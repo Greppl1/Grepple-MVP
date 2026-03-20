@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grepple Logo Options</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0f;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 60px 40px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #666;
+    margin-bottom: 60px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .card {
+    border-radius: 24px;
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+  }
+
+  .card-label {
+    position: absolute;
+    top: 20px;
+    left: 24px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0.5;
+  }
+
+  .card-desc {
+    margin-top: 32px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    max-width: 280px;
+    line-height: 1.6;
+  }
+
+  /* Option A — Neon Terminal */
+  .card-a {
+    background: linear-gradient(160deg, #0d1117 0%, #161b22 100%);
+    border: 1px solid #21262d;
+  }
+
+  .logo-a {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-a .icon {
+    width: 56px;
+    height: 56px;
+    position: relative;
+  }
+
+  .logo-a .text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 42px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #58a6ff 0%, #bc8cff 50%, #f778ba 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+  }
+
+  /* Option B — Minimal Geometric */
+  .card-b {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+  }
+  .card-b .card-label { color: #999; }
+  .card-b .card-desc { color: rgba(0,0,0,0.4); }
+
+  .logo-b {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-b .text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    color: #111;
+    letter-spacing: -1.5px;
+  }
+
+  /* Option C — Gradient Blob */
+  .card-c {
+    background: linear-gradient(160deg, #0f0c29 0%, #1a1145 50%, #24243e 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .logo-c {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .logo-c .text {
+    font-family: 'Sora', sans-serif;
+    font-size: 44px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+
+  .logo-c .text span {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Option D — Bold & Playful */
+  .card-d {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+  }
+
+  .logo-d {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-d .text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 46px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+
+  /* Option E — Dark Premium */
+  .card-e {
+    background: #111;
+    border: 1px solid #222;
+  }
+
+  .logo-e {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-e .text {
+    font-family: 'Inter', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    background: linear-gradient(180deg, #fff 0%, #999 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Option F — Web3 Cyber */
+  .card-f {
+    background: #000;
+    border: 1px solid #1a1a2e;
+    position: relative;
+  }
+  .card-f::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(0, 255, 136, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .logo-f {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-f .text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 44px;
+    font-weight: 700;
+    color: #00ff88;
+    letter-spacing: -0.5px;
+    text-shadow: 0 0 40px rgba(0,255,136,0.3);
+  }
+
+  /* Full width card */
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  .variations {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .var-card {
+    border-radius: 16px;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+
+  .section-title {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #444;
+    margin-top: 40px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  /* Animations */
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(88, 166, 255, 0.4)); }
+    50% { filter: drop-shadow(0 0 20px rgba(88, 166, 255, 0.7)); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .animate-glow { animation: pulse-glow 3s ease-in-out infinite; }
+  .animate-float { animation: float 4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<h1>Grepple — Logo Concepts</h1>
+
+<div class="grid">
+
+  <!-- ======== OPTION A: Neon Terminal ======== -->
+  <div class="card card-a">
+    <span class="card-label">Option A — Neon Terminal</span>
+    <div class="logo-a">
+      <div class="icon animate-glow">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="52" height="52" rx="12" stroke="url(#gradA)" stroke-width="2.5" fill="none"/>
+          <path d="M16 22L24 28L16 34" stroke="#58a6ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="28" y1="34" x2="40" y2="34" stroke="#bc8cff" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="38" cy="18" r="3" fill="#f778ba" opacity="0.6"/>
+          <circle cx="44" cy="22" r="2" fill="#58a6ff" opacity="0.4"/>
+          <defs>
+            <linearGradient id="gradA" x1="0" y1="0" x2="56" y2="56">
+              <stop offset="0%" stop-color="#58a6ff"/>
+              <stop offset="50%" stop-color="#bc8cff"/>
+              <stop offset="100%" stop-color="#f778ba"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="text">grepple</span>
+    </div>
+    <div class="card-desc">Developer-native. Terminal aesthetic with gradient accents. The ">" cursor + search dots convey grep + discovery.</div>
+  </div>
+
+  <!-- ======== OPTION B: Minimal Geometric ======== -->
+  <div class="card card-b">
+    <span class="card-label">Option B — Minimal Geometric</span>
+    <div class="logo-b">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Magnifying glass merged with node graph -->
+        <circle cx="22" cy="22" r="12" stroke="#111" stroke-width="3" fill="none"/>
+        <line x1="31" y1="31" x2="40" y2="40" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+        <!-- Inner connection nodes -->
+        <circle cx="18" cy="20" r="2.5" fill="#111"/>
+        <circle cx="26" cy="18" r="2.5" fill="#111"/>
+        <circle cx="22" cy="26" r="2.5" fill="#111"/>
+        <line x1="18" y1="20" x2="26" y2="18" stroke="#111" stroke-width="1.5"/>
+        <line x1="26" y1="18" x2="22" y2="26" stroke="#111" stroke-width="1.5"/>
+        <line x1="22" y1="26" x2="18" y2="20" stroke="#111" stroke-width="1.5"/>
+      </svg>
+      <span class="text">Grepple</span>
+    </div>
+    <div class="card-desc">Clean, trustworthy, scalable. Magnifying glass with connected nodes inside — search meets tool graph.</div>
+  </div>
+
+  <!-- ======== OPTION C: Gradient Cosmos ======== -->
+  <div class="card card-c">
+    <span class="card-label">Option C — Gradient Cosmos</span>
+    <div class="logo-c">
+      <div class="animate-float">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gradC1" x1="0" y1="0" x2="52" y2="52">
+              <stop offset="0%" stop-color="#667eea"/>
+              <stop offset="100%" stop-color="#764ba2"/>
+            </linearGradient>
+            <linearGradient id="gradC2" x1="0" y1="26" x2="52" y2="26">
+              <stop offset="0%" stop-color="#f093fb"/>
+              <stop offset="100%" stop-color="#f5576c"/>
+            </linearGradient>
+          </defs>
+          <!-- Outer ring -->
+          <circle cx="26" cy="26" r="23" stroke="url(#gradC1)" stroke-width="2.5" fill="none"/>
+          <!-- Orbital paths -->
+          <ellipse cx="26" cy="26" rx="16" ry="8" stroke="url(#gradC2)" stroke-width="1.5" fill="none" opacity="0.6" transform="rotate(-30 26 26)"/>
+          <ellipse cx="26" cy="26" rx="16" ry="8" stroke="url(#gradC1)" stroke-width="1.5" fill="none" opacity="0.6" transform="rotate(30 26 26)"/>
+          <!-- Center core -->
+          <circle cx="26" cy="26" r="5" fill="url(#gradC1)"/>
+          <!-- Orbital dots -->
+          <circle cx="12" cy="20" r="2.5" fill="#f093fb"/>
+          <circle cx="40" cy="32" r="2.5" fill="#667eea"/>
+          <circle cx="26" cy="10" r="2" fill="#764ba2"/>
+        </svg>
+      </div>
+      <span class="text"><span>grep</span>ple</span>
+    </div>
+    <div class="card-desc">Orbital motif — agents circling a tool registry core. "grep" highlighted to anchor the name's origin.</div>
+  </div>
+
+  <!-- ======== OPTION D: Bold & Vibrant ======== -->
+  <div class="card card-d">
+    <span class="card-label" style="color:rgba(255,255,255,0.5)">Option D — Bold Vibrant</span>
+    <div class="logo-d">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Stylized G with search ray -->
+        <path d="M26 6C15 6 6 15 6 26s9 20 20 20 20-9 20-20" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <path d="M46 26H28" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M28 26V36" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Search pulse -->
+        <circle cx="42" cy="10" r="4" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="42" cy="10" r="2" fill="#fff"/>
+        <line x1="38" y1="14" x2="34" y2="18" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="text">grepple</span>
+    </div>
+    <div class="card-desc">Confident & approachable. The "G" doubles as a search scope, with a discovery pulse in the corner.</div>
+  </div>
+
+  <!-- ======== OPTION E: Dark Premium ======== -->
+  <div class="card card-e">
+    <span class="card-label">Option E — Dark Premium</span>
+    <div class="logo-e">
+      <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gradE" x1="0" y1="0" x2="50" y2="50">
+            <stop offset="0%" stop-color="#fff"/>
+            <stop offset="100%" stop-color="#666"/>
+          </linearGradient>
+        </defs>
+        <!-- Hexagonal frame -->
+        <path d="M25 3L44.5 14V36L25 47L5.5 36V14L25 3Z" stroke="url(#gradE)" stroke-width="2" fill="none"/>
+        <!-- Inner grep arrows -->
+        <path d="M15 20L22 25L15 30" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M25 30H35" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+        <!-- Top accent -->
+        <circle cx="25" cy="14" r="2" fill="#fff" opacity="0.4"/>
+      </svg>
+      <span class="text">grepple</span>
+    </div>
+    <div class="card-desc">Premium, understated. Hexagonal frame (Web3 nod) with terminal prompt inside. Silver gradient text.</div>
+  </div>
+
+  <!-- ======== OPTION F: Cyber Web3 ======== -->
+  <div class="card card-f">
+    <span class="card-label" style="color:#00ff88;">Option F — Cyber Web3</span>
+    <div class="logo-f">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Brackets -->
+        <path d="M8 14L4 26L8 38" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M44 14L48 26L44 38" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Center eye / scanner -->
+        <ellipse cx="26" cy="26" rx="14" ry="10" stroke="#00ff88" stroke-width="2" fill="none" opacity="0.6"/>
+        <circle cx="26" cy="26" r="4" fill="#00ff88"/>
+        <circle cx="26" cy="26" r="7" stroke="#00ff88" stroke-width="1" fill="none" opacity="0.3"/>
+        <!-- Scan lines -->
+        <line x1="14" y1="26" x2="19" y2="26" stroke="#00ff88" stroke-width="1" opacity="0.4"/>
+        <line x1="33" y1="26" x2="38" y2="26" stroke="#00ff88" stroke-width="1" opacity="0.4"/>
+      </svg>
+      <span class="text">grepple</span>
+    </div>
+    <div class="card-desc">Cyberpunk scanner aesthetic. Code brackets frame an "eye" — the platform watching and evaluating tools.</div>
+  </div>
+
+  <!-- ======== SECTION: Icon-only variants ======== -->
+  <div class="section-title">Icon-Only Variants (for favicon / avatar)</div>
+
+  <div class="variations">
+    <div class="var-card" style="background: #0d1117; border: 1px solid #21262d; border-radius: 16px;">
+      <svg width="80" height="80" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="52" height="52" rx="14" fill="url(#gradIco1)"/>
+        <path d="M18 23L25 28L18 33" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="28" y1="33" x2="38" y2="33" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="gradIco1" x1="0" y1="0" x2="56" y2="56">
+            <stop offset="0%" stop-color="#667eea"/>
+            <stop offset="100%" stop-color="#764ba2"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="card-desc" style="margin-top: 16px; font-size: 11px;">Terminal prompt on gradient</div>
+    </div>
+
+    <div class="var-card" style="background: #111; border: 1px solid #222; border-radius: 16px;">
+      <svg width="80" height="80" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="25" fill="#000" stroke="#00ff88" stroke-width="2"/>
+        <path d="M20 24L27 28L20 32" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="35" cy="28" r="3" fill="#00ff88" opacity="0.8"/>
+        <circle cx="35" cy="28" r="6" stroke="#00ff88" stroke-width="1" fill="none" opacity="0.3"/>
+      </svg>
+      <div class="card-desc" style="margin-top: 16px; font-size: 11px;">Cyber scanner circle</div>
+    </div>
+
+    <div class="var-card" style="background: #fff; border: 1px solid #e5e5e5; border-radius: 16px;">
+      <svg width="80" height="80" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="22" cy="22" r="12" stroke="#111" stroke-width="3" fill="none"/>
+        <line x1="31" y1="31" x2="40" y2="40" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="18" cy="20" r="2.5" fill="#111"/>
+        <circle cx="26" cy="18" r="2.5" fill="#111"/>
+        <circle cx="22" cy="26" r="2.5" fill="#111"/>
+        <line x1="18" y1="20" x2="26" y2="18" stroke="#111" stroke-width="1.5"/>
+        <line x1="26" y1="18" x2="22" y2="26" stroke="#111" stroke-width="1.5"/>
+        <line x1="22" y1="26" x2="18" y2="20" stroke="#111" stroke-width="1.5"/>
+      </svg>
+      <div class="card-desc" style="margin-top: 16px; font-size: 11px; color: rgba(0,0,0,0.4);">Graph search — light mode</div>
+    </div>
+  </div>
+
+  <!-- ======== SECTION: Wordmark Only ======== -->
+  <div class="section-title">Wordmark-Only Variants</div>
+
+  <div class="card full-width" style="background: #0a0a0f; border: 1px solid #1a1a1a; min-height: 300px;">
+    <div style="display: flex; flex-direction: column; gap: 48px; align-items: center;">
+      <!-- Wordmark 1 -->
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 52px; font-weight: 700;">
+        <span style="color: #58a6ff;">grep</span><span style="color: #fff; opacity: 0.4;">ple</span>
+      </div>
+      <!-- Wordmark 2 -->
+      <div style="font-family: 'Sora', sans-serif; font-size: 52px; font-weight: 800; letter-spacing: -2px;">
+        <span style="background: linear-gradient(135deg, #00ff88, #00b4d8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">grepple</span>
+      </div>
+      <!-- Wordmark 3 -->
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 52px; font-weight: 700; letter-spacing: -1px; color: #fff;">
+        g<span style="color: #764ba2;">r</span>e<span style="color: #667eea;">p</span>ple
+      </div>
+    </div>
+    <div class="card-desc" style="margin-top: 36px;">Three wordmark styles: monospace emphasis, gradient sweep, and selective color accent.</div>
+  </div>
+
+</div>
+
+<div style="text-align: center; margin-top: 80px; color: #333; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">
+  Grepple Brand Exploration — 2026
+</div>
+
+</body>
+</html>
