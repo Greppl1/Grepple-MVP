@@ -11,6 +11,7 @@ from scoring_engine.models.report import (
     RewriteSuggestion,
     SchemaMetrics,
 )
+from scoring_engine.models.submission import ImprovedToolSubmission, SubmissionResponse
 from scoring_engine.models.tool_input import ToolInput
 
 __all__ = [
@@ -20,10 +21,12 @@ __all__ = [
     "DescriptionMetrics",
     "Diagnosis",
     "DiagnosticReport",
+    "ImprovedToolSubmission",
     "Issue",
     "Metrics",
     "PromptTestResult",
     "RewriteSuggestion",
     "SchemaMetrics",
+    "SubmissionResponse",
     "ToolInput",
 ]
