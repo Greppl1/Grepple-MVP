@@ -279,54 +279,76 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 ## 六、任务清单
 
 ### 已完成任务
-（初始为空，完成后在此记录）
+
+**Step 1: 项目脚手架 + TestToken** ✅
+- [x] 初始化 Hardhat 项目（`contracts/`目录，安装 OpenZeppelin 5.x）
+- [x] 编写 `AAOTestToken.sol`：继承 ERC-20，添加 authorizedMinter 机制 + 可配置 rewardAmount
+- [x] 编写 `TokenMintRecord` struct 和 `mint()` 函数
+- [x] 编写 `getMintRecord()` 和 `getMintsByAgent()` 查询函数
+- [x] 编写 TestToken 单元测试（17 tests passing）
+- [x] 编写 BSC Testnet 部署脚本（支持 BSC Testnet + Base Sepolia）
+- [x] 部署到 BSC Testnet
+
+**Step 2: Agent 注册表** ✅
+- [x] 编写 `AgentRegistry.sol`：注册、查询、停用、stats 更新
+- [x] 实现 `agentIdHash` 反查机制
+- [x] 编写 AgentRegistry 单元测试（12 tests passing）
+- [x] 编写后端 API：`POST /api/agents/register`、`GET /api/agents/:wallet/profile`
+- [x] 部署到 BSC Testnet
+
+**Step 3: Vault 金库合约** ✅
+- [x] 编写 `AAOVault.sol`：deposit、getBuilderBalance、toggleRedemption、requestRedemption
+- [x] 集成 MockUSDC（18 decimals）
+- [x] 编写 Vault 单元测试（18 tests passing）
+- [x] 编写后端 API：`POST /api/vault/deposit`、`GET /api/vault/balance/:wallet`
+- [x] 部署到 BSC Testnet
+
+**Step 4: Mint 奖励逻辑** ✅
+- [x] 编写后端 mint 服务：接收 Jerry 的 `test_task_completed` 事件
+- [x] 实现 RewardTier 判定逻辑（FULL / PARTIAL / NONE）
+- [x] 编写 `POST /api/rewards/mint` endpoint（带签名验证 + 限流）
+- [x] 编写 `GET /api/rewards/status/:task_id` endpoint
+- [x] 编写 `GET /api/agents/:wallet/rewards` endpoint
+- [x] 集成测试（24 backend tests passing）
+
+**Step 5: 兑换验证机制** ✅
+- [x] 实现 `_validateRedemption`：token 持有验证 + mintId 归属验证
+- [x] 实现与 Fiona Registry 的 `callRecordHash` 交叉验证
+- [x] 实现防重放（`processedRedemptions` mapping）
+- [x] 编写 `POST /api/vault/redeem` endpoint（开关检查 + 验证 + 转账）
+- [x] 编写兑换流程端到端测试（5 redemption tests passing）
+
+**Step 6: Agentic Security** ✅
+- [x] 设计防女巫方案：per-wallet 频率限制（10 req/min 默认）
+- [x] 实现 agent 身份验证中间件（ethers.verifyMessage 签名验证，5min 时间窗口）
+- [x] 编写安全相关测试（10 security tests passing）
+- [x] 完成安全审计 checklist（`contracts/SECURITY_CHECKLIST.md`）
+
+### BSC Testnet 部署地址（2026-03-20）
+
+| 合约 | 地址 |
+|------|------|
+| MockUSDC | `0xC4A60C64E24d3D7331Da6B48624333E9196C9188` |
+| AAOTestToken | `0xc2a5E61225b7623090DfB7067D76CfA987C3AbF3` |
+| AgentRegistry | `0xB31733fE1676539fD0b478aF3C366FBC9711927e` |
+| AAOVault | `0x01230E4030981864B8d93ea9a15E7AAC207A6952` |
+
+### 测试统计
+
+| 层 | 测试数 | 状态 |
+|----|--------|------|
+| 合约（Mocha/Chai） | 53 | ✅ all passing |
+| 后端 API（Jest） | 39 | ✅ all passing |
+| **总计** | **92** | **✅** |
+
+### 队友对接 Issues
+
+- GitHub Issue #1：Jerry（评分引擎）— 事件格式 + 奖励规则
+- GitHub Issue #2：Fiona（Registry）— callRecordHash 验证 + 接口格式
 
 ### 待办任务
 
-**Step 1: 项目脚手架 + TestToken**
-- [ ] 初始化 Hardhat 项目（`contracts/`目录，安装 OpenZeppelin）
-- [ ] 编写 `AAOTestToken.sol`：继承 ERC-20，添加 authorizedMinter 机制
-- [ ] 编写 `TokenMintRecord` struct 和 `mint()` 函数
-- [ ] 编写 `getMintRecord()` 和 `getMintsByAgent()` 查询函数
-- [ ] 编写 TestToken 单元测试（mint 权限、余额变化、记录查询）
-- [ ] 编写 BSC Testnet 部署脚本
-- [ ] 部署到 BSC Testnet，记录合约地址
-
-**Step 2: Agent 注册表**
-- [ ] 编写 `AgentRegistry.sol`：注册、查询、停用
-- [ ] 实现 `agentIdHash` 反查机制
-- [ ] 编写 AgentRegistry 单元测试
-- [ ] 编写后端 API：`POST /api/agents/register`、`GET /api/agents/:wallet/profile`
-- [ ] 部署到 BSC Testnet
-
-**Step 3: Vault 金库合约**
-- [ ] 编写 `AAOVault.sol`：deposit、getBuilderBalance、toggleRedemption
-- [ ] 集成 mock USDC（testnet ERC-20）
-- [ ] 编写 Vault 存入相关单元测试
-- [ ] 编写后端 API：`POST /api/vault/deposit`、`GET /api/vault/balance/:wallet`
-- [ ] 部署到 BSC Testnet
-
-**Step 4: Mint 奖励逻辑**
-- [ ] 编写后端 mint 服务：接收 Jerry 的 `test_task_completed` 事件
-- [ ] 实现 RewardTier 判定逻辑（FULL / PARTIAL / NONE）
-- [ ] 编写 `POST /api/rewards/mint` endpoint
-- [ ] 编写 `GET /api/rewards/status/:task_id` endpoint
-- [ ] 编写 `GET /api/agents/:wallet/rewards` endpoint
-- [ ] 集成测试：mock Jerry 事件 → mint → 查询验证
-
-**Step 5: 兑换验证机制**
-- [ ] 实现 `_validateRedemption`：token 持有验证 + mintId 归属验证
-- [ ] 实现与 Fiona Registry 的 `callRecordHash` 交叉验证
-- [ ] 实现防重放（`processedRedemptions` mapping）
-- [ ] 编写 `POST /api/vault/redeem` endpoint（开关检查 + 验证 + 转账）
-- [ ] 编写兑换流程端到端测试
-- [ ] 部署更新后的 Vault 合约
-
-**Step 6: Agentic Security**
-- [ ] 设计防女巫方案：单 agent 频率限制 + 注册门槛
-- [ ] 实现 agent 身份验证中间件（API 层签名验证）
-- [ ] 编写安全相关测试（重放攻击、伪造 mint、女巫注册）
-- [ ] 完成安全审计 checklist
+（全部完成，无待办）
 
 ---
 
@@ -529,7 +551,7 @@ cd backend && npm test -- --grep "redemption validation"
 
 ### 目录结构
 ```
-contracts/           # Solidity 合约 + Hardhat 项目
+contracts/                # Solidity 合约 + Hardhat 项目
   contracts/
     AAOTestToken.sol
     AAOVault.sol
@@ -540,15 +562,16 @@ contracts/           # Solidity 合约 + Hardhat 项目
     AAOTestToken.test.js
     AAOVault.test.js
     AgentRegistry.test.js
-    mocks/
-      jerry_events.json
-      fiona_registry_mock.js
   scripts/
     deploy.js
   hardhat.config.js
+  SECURITY_CHECKLIST.md
 
-backend/             # Node.js API 服务
+backend/                  # Node.js API 服务
   src/
+    app.js                # Express app setup
+    server.js             # Entry point
+    config.js             # Contract addresses, RPC config
     routes/
       rewards.js
       vault.js
@@ -557,12 +580,16 @@ backend/             # Node.js API 服务
       mintService.js
       vaultService.js
       agentService.js
+      contractService.js  # Shared ethers.js contract interaction layer
     middleware/
-      agentAuth.js
+      agentAuth.js        # Signature verification (ethers.verifyMessage)
+      rateLimiter.js      # Per-wallet rate limiting
   test/
     rewards.test.js
     vault.test.js
     agents.test.js
+    redemption.test.js
+    security.test.js
 ```
 
 ### 命名规范

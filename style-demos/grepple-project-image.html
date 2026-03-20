@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grepple - Project Image</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .card {
+    width: 1200px;
+    height: 630px;
+    background: #0D0B2E;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  /* Dot grid background */
+  .dot-grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(123,107,168,0.12) 1px, transparent 1px);
+    background-size: 28px 28px;
+    z-index: 0;
+  }
+
+  /* Radial glow */
+  .radial-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 70% at 35% 45%, rgba(123,107,168,0.18) 0%, rgba(74,108,247,0.06) 40%, transparent 70%);
+    z-index: 1;
+  }
+
+  /* Orbital watermark behind logo */
+  .orbital-watermark {
+    position: absolute;
+    left: 20px;
+    top: 40px;
+    width: 420px;
+    height: 420px;
+    opacity: 0.04;
+    z-index: 1;
+  }
+
+  /* Left side */
+  .left {
+    width: 55%;
+    padding: 52px 48px 40px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .launchpad-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #7B6BA8;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 18px;
+  }
+
+  .logo {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 14px;
+    letter-spacing: -1px;
+  }
+  .logo .l-g { color: #FFFFFF; }
+  .logo .l-r { color: #7B6BA8; }
+  .logo .l-e1 { color: #9B8EC8; }
+  .logo .l-p1 { color: #FFFFFF; }
+  .logo .l-p2 { color: #4A6CF7; }
+  .logo .l-l { color: #5B7FFF; }
+  .logo .l-e2 { color: #FFFFFF; }
+
+  .tagline {
+    font-size: 20px;
+    font-weight: 500;
+    color: #FFFFFF;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: #8B85AA;
+    margin-bottom: 32px;
+    line-height: 1.4;
+  }
+
+  .stat-pills {
+    display: flex;
+    gap: 12px;
+  }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid rgba(123,107,168,0.3);
+    border-radius: 20px;
+    padding: 6px 14px;
+    background: rgba(26,23,64,0.6);
+  }
+
+  .pill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #18DC7E;
+    flex-shrink: 0;
+  }
+
+  .pill-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: #C8C3E0;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Right side */
+  .right {
+    width: 45%;
+    padding: 36px 40px 36px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .flow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+
+  .flow-node {
+    background: rgba(26,23,64,0.8);
+    border: 1px solid rgba(123,107,168,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 20px rgba(75,60,140,0.15), 0 0 1px rgba(123,107,168,0.3);
+    position: relative;
+    z-index: 2;
+  }
+
+  .flow-node-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #7B6BA8;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  .node-submit {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .submit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bracket-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: #5B7FFF;
+    background: rgba(91,127,255,0.1);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .submit-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+  }
+
+  /* Connector line */
+  .connector {
+    width: 2px;
+    height: 24px;
+    background: linear-gradient(180deg, #7B6BA8, #4A6CF7);
+    position: relative;
+    z-index: 2;
+  }
+
+  .connector-arrow {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #4A6CF7;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Diagnose node */
+  .node-diagnose {
+    width: 240px;
+  }
+
+  .score-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #8B85AA;
+    width: 56px;
+    flex-shrink: 0;
+  }
+
+  .score-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+
+  .score-bar-fill.green { background: #18DC7E; }
+  .score-bar-fill.purple { background: #9B8EC8; }
+  .score-bar-fill.blue { background: #4A6CF7; }
+  .score-bar-fill.bright-blue { background: #5B7FFF; }
+
+  .score-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #C8C3E0;
+    width: 30px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Registry node */
+  .node-registry {
+    width: 250px;
+  }
+
+  .leaderboard {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+  }
+
+  .lb-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #5B7FFF;
+    font-weight: 600;
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  .lb-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: #C8C3E0;
+    flex: 1;
+  }
+
+  .lb-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #FFFFFF;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* Rewards badge */
+  .rewards-badge {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    z-index: 3;
+  }
+
+  .reward-star {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .reward-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: #18DC7E;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+
+  /* Bottom gradient line */
+  .bottom-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #7B6BA8, #4A6CF7, #5B7FFF);
+    z-index: 3;
+  }
+
+  /* BNB Chain badge */
+  .bnb-badge {
+    position: absolute;
+    bottom: 14px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 3;
+  }
+
+  .bnb-badge-text {
+    font-size: 10px;
+    font-weight: 500;
+    color: #8B85AA;
+    letter-spacing: 0.5px;
+  }
+
+  .bnb-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Screenshot note */
+  .note {
+    margin-top: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #555;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Background layers -->
+  <div class="dot-grid"></div>
+  <div class="radial-glow"></div>
+
+  <!-- Orbital watermark -->
+  <svg class="orbital-watermark" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="200" cy="200" rx="180" ry="80" stroke="#7B6BA8" stroke-width="1.5" transform="rotate(-20 200 200)"/>
+    <ellipse cx="200" cy="200" rx="180" ry="80" stroke="#4A6CF7" stroke-width="1.5" transform="rotate(25 200 200)"/>
+    <ellipse cx="200" cy="200" rx="180" ry="80" stroke="#5B7FFF" stroke-width="1.5" transform="rotate(70 200 200)"/>
+    <circle cx="200" cy="200" r="8" fill="#7B6BA8"/>
+    <circle cx="200" cy="200" r="3" fill="#FFFFFF"/>
+    <circle cx="95" cy="135" r="4" fill="#4A6CF7"/>
+    <circle cx="310" cy="250" r="4" fill="#5B7FFF"/>
+    <circle cx="170" cy="290" r="3" fill="#9B8EC8"/>
+  </svg>
+
+  <!-- Left side -->
+  <div class="left">
+    <div class="launchpad-label">AAO Launchpad</div>
+    <div class="logo">
+      <span class="l-g">g</span><span class="l-r">r</span><span class="l-e1">e</span><span class="l-p1">p</span><span class="l-p2">p</span><span class="l-l">l</span><span class="l-e2">e</span>
+    </div>
+    <div class="tagline">The MCP Tool Registry</div>
+    <div class="subtitle">Where agents test, score, and rank your tools</div>
+    <div class="stat-pills">
+      <div class="pill">
+        <div class="pill-dot"></div>
+        <span class="pill-text">2,847 Tools</span>
+      </div>
+      <div class="pill">
+        <div class="pill-dot" style="background:#5B7FFF;"></div>
+        <span class="pill-text">12.4K Calls/Week</span>
+      </div>
+      <div class="pill">
+        <div class="pill-dot" style="background:#9B8EC8;"></div>
+        <span class="pill-text">894 Builders</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side -->
+  <div class="right">
+    <div class="flow-container">
+      <!-- Submit Node -->
+      <div class="flow-node node-submit">
+        <div class="flow-node-label">Step 1 &middot; Submit</div>
+        <div class="submit-row">
+          <div class="bracket-icon">{ }</div>
+          <span class="submit-text">Submit MCP Tool</span>
+        </div>
+      </div>
+
+      <div class="connector"></div>
+      <div class="connector-arrow"></div>
+
+      <!-- Diagnose Node -->
+      <div class="flow-node node-diagnose">
+        <div class="flow-node-label">Step 2 &middot; Agent Diagnosis</div>
+        <div class="score-bars">
+          <div class="score-row">
+            <span class="score-label">Schema</span>
+            <div class="score-bar-bg"><div class="score-bar-fill green" style="width:97%;"></div></div>
+            <span class="score-value">97</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Discover</span>
+            <div class="score-bar-bg"><div class="score-bar-fill purple" style="width:94%;"></div></div>
+            <span class="score-value">94</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Call</span>
+            <div class="score-bar-bg"><div class="score-bar-fill blue" style="width:88%;"></div></div>
+            <span class="score-value">88</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Success</span>
+            <div class="score-bar-bg"><div class="score-bar-fill bright-blue" style="width:96%;"></div></div>
+            <span class="score-value">96%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"></div>
+      <div class="connector-arrow"></div>
+
+      <!-- Registry Node -->
+      <div class="flow-node node-registry">
+        <div class="flow-node-label">Step 3 &middot; Public Registry</div>
+        <div class="leaderboard">
+          <div class="lb-row">
+            <span class="lb-rank">#1</span>
+            <span class="lb-name">mcp-web-search</span>
+            <span class="lb-score">94</span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-rank">#2</span>
+            <span class="lb-name">mcp-swap</span>
+            <span class="lb-score">78</span>
+          </div>
+          <div class="lb-row">
+            <span class="lb-rank">#3</span>
+            <span class="lb-name">mcp-code</span>
+            <span class="lb-score">88</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rewards badge on far right -->
+      <div class="rewards-badge">
+        <div class="reward-star">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2l3.09 6.26L24 9.27l-5 4.87L20.18 21 14 17.77 7.82 21 9 14.14l-5-4.87 6.91-1.01L14 2z" fill="#18DC7E" opacity="0.9"/>
+            <path d="M14 6l1.76 3.57 3.94.57-2.85 2.78.67 3.93L14 15.02l-3.52 1.83.67-3.93-2.85-2.78 3.94-.57L14 6z" fill="#0D0B2E"/>
+          </svg>
+        </div>
+        <span class="reward-text">Earn $GREP</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom gradient line -->
+  <div class="bottom-line"></div>
+
+  <!-- BNB Chain badge -->
+  <div class="bnb-badge">
+    <svg class="bnb-icon" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1L3 3.5V6.5L5.5 5.25V8.25L8 9.5L10.5 8.25V5.25L13 6.5V3.5L8 1Z" fill="#F0B90B" opacity="0.7"/>
+      <path d="M3 9.5L5.5 10.75V13.25L8 15L10.5 13.25V10.75L13 9.5" stroke="#F0B90B" stroke-width="0.8" opacity="0.7" fill="none"/>
+    </svg>
+    <span class="bnb-badge-text">Built on BNB Chain</span>
+  </div>
+</div>
+
+<div class="note">Screenshot this image (1200&times;630)</div>
+
+</body>
+</html>
