@@ -507,8 +507,8 @@ ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud
 - [x] Jerry 部署到 Railway：`https://spirited-success-production-2b55.up.railway.app`
 - [x] 前端 `.env.local` 配好 `NEXT_PUBLIC_SCORING_ENGINE_URL`
 - [x] Builder 提交页 → `POST /api/v1/diagnose` → 拿到 `reportId` → 跳转报告页 ✅ 已测试
-- [x] 报告页 → `GET /api/v1/report/{reportId}/scores` → 展示真实 0-100 分数 + grade
-- [x] 报告页 → `GET /api/v1/report/{reportId}` → 从 `diagnosis.issues` 提取改进建议
+- [x] 报告页 → `GET /api/v1/report/{reportId}/scores` → 展示真实 0-100 分数 + grade（已适配架构拆分：只有 schemaHealth + discoverability，无 callability）
+- [x] 报告页 → `GET /api/v1/report/{reportId}` → 从 `diagnosis.issues` 提取改进建议（兼容 `suggestions` 和 `rewriteSuggestion` 两种字段名）
 - [x] 评分引擎不可达时 fallback 到确定性 mock 分数
 - [x] 后端 `.env` 配好 `SCORING_ENGINE_URL` + `REGISTRY_API_URL`（Supabase Edge Function）
 - [x] `vaultService.fetchCallRecord` URL 格式改为 Supabase `?id=` 格式
@@ -538,8 +538,10 @@ ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud
 
 **Step 12: 对接联调**
 - [x] 前端 ↔ Fiona Registry Supabase 对接 ✅（2,114 工具实时展示）
-- [x] 前端 ↔ Jerry 评分 API 联调 ✅（diagnose + scores + report 全通）
-- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents — 等后端部署公网）
+- [x] 前端 ↔ Jerry 评分 API 联调 ✅（diagnose + scores + report 全通，已适配架构拆分）
+- [x] 后端 Railway 部署 ✅（`https://zian-backend-production.up.railway.app`，Issue #15）
+- [x] successRate 公式修复 ✅（Issue #12 Fiona 反馈：`invoke_rate/(invoke_rate+error_rate)` 替代 `100-error_rate`）
+- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents — 等 Railway 部署验证）
 - [ ] 端到端流程测试：Builder 提交 → 诊断 → Launch → Registry 展示 → Agent 测试 → Token 发放
 
 ---

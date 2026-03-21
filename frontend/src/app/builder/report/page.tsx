@@ -69,11 +69,15 @@ function ReportContent() {
         if (!res.ok) throw new Error('scores not found');
         const data = await res.json();
 
+        // Jerry's scoring engine now only returns schemaHealth + discoverability (no callability)
+        // Overall = schema×50% + description×50%
+        const schema = data.schemaHealth?.score ?? 0;
+        const discovery = data.discoverability?.score ?? 0;
         setScores({
-          composite: data.overall ?? 0,
-          schema: data.schemaHealth?.score ?? 0,
-          discoverability: data.discoverability?.score ?? 0,
-          successRate: Math.max(0, 100 - (data.callability?.breakdown?.friction ?? 0)),
+          composite: data.overall ?? Math.round((schema + discovery) / 2),
+          schema,
+          discoverability: discovery,
+          successRate: 0, // callability removed from scoring engine; only in external agent eval
           grade: data.grade ?? 'N/A',
         });
         setIsLive(true);
@@ -97,12 +101,13 @@ function ReportContent() {
             }
           }
 
-          // Add rewrite suggestion if present
-          if (report.rewriteSuggestion?.rationale) {
+          // Add rewrite suggestion if present (Jerry aliases rewriteSuggestion as "suggestions")
+          const rewrite = report.suggestions ?? report.rewriteSuggestion;
+          if (rewrite?.rationale) {
             realSuggestions.push({
               category: 'Description',
               impact: 'High',
-              text: report.rewriteSuggestion.rationale,
+              text: rewrite.rationale,
             });
           }
 
@@ -125,11 +130,17 @@ function ReportContent() {
     return <SkeletonPage />;
   }
 
-  const SCORE_CARDS = [
-    { label: 'Schema Health', score: scores.schema },
-    { label: 'Discoverability', score: scores.discoverability },
-    { label: 'Success Rate', score: scores.successRate },
-  ];
+  // When live, scoring engine only returns schema + discoverability (no callability)
+  const SCORE_CARDS = isLive
+    ? [
+        { label: 'Schema Health', score: scores.schema },
+        { label: 'Discoverability', score: scores.discoverability },
+      ]
+    : [
+        { label: 'Schema Health', score: scores.schema },
+        { label: 'Discoverability', score: scores.discoverability },
+        { label: 'Success Rate', score: scores.successRate },
+      ];
 
   const handleCopy = async (text: string, index: number) => {
     try {

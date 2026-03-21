@@ -126,8 +126,13 @@ function computeScores(bench: SupabaseBenchmark | null) {
     } catch { /* use default */ }
   }
 
-  // Success rate: 100 - error_rate
-  const successRate = Math.max(0, 100 - (bench.error_rate ?? 0));
+  // Success rate: ratio of successful invocations out of all attempts
+  // Tools with 0 invocations and 0 errors get 0 (not 100)
+  const invokeRate = bench.invoke_rate ?? 0;
+  const errorRate = bench.error_rate ?? 0;
+  const successRate = (invokeRate + errorRate) > 0
+    ? Math.round(invokeRate / (invokeRate + errorRate) * 100)
+    : 0;
 
   // Composite: weighted average
   const composite = Math.round(
