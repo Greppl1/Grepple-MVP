@@ -1,9 +1,10 @@
 'use client';
 
 export default function ScoreRing({ score, size = 60 }: { score: number; size?: number }) {
+  const s = Math.max(0, Math.min(100, score));
   const r = size * 0.38;
   const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 100) * circ;
+  const offset = circ - (s / 100) * circ;
   const center = size / 2;
 
   return (

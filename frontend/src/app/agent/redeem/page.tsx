@@ -68,16 +68,16 @@ export default function AgentRedeemPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-8">Redeem Tokens</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-8">Redeem Tokens</h1>
 
       {/* Balance Display */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-text-dim text-sm mb-1">Your AAOT Balance</p>
+            <p className="text-text-dim text-sm mb-1">Your GREP Balance</p>
             <p className="text-3xl sm:text-4xl font-bold text-text font-mono">
               {MOCK_BALANCE}
-              <span className="text-base font-normal text-text-secondary ml-2">AAOT</span>
+              <span className="text-base font-normal text-text-secondary ml-2">GREP</span>
             </p>
           </div>
           <div className="text-right">
@@ -130,7 +130,7 @@ export default function AgentRedeemPage() {
               className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-text font-mono text-sm placeholder:text-text-dim focus:outline-none focus:border-border-hi disabled:cursor-not-allowed"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim text-sm">
-              AAOT
+              GREP
             </span>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function AgentRedeemPage() {
                     <TierBadge tier={mint.tier} />
                   </div>
                   <span className="font-mono text-sm text-text">
-                    {mint.amount.toFixed(1)} <span className="text-text-dim">AAOT</span>
+                    {mint.amount.toFixed(1)} <span className="text-text-dim">GREP</span>
                   </span>
                 </div>
               </label>
@@ -181,7 +181,7 @@ export default function AgentRedeemPage() {
         {/* Redeem Button */}
         <button
           disabled={!REDEMPTION_ENABLED || selectedMints.length === 0}
-          className={`w-full btn-gradient py-3.5 rounded-lg text-sm font-semibold transition-all ${
+          className={`w-full btn-gradient py-3 px-6 rounded-lg text-sm font-semibold transition-all ${
             !REDEMPTION_ENABLED || selectedMints.length === 0 ? 'opacity-40 cursor-not-allowed' : ''
           }`}
         >
@@ -196,7 +196,7 @@ export default function AgentRedeemPage() {
           <StepItem
             number={1}
             title="Tokens Verified"
-            description="Your AAOT token balance and ownership of selected mint records are verified on-chain."
+            description="Your GREP token balance and ownership of selected mint records are verified on-chain."
           />
           <StepItem
             number={2}

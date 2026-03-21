@@ -71,7 +71,7 @@ export default function AgentRegisterPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-2xl mx-auto animate-fade-in">
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-3">
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-3">
         Register as Test Agent
       </h1>
       <p className="text-text-secondary mb-6 text-base leading-relaxed">
@@ -152,7 +152,7 @@ export default function AgentRegisterPage() {
                 </p>
                 <Link
                   href="/agent/profile"
-                  className="inline-block btn-gradient px-6 py-2.5 rounded-lg text-sm font-semibold"
+                  className="inline-block btn-gradient px-6 py-3 rounded-lg text-sm font-semibold"
                 >
                   View Your Profile
                 </Link>
@@ -161,7 +161,7 @@ export default function AgentRegisterPage() {
               <button
                 onClick={handleRegister}
                 disabled={!isConnected || isRegistering}
-                className={`btn-gradient px-8 py-3 rounded-lg text-sm font-semibold transition-all ${
+                className={`btn-gradient px-6 py-3 rounded-lg text-sm font-semibold transition-all ${
                   !isConnected || isRegistering ? 'opacity-40 cursor-not-allowed' : ''
                 }`}
               >

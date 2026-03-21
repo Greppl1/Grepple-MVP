@@ -6,6 +6,7 @@ export default function Sparkline({ data, color = '#4A6CF7', width = 80, height 
   width?: number;
   height?: number;
 }) {
+  if (data.length < 2) return null;
   const pad = 2;
   const min = Math.min(...data);
   const max = Math.max(...data);

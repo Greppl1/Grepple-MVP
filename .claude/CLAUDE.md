@@ -440,10 +440,30 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - 缺少 off-chain indexer（The Graph / Ponder），统计数据暂为 mock
 - 幂等性 Map 仍为内存级，生产环境需 Redis/DB 持久化
 
+**Step 15: Supabase 数据对接** ✅
+- [x] 安装 `@supabase/supabase-js`
+- [x] `lib/supabase.ts` — Supabase client 初始化（env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`）
+- [x] `lib/registry-adapter.ts` — Supabase → 前端 Tool 接口映射（含 cluster→category 映射、分数计算、时间格式化）
+- [x] `hooks/useRegistry.ts` — 数据层 hook，Supabase 可用时拉真实数据（2,114 工具 + 672 benchmark），否则 fallback 到 mock
+- [x] `hooks/useRegistry.ts: useToolDetail(id)` — 单工具详情查询
+- [x] 前端 build 通过（12 pages, 0 errors）
+
+**Supabase 数据源（Fiona）：**
+- `tools_with_repo` — 2,114 行工具数据（tool_name, tool_description, cluster, repo_name, parsed_schema...）
+- `benchmark_results` — 672 行评分数据（invoke_rate, mention_rate, schema_metrics JSON, description_metrics JSON...）
+- `registry_stats` — 全局统计（total_tools, total_repos...）
+- `cluster_summary` — 15 个 cluster 聚合
+- Edge Function: `GET /functions/v1/call-record?id=xxx` — 兑换验证
+
+**Cluster → Category 映射：**
+ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud_infra→Cloud, notification→Communication, search→Search, code_tools→DevTools, finance_data→Data, file_ops→DevTools, bridging→DeFi, web_fetch→Search, docs_productivity→Productivity, lending→DeFi, portfolio→Data
+
+**接入方式：** 配置 `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` 环境变量即可，前端自动切换到真实数据。无 key 时自动 fallback 到 mock。
+
 **Step 12: 对接联调**
-- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents 全部 endpoint）
-- [ ] 前端 ↔ Jerry 评分 API 联调（诊断报告数据）
-- [ ] 前端 ↔ Fiona Registry API 联调（工具列表、详情、搜索）
+- [x] 前端 ↔ Fiona Registry Supabase 对接（adapter + hook 已完成，等有效 anon key）
+- [ ] 前端 ↔ Jerry 评分 API 联调（等 Jerry 部署公网 URL）
+- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents）
 - [ ] 端到端流程测试：Builder 提交 → 诊断 → Launch → Registry 展示 → Agent 测试 → Token 发放
 
 ---

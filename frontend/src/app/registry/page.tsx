@@ -159,7 +159,7 @@ function RegistryContent() {
 
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Registry</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright">Registry</h1>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Search */}
@@ -288,7 +288,7 @@ function RegistryContent() {
                       <td className="px-3 py-3 hidden xl:table-cell">
                         <Sparkline
                           data={tool.trend}
-                          color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#F5A623' : '#FF4757'}
+                          color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623'}
                           width={80}
                           height={28}
                         />
@@ -352,7 +352,7 @@ function RegistryContent() {
                 <div className="flex items-center justify-between pt-3 border-t border-border/50 mt-auto">
                   <Sparkline
                     data={tool.trend}
-                    color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#F5A623' : '#FF4757'}
+                    color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623'}
                     width={72}
                     height={24}
                   />

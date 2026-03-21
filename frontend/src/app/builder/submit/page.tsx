@@ -303,7 +303,7 @@ export default function SubmitPage() {
           value={form.toolName}
           onChange={(e) => update('toolName', e.target.value)}
           placeholder="mcp-my-tool"
-          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors"
+          className={`w-full bg-elevated border ${form.toolName.length > 0 ? 'border-green/30' : 'border-border'} rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors`}
         />
       </div>
 
@@ -318,7 +318,7 @@ export default function SubmitPage() {
           onChange={(e) => update('description', e.target.value)}
           placeholder="Describe what your tool does, its capabilities, and expected inputs/outputs..."
           rows={3}
-          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim text-sm focus:outline-none focus:border-blue transition-colors resize-none"
+          className={`w-full bg-elevated border ${form.description.length >= 20 ? 'border-green/30' : form.description.length > 0 ? 'border-amber/50' : 'border-border'} rounded-lg px-4 py-3 text-white placeholder-text-dim text-sm focus:outline-none focus:border-blue transition-colors resize-none`}
         />
         {form.description.length > 0 && form.description.length < 20 && (
           <p className="text-xs text-amber">{20 - form.description.length} more characters needed</p>
@@ -331,20 +331,25 @@ export default function SubmitPage() {
           <CheckMark filled={form.category.length > 0} />
           Category
         </label>
-        <select
-          value={form.category}
-          onChange={(e) => update('category', e.target.value)}
-          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-blue transition-colors appearance-none cursor-pointer"
-        >
-          <option value="" className="bg-elevated text-text-dim">
-            Select...
-          </option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat} className="bg-elevated">
-              {cat}
+        <div className="relative">
+          <select
+            value={form.category}
+            onChange={(e) => update('category', e.target.value)}
+            className={`w-full bg-elevated border ${form.category.length > 0 ? 'border-green/30' : 'border-border'} rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-blue transition-colors appearance-none cursor-pointer`}
+          >
+            <option value="" className="bg-elevated text-text-dim">
+              Select...
             </option>
-          ))}
-        </select>
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat} className="bg-elevated">
+                {cat}
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-dim">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -362,7 +367,7 @@ export default function SubmitPage() {
           value={form.serverUrl}
           onChange={(e) => update('serverUrl', e.target.value)}
           placeholder="https://mcp.example.com/v1"
-          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors"
+          className={`w-full bg-elevated border ${form.serverUrl.startsWith('http') ? 'border-green/30' : form.serverUrl.length > 0 ? 'border-amber/50' : 'border-border'} rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors`}
         />
       </div>
 
@@ -385,7 +390,7 @@ export default function SubmitPage() {
           onChange={(e) => update('inputSchema', e.target.value)}
           placeholder={PLACEHOLDER_SCHEMA}
           rows={10}
-          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors resize-none"
+          className={`w-full bg-elevated border ${form.inputSchema.trim() ? (() => { try { JSON.parse(form.inputSchema); return 'border-green/30'; } catch { return 'border-amber/50'; } })() : 'border-border'} rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors resize-none`}
           spellCheck={false}
         />
       </div>
@@ -397,15 +402,18 @@ export default function SubmitPage() {
           Test Budget per Task
         </label>
         <div className="flex items-center gap-4">
-          <input
-            type="range"
-            min="0.10"
-            max="1.00"
-            step="0.05"
-            value={form.testBudget}
-            onChange={(e) => update('testBudget', parseFloat(e.target.value))}
-            className="flex-1 accent-blue"
-          />
+          <div className="relative flex-1">
+            <input
+              type="range"
+              min="0.10"
+              max="1.00"
+              step="0.05"
+              value={form.testBudget}
+              onChange={(e) => update('testBudget', parseFloat(e.target.value))}
+              className="w-full accent-blue relative z-10"
+              style={{ background: `linear-gradient(to right, #4A6CF7 ${((form.testBudget - 0.1) / 0.9) * 100}%, #2D2855 ${((form.testBudget - 0.1) / 0.9) * 100}%)`, borderRadius: '4px', height: '4px' }}
+            />
+          </div>
           <div className="bg-elevated border border-border rounded-lg px-4 py-2 font-mono text-sm min-w-[80px] text-center">
             ${form.testBudget.toFixed(2)}
           </div>
@@ -510,7 +518,7 @@ export default function SubmitPage() {
   return (
     <div className="p-6 lg:p-8 max-w-5xl animate-fade-in">
       {/* Header */}
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">Submit Your Tool</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-2">Submit Your Tool</h1>
       <p className="text-text-secondary mb-8">
         Register an MCP tool for automated diagnosis and registry listing.
       </p>
@@ -543,7 +551,7 @@ export default function SubmitPage() {
               <button
                 onClick={() => setStep((s) => s + 1)}
                 disabled={!currentStepValid}
-                className={`btn-gradient flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                className={`btn-gradient flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
                   !currentStepValid ? 'opacity-40 cursor-not-allowed' : ''
                 }`}
               >
@@ -554,11 +562,19 @@ export default function SubmitPage() {
               <button
                 onClick={handleSubmit}
                 disabled={!allValid || submitting}
-                className={`btn-gradient flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all ${
+                className={`btn-gradient flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
                   !allValid || submitting ? 'opacity-40 cursor-not-allowed' : ''
                 }`}
               >
-                {submitting ? 'Submitting...' : 'Submit for Diagnosis'}
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                      <path d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor" />
+                    </svg>
+                    Submitting...
+                  </span>
+                ) : 'Submit for Diagnosis'}
               </button>
             )}
           </div>

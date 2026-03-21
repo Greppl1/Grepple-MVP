@@ -79,7 +79,7 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
           <p className="text-text-secondary mb-3 leading-relaxed">{tool.description}</p>
           <div className="flex flex-wrap items-center gap-4 text-xs text-text-dim">
             <span className="font-mono">{tool.builder}</span>
-            <span>Last tested: {tool.lastTested}</span>
+            <span>Last tested: {tool.lastTested === 'Never' ? 'Not yet tested' : tool.lastTested}</span>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
           <div className="flex-1 flex items-center justify-center">
             <Sparkline
               data={tool.trend}
-              color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#F5A623' : '#FF4757'}
+              color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623'}
               width={200}
               height={80}
             />
@@ -141,7 +141,7 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
       <div className="flex flex-wrap gap-4">
         <Link
           href={`/builder/report?id=${tool.id}`}
-          className="btn-gradient px-6 py-2.5 rounded-xl text-sm font-semibold"
+          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold"
         >
           View Diagnosis Report
         </Link>

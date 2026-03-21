@@ -74,14 +74,14 @@ export default function ToolsPage() {
     <div className="p-6 lg:p-8 max-w-5xl animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">My MCP Tools</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-2">My MCP Tools</h1>
           <p className="text-text-secondary">
             Manage and monitor your published MCP Tools.
           </p>
         </div>
         <Link
           href="/builder/submit"
-          className="btn-gradient px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
         >
           <IconPlus size={16} />
           Submit New MCP Tool
@@ -147,7 +147,7 @@ export default function ToolsPage() {
                 <div className="flex-shrink-0">
                   <Link
                     href={`/builder/report?id=${tool.id}&name=${encodeURIComponent(tool.name)}`}
-                    className="text-sm text-blue-bright hover:text-white transition-colors font-medium btn-secondary rounded-lg px-4 py-2"
+                    className="text-sm text-blue-bright hover:text-white transition-colors font-medium btn-secondary rounded-lg px-5 py-2.5"
                   >
                     View Report
                   </Link>
@@ -172,7 +172,7 @@ export default function ToolsPage() {
           </p>
           <Link
             href="/builder/submit"
-            className="btn-gradient inline-block px-8 py-3 rounded-xl text-sm font-semibold"
+            className="btn-gradient inline-block px-6 py-3 rounded-xl text-sm font-semibold"
           >
             Submit Your First MCP Tool
           </Link>

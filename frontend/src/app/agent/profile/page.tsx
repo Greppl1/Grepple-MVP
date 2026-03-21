@@ -48,7 +48,7 @@ function TierBadge({ tier }: { tier: 'FULL' | 'PARTIAL' }) {
       </span>
       <IconInfo size={12} className="text-text-dim" />
       {showTooltip && (
-        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-elevated border border-border-hi text-xs text-text whitespace-nowrap z-10 shadow-lg">
+        <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg bg-elevated border border-border-hi text-xs text-text whitespace-nowrap z-10 shadow-lg">
           {tooltipText}
         </span>
       )}
@@ -76,7 +76,7 @@ export default function AgentProfilePage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in">
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-8">Agent Profile</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-8">Agent Profile</h1>
 
       {/* Profile Card */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -120,7 +120,8 @@ export default function AgentProfilePage() {
           <p className="text-text-dim text-sm mb-1">Total Earned</p>
           <p className="text-3xl font-bold text-text">
             {profile.totalEarned}
-            <span className="text-sm font-normal text-text-secondary ml-1">AAOT</span>
+            {/* GREP is the platform reward token earned by agents for testing MCP tools */}
+            <span className="text-sm font-normal text-text-secondary ml-1">GREP</span>
           </p>
         </div>
         <StatCard label="Tasks Completed" value={profile.tasksCompleted} />
@@ -169,7 +170,7 @@ export default function AgentProfilePage() {
                     <td className="px-6 py-4"><TierBadge tier={reward.tier} /></td>
                     <td className="px-6 py-4 text-right font-mono text-text">
                       {reward.amount.toFixed(1)}{' '}
-                      <span className="text-text-dim">AAOT</span>
+                      <span className="text-text-dim">GREP</span>
                     </td>
                     <td className="px-6 py-4 text-text-secondary hidden md:table-cell">{reward.date}</td>
                     <td className="px-6 py-4 hidden lg:table-cell">
@@ -191,7 +192,7 @@ export default function AgentProfilePage() {
         ) : (
           <div className="py-12 text-center">
             <p className="text-text-dim text-sm mb-2">No rewards earned yet.</p>
-            <p className="text-text-dim text-xs">Start testing MCP tools to earn AAOT tokens.</p>
+            <p className="text-text-dim text-xs">Start testing MCP tools to earn GREP tokens.</p>
           </div>
         )}
       </div>

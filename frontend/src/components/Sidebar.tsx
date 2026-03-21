@@ -60,8 +60,7 @@ function Logo({ collapsed }: { collapsed: boolean }) {
   }
   return (
     <span className="text-xl font-bold tracking-tight">
-      <span className="logo-grep">grep</span>
-      <span className="logo-ple">ple</span>
+      <span className="logo-grep">grep</span><span className="logo-ple">ple</span>
     </span>
   );
 }

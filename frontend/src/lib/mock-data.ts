@@ -32,12 +32,12 @@ export const CATEGORIES = ['All', 'Search', 'DeFi', 'DevTools', 'Database', 'AI'
 
 export function scoreColor(v: number): string {
   if (v >= 85) return 'text-green';
-  if (v >= 60) return 'text-amber';
-  return 'text-red';
+  if (v >= 60) return 'text-white';
+  return 'text-amber';
 }
 
 export function scoreBg(v: number): string {
   if (v >= 85) return 'bg-green';
-  if (v >= 60) return 'bg-amber';
-  return 'bg-red';
+  if (v >= 60) return 'bg-blue';
+  return 'bg-amber';
 }

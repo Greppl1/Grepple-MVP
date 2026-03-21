@@ -40,12 +40,17 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-border-hi); }
 
-/* Gradient text utility */
+/* Gradient text utility — kept for rare uses, prefer solid colors */
 .gradient-text {
   background: linear-gradient(135deg, #9B8EC8, #5B7FFF);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Accent text — preferred over gradient */
+.accent-text {
+  color: var(--color-blue-bright);
 }
 
 /* Gradient button */
@@ -196,13 +201,6 @@ body {
   }
 }
 
-/* Logo with "grep" highlighted */
-.logo-grep {
-  background: linear-gradient(135deg, #9B8EC8, #5B7FFF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.logo-ple {
-  color: var(--color-text-secondary);
-}
+/* Logo: "grep" white, "ple" purple */
+.logo-grep { color: #FFFFFF; }
+.logo-ple { color: #7B6BA8; }

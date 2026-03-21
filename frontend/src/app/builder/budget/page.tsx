@@ -52,7 +52,7 @@ export default function BudgetPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl animate-fade-in">
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">Budget Management</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-2">Budget Management</h1>
       <p className="text-text-secondary mb-8">
         Manage your USDC balance for MCP Tool diagnosis and testing.
       </p>
@@ -113,7 +113,7 @@ export default function BudgetPage() {
           <button
             onClick={handleDeposit}
             disabled={!depositAmount || parseFloat(depositAmount) <= 0 || depositing}
-            className={`btn-gradient px-8 py-3 rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
+            className={`btn-gradient px-6 py-3 rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
               !depositAmount || parseFloat(depositAmount) <= 0 || depositing
                 ? 'opacity-40 cursor-not-allowed'
                 : ''

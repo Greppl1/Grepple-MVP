@@ -78,7 +78,7 @@ function ReportContent() {
       {/* Header */}
       <div className="mb-8">
         <p className="text-sm text-text-dim font-mono mb-1">{toolName}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Diagnosis Report</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright">Diagnosis Report</h1>
       </div>
 
       {/* Composite Score */}
@@ -160,13 +160,13 @@ function ReportContent() {
       <div className="flex flex-wrap gap-4">
         <button
           onClick={handleRunAgain}
-          className="btn-secondary px-8 py-3 rounded-xl text-sm font-semibold"
+          className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold"
         >
           Run Again
         </button>
         <button
           onClick={handlePublish}
-          className="btn-gradient px-8 py-3 rounded-xl text-sm font-semibold"
+          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold"
         >
           Publish to Registry
         </button>

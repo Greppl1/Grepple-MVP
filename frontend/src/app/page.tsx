@@ -17,8 +17,7 @@ export default function LandingPage() {
       {/* Floating nav */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-16 bg-bg-nav backdrop-blur-md border-b border-border/50">
         <span className="text-xl font-bold tracking-tight">
-          <span className="logo-grep">grep</span>
-          <span className="logo-ple">ple</span>
+          <span className="logo-grep">grep</span><span className="logo-p2">p</span><span className="logo-l">l</span><span className="logo-e2">e</span>
         </span>
         <div className="flex items-center gap-4">
           <ConnectButton.Custom>
@@ -53,7 +52,7 @@ export default function LandingPage() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6 animate-slide-up">
             Your MCP tools deserve
             <br />
-            to be <span className="gradient-text">found</span>
+            to be <span className="text-blue-bright">found</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed animate-slide-up" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
@@ -102,7 +101,7 @@ export default function LandingPage() {
       <section className="py-20 px-6 lg:px-10">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-            How <span className="gradient-text">Grepple</span> works
+            How <span className="logo-grep">grep</span><span className="logo-ple">ple</span> works
           </h2>
           <p className="text-text-secondary text-center mb-14 max-w-xl mx-auto">
             Three steps from &ldquo;my tool exists&rdquo; to &ldquo;agents are using it.&rdquo;
@@ -130,7 +129,7 @@ export default function LandingPage() {
                 key={item.step}
                 className="bg-surface border border-border rounded-2xl p-6 card-glow"
               >
-                <span className="text-3xl font-bold font-mono gradient-text">
+                <span className="text-3xl font-bold font-mono text-blue-bright">
                   {item.step}
                 </span>
                 <h3 className="text-lg font-bold text-white mt-3 mb-2">
@@ -155,13 +154,13 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/builder/submit"
-              className="btn-gradient px-8 py-3 rounded-xl text-sm font-semibold"
+              className="btn-gradient px-8 py-3.5 rounded-xl text-sm font-semibold"
             >
               Submit a Tool
             </Link>
             <Link
               href="/registry"
-              className="btn-secondary px-8 py-3 rounded-xl text-sm font-semibold"
+              className="btn-secondary px-8 py-3.5 rounded-xl text-sm font-semibold"
             >
               Browse Registry
             </Link>
@@ -173,7 +172,7 @@ export default function LandingPage() {
       <footer className="border-t border-border py-8 px-6 lg:px-10">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <span className="text-sm text-text-dim">
-            Grepple &mdash; BSC Testnet
+            <span className="logo-grep">grep</span><span className="logo-ple">ple</span>{' \u2014 BSC Testnet'}
           </span>
           <span className="text-sm text-text-dim">
             &copy; 2026
