@@ -344,7 +344,7 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 |----|--------|------|
 | 合约（Mocha/Chai） | 53 | ✅ all passing（含 Pausable + taskHash 唯一性 + ReentrancyGuard） |
 | 后端 API（Jest） | 40 | ✅ all passing（含 txQueue + webhookAuth + 地址校验） |
-| 前端（Next.js build） | 13 pages | ✅ compiles, 0 errors |
+| 前端（Next.js build） | 13 pages | ✅ compiles, 0 errors（Step 20 后重验证） |
 | **总计** | **93+** | **✅** |
 
 ### 队友对接 Issues
@@ -610,6 +610,30 @@ ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud
 - [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents — 等 Railway 部署验证）
 - [x] 意图 → 匹配 → 执行结果完整闭环 ✅（Landing 搜索 → /intent 匹配 → Agent 执行 → 分数 + 集成指南）
 - [ ] 端到端流程测试：Builder 提交 → 诊断 → Launch → Registry 展示 → Agent 测试 → Token 发放
+
+**Step 20: UX/UI 产品级重构 (2026-03-21)** ✅
+- [x] **Landing Page 重写**：Hero 改为 "Ship tools that agents actually use"，具体 value prop 替代抽象术语
+- [x] **Landing 搜索统一**：移除 Intent 独立搜索入口，Landing 搜索跳转 Registry（`/registry?q=...`）消除双搜索混乱
+- [x] **Landing 角色入口**：Builder / Agent 双卡片，各自展示 3 个具体 value points + CTA
+- [x] **Testnet Banner**：Landing 顶部统一 amber 横幅 "BSC Testnet — no real funds involved"
+- [x] **SidebarProvider 上下文**：新增 `providers/SidebarProvider.tsx`，Sidebar 折叠状态全局共享
+- [x] **LayoutShell 修复**：margin-left 根据 sidebar collapsed 状态动态切换（`lg:ml-16` / `lg:ml-60`），不再硬编码
+- [x] **Sidebar 角色分区**：Discover（Registry, Try Tools）/ Build（Submit, My Tools, Budget）/ Agent（Dashboard, Rewards），section label 标识
+- [x] **Budget 加入导航**：Sidebar 新增 Budget 入口（之前完全无法到达）
+- [x] **BottomNav 对齐**：Landing 页隐藏底部导航，4 个入口与 Sidebar 结构一致
+- [x] **假功能标注**：所有 "Publish to Registry" 按钮改为 `btn-secondary` + Coming Soon badge，不再伪装成真功能
+- [x] **Report 数据源标注**：scoring engine 不可达时顶部显示 demo-banner 明确说明 "showing estimated scores"
+- [x] **Agent Execution Demo 标注**：Intent 页 agent 执行面板右上角添加 Demo badge
+- [x] **Agent 注册持久化**：`isRegistered` 存入 localStorage（`grepple_agent_registered_{userId}`），刷新不丢失
+- [x] **Agent Profile 注册联动**：读取 localStorage 注册状态，未注册时显示 "Not registered — Register now" 链接替代硬编码 "Active"
+- [x] **Budget Demo Banner**：顶部说明 "Testnet mode — deposits use mock USDC. Balances will update once backend connected"
+- [x] **错误 Toast 级别修复**：scoring engine 不可达 / API 错误从 `toast('info')` 改为 `toast('error')`，不再误导用户
+- [x] **Registry 搜索防抖**：250ms debounce，避免 2000+ 工具时每次按键都触发过滤
+- [x] **颜色对比度提升**：`text-dim` 从 #7B75A0 提升至 #918BB2（WCAG AA 达标）
+- [x] **Surface 分层加大**：surface #111136、elevated #1C1C4D、elevated-2 #272766，与 bg #07071C 形成更明显层级
+- [x] **CSS 新增**：`.demo-banner`（诚实状态横幅）、`.nav-section-label`（导航分区标签）、`.badge-coming-soon`（未上线功能标记）
+- [x] **My Tools 空状态优化**：新增 "Published tools will appear here once registry publishing is enabled" 说明
+- [x] 前端 build 通过（13 pages, 0 errors）
 
 ---
 
@@ -888,7 +912,7 @@ frontend/                   # React/Next.js 前端
       UserButton.tsx        # 认证状态按钮 + 菜单
     hooks/                  # 自定义 hooks（合约交互、API 调用）
     lib/                    # 工具函数、合约 ABI、常量
-    providers/              # Web3 Provider、主题等
+    providers/              # Web3 Provider、Auth、Sidebar 状态等
 ```
 
 ### 命名规范

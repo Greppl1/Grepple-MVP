@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useRegistry } from '@/hooks/useRegistry';
@@ -17,7 +17,15 @@ const barColor = (v: number) =>
 
 type SortOption = 'score-desc' | 'score-asc' | 'name-asc' | 'newest';
 
-function MetricInline({ label, value }: { label: string; value: number }) {
+function MetricInline({ label, value, untested }: { label: string; value: number; untested?: boolean }) {
+  if (untested) {
+    return (
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-xs text-text-dim shrink-0">{label}</span>
+        <span className="text-xs text-text-dim italic">n/a</span>
+      </div>
+    );
+  }
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <span className="text-xs text-text-dim shrink-0">{label}</span>
@@ -61,16 +69,27 @@ function RegistryContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') ?? '';
   const [search, setSearch] = useState(initialQuery);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialQuery);
   const [activeCategory, setActiveCategory] = useState('All');
   const [sort, setSort] = useState<SortOption>('score-desc');
   const [page, setPage] = useState(1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { tools, categories, loading, isLive } = useRegistry();
+
+  // Debounce search input
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value);
+    }, 250);
+  }, []);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, activeCategory, sort]);
+  }, [debouncedSearch, activeCategory, sort]);
 
   const filtered = useMemo(() => {
     let result = tools;
@@ -79,8 +98,8 @@ function RegistryContent() {
       result = result.filter((t) => t.category === activeCategory);
     }
 
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.trim().toLowerCase();
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
@@ -104,7 +123,7 @@ function RegistryContent() {
     });
 
     return sorted;
-  }, [tools, search, activeCategory, sort]);
+  }, [tools, debouncedSearch, activeCategory, sort]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paged = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -139,7 +158,7 @@ function RegistryContent() {
             type="text"
             placeholder="Search tools by name or description..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-blue transition-colors"
           />
         </div>
@@ -227,7 +246,7 @@ function RegistryContent() {
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                 <MetricInline label="Schema" value={tool.metrics.schemaHealth} />
                 <MetricInline label="Discover" value={tool.metrics.discoverability} />
-                <MetricInline label="Success" value={tool.metrics.successRate} />
+                <MetricInline label="Success" value={tool.metrics.successRate} untested={tool.metrics.successRate === 0} />
               </div>
             </Link>
           ))}

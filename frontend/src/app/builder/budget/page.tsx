@@ -67,6 +67,11 @@ export default function BudgetPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto page-enter">
+      {/* Demo banner */}
+      <div className="demo-banner mb-6">
+        Testnet mode &mdash; deposits use mock USDC. No real funds are involved. Balances will update once the backend is connected.
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-text mb-1">Budget & Billing</h1>

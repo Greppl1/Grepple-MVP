@@ -33,7 +33,7 @@ const DISCOVER_ITEMS: NavItem[] = [
 ];
 
 const BUILD_ITEMS: NavItem[] = [
-  { href: '/builder/submit', label: 'Submit Tool', icon: IconPlus },
+  { href: '/builder/submit', label: 'Diagnose Tool', icon: IconPlus },
   { href: '/builder/tools', label: 'My Tools', icon: IconBuilder },
   { href: '/builder/budget', label: 'Budget', icon: IconWallet },
 ];

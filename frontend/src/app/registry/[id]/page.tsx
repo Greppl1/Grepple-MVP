@@ -149,9 +149,9 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   const metrics = [
-    { label: 'Schema Health', value: tool.metrics.schemaHealth },
-    { label: 'Discoverability', value: tool.metrics.discoverability },
-    { label: 'Success Rate', value: tool.metrics.successRate },
+    { label: 'Schema Health', value: tool.metrics.schemaHealth, untested: false },
+    { label: 'Discoverability', value: tool.metrics.discoverability, untested: false },
+    { label: 'Success Rate', value: tool.metrics.successRate, untested: tool.metrics.successRate === 0 },
   ];
 
   const sparklineColor =
@@ -196,14 +196,20 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
             <div key={m.label}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-text-secondary">{m.label}</span>
-                <span className="text-sm font-bold font-mono text-white">{m.value}/100</span>
+                {m.untested ? (
+                  <span className="text-sm text-text-dim italic">Not tested</span>
+                ) : (
+                  <span className="text-sm font-bold font-mono text-white">{m.value}/100</span>
+                )}
               </div>
-              <div className="metric-bar h-2 rounded-full bg-elevated overflow-hidden w-full">
-                <div
-                  className={`metric-bar-fill h-full rounded-full ${barColor(m.value)}`}
-                  style={{ width: `${m.value}%`, transition: 'width 0.8s ease-out' }}
-                />
-              </div>
+              {!m.untested && (
+                <div className="metric-bar h-2 rounded-full bg-elevated overflow-hidden w-full">
+                  <div
+                    className={`metric-bar-fill h-full rounded-full ${barColor(m.value)}`}
+                    style={{ width: `${m.value}%`, transition: 'width 0.8s ease-out' }}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

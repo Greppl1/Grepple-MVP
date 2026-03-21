@@ -143,8 +143,11 @@ export default function ToolsPage() {
               <IconBuilder size={32} className="text-text-dim" />
             </div>
             <h2 className="text-xl font-semibold text-text mb-2">No tools submitted yet</h2>
-            <p className="text-text-secondary text-sm mb-8 leading-relaxed">
+            <p className="text-text-secondary text-sm mb-2 leading-relaxed">
               Submit your first tool to get an automated quality diagnosis and list it in the registry.
+            </p>
+            <p className="text-text-dim text-xs mb-8">
+              Published tools will appear here once registry publishing is enabled.
             </p>
             <Link
               href="/builder/submit"

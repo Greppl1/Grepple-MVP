@@ -150,7 +150,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <IconSettings size={28} className="text-accent" />
+          <IconSettings size={28} className="text-blue-bright" />
           <h1 className="text-2xl font-bold text-text">Model Configuration</h1>
         </div>
         <p className="text-text-secondary">
@@ -167,7 +167,7 @@ export default function SettingsPage() {
           id="provider"
           value={provider}
           onChange={(e) => handleProviderChange(e.target.value as ModelConfig['provider'])}
-          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-text placeholder:text-text-dim appearance-none cursor-pointer focus:outline-none focus:border-accent transition-colors"
+          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-text placeholder:text-text-dim appearance-none cursor-pointer focus:outline-none focus:border-blue transition-colors"
         >
           {PROVIDERS.map((p) => (
             <option key={p.value} value={p.value}>
@@ -192,10 +192,10 @@ export default function SettingsPage() {
             placeholder={PLACEHOLDERS[provider]}
             className={`w-full bg-elevated border rounded-lg px-4 py-3 pr-12 text-text placeholder:text-text-dim focus:outline-none transition-colors ${
               keyError
-                ? 'border-red-500 focus:border-red-500'
+                ? 'border-red focus:border-red'
                 : keyTouched && keyValid
-                  ? 'border-green-500 focus:border-green-500'
-                  : 'border-border focus:border-accent'
+                  ? 'border-green focus:border-green'
+                  : 'border-border focus:border-blue'
             }`}
             autoComplete="off"
             spellCheck={false}
@@ -224,7 +224,7 @@ export default function SettingsPage() {
           </button>
         </div>
         {keyError && (
-          <p className="mt-1.5 text-sm text-red-400">
+          <p className="mt-1.5 text-sm text-red">
             Invalid API key format for {PROVIDER_LABELS[provider]}
           </p>
         )}
@@ -239,7 +239,7 @@ export default function SettingsPage() {
           id="model"
           value={model}
           onChange={(e) => setModel(e.target.value)}
-          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-text placeholder:text-text-dim appearance-none cursor-pointer focus:outline-none focus:border-accent transition-colors"
+          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-text placeholder:text-text-dim appearance-none cursor-pointer focus:outline-none focus:border-blue transition-colors"
         >
           {MODELS[provider].map((m) => (
             <option key={m.value} value={m.value}>
@@ -271,7 +271,7 @@ export default function SettingsPage() {
         className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${
           canSave
             ? 'btn-gradient text-white cursor-pointer'
-            : 'bg-elevated text-dim cursor-not-allowed'
+            : 'bg-elevated text-text-dim cursor-not-allowed'
         }`}
       >
         Save Configuration
@@ -281,16 +281,16 @@ export default function SettingsPage() {
       {savedConfig && (
         <div className="mt-8 border-t border-border pt-6">
           <div className="flex items-center gap-2 mb-3">
-            <IconCheck size={18} className="text-green-400" />
+            <IconCheck size={18} className="text-green" />
             <span className="text-sm text-text">
               Model configured:{' '}
-              <span className="font-medium text-accent">{savedConfig.model}</span> via{' '}
+              <span className="font-medium text-blue-bright">{savedConfig.model}</span> via{' '}
               <span className="font-medium">{PROVIDER_LABELS[savedConfig.provider]}</span>
             </span>
           </div>
           <button
             onClick={handleClear}
-            className="text-sm text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+            className="text-sm text-red hover:text-red-300 transition-colors cursor-pointer"
           >
             Clear configuration
           </button>

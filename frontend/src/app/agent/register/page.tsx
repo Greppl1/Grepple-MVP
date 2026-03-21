@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 import AuthModal from '@/components/AuthModal';
@@ -9,14 +9,24 @@ import { IconCheck } from '@/components/Icons';
 import Identicon from '@/components/Identicon';
 import { truncateAddress } from '@/lib/wallet';
 
+const REGISTERED_KEY = 'grepple_agent_registered';
+
 export default function AgentRegisterPage() {
-  const { isAuthenticated, wallet } = useAuth();
+  const { isAuthenticated, wallet, user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const { toast } = useToast();
 
   const address = wallet?.address || '';
+
+  // Persist registration state in localStorage
+  useEffect(() => {
+    if (user?.id) {
+      const saved = localStorage.getItem(`${REGISTERED_KEY}_${user.id}`);
+      if (saved === 'true') setIsRegistered(true);
+    }
+  }, [user?.id]);
 
   const agentIdHash = address
     ? `0x${Array.from({ length: 64 }, (_, i) =>
@@ -34,13 +44,19 @@ export default function AgentRegisterPage() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsRegistering(false);
     setIsRegistered(true);
-    toast('Agent registered successfully!', 'success');
+    if (user?.id) {
+      localStorage.setItem(`${REGISTERED_KEY}_${user.id}`, 'true');
+    }
+    toast('Agent registered on testnet (demo)', 'success');
   };
 
   // Success state
   if (isRegistered) {
     return (
       <div className="p-6 lg:p-8 max-w-lg mx-auto text-center page-enter">
+        <div className="demo-banner mb-6">
+          Testnet demo &mdash; registration is simulated. Real on-chain registration coming soon.
+        </div>
         <div className="bg-surface border border-border rounded-xl p-10 space-y-5 animate-scale-in">
           <div className="w-16 h-16 rounded-full bg-green/20 flex items-center justify-center mx-auto">
             <IconCheck size={32} className="text-green" />
@@ -66,7 +82,7 @@ export default function AgentRegisterPage() {
   if (!isAuthenticated) {
     return (
       <div className="p-6 lg:p-8 max-w-lg mx-auto text-center page-enter">
-        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-text mb-3">
           Become a Testing Agent
         </h1>
         <p className="text-text-secondary mb-8 text-base leading-relaxed">
@@ -94,7 +110,11 @@ export default function AgentRegisterPage() {
   // Authenticated but not registered
   return (
     <div className="p-6 lg:p-8 max-w-lg mx-auto text-center page-enter">
-      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-3">
+      <div className="demo-banner mb-6">
+        Testnet demo &mdash; registration is simulated. Real on-chain registration coming soon.
+      </div>
+
+      <h1 className="text-2xl sm:text-3xl font-bold text-text mb-3">
         Become a Testing Agent
       </h1>
       <p className="text-text-secondary mb-8 text-base leading-relaxed">

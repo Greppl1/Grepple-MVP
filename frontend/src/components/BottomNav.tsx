@@ -2,17 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { IconRegistry, IconPlus, IconBarChart, IconSparkles } from '@/components/Icons';
+import { IconRegistry, IconPlus, IconBarChart, IconSparkles, IconSearch } from '@/components/Icons';
 
 const items = [
   { href: '/registry', label: 'Registry', icon: IconRegistry },
   { href: '/intent', label: 'Try', icon: IconSparkles },
   { href: '/builder/submit', label: 'Submit', icon: IconPlus },
-  { href: '/agent/profile', label: 'Dashboard', icon: IconBarChart },
+  { href: '/agent/profile', label: 'Agent', icon: IconBarChart },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const isLanding = pathname === '/';
+
+  if (isLanding) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-surface/95 backdrop-blur-md border-t border-border">

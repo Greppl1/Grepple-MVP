@@ -212,14 +212,14 @@ export default function SubmitPage() {
         toast('Tool submitted! Redirecting to report...', 'success');
         router.push(`/builder/report?id=${data.reportId}&name=${encodeURIComponent(formData.toolName)}`);
       } else {
-        toast('Submission received. Generating report...', 'info');
+        toast('Scoring engine returned an error. Showing estimated report.', 'error');
         setTimeout(() => {
           router.push(`/builder/report?name=${encodeURIComponent(formData.toolName)}`);
         }, 1000);
       }
     } catch {
       localStorage.removeItem(DRAFT_KEY);
-      toast('Scoring engine unavailable. Using demo report.', 'info');
+      toast('Scoring engine unavailable. Showing estimated report.', 'error');
       setTimeout(() => {
         router.push(`/builder/report?name=${encodeURIComponent(formData.toolName)}`);
       }, 1000);
@@ -235,9 +235,9 @@ export default function SubmitPage() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-2xl sm:text-3xl font-bold text-text mb-2">Submit a Tool</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text mb-2">Diagnose Your Tool</h1>
           <p className="text-text-secondary">
-            We&apos;ll run automated diagnostics and score your tool for the registry.
+            Real agents will test your tool and produce quantified scores for schema health, discoverability, and callability. Free for pre-launch.
           </p>
         </div>
 

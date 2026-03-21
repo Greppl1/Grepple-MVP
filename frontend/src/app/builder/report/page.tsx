@@ -154,8 +154,7 @@ function ReportContent() {
   };
 
   const handlePublish = () => {
-    toast('Tool published to registry!', 'success');
-    setTimeout(() => { router.push('/builder/tools'); }, 1500);
+    toast('Publishing is not yet available on testnet. Your report has been saved.', 'info');
   };
 
   const impactColor = (impact: string) => impact === 'High' ? 'bg-red-dim text-red' : 'bg-amber-dim text-amber';
@@ -167,10 +166,17 @@ function ReportContent() {
 
   return (
     <div className="animate-fade-in">
+      {/* Data source banner */}
+      {!isLive && (
+        <div className="demo-banner mb-6">
+          Scoring engine unavailable &mdash; showing estimated scores based on tool name. Submit again when the engine is online for real diagnostics.
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <p className="text-sm text-text-dim font-mono mb-1">{toolName}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright">Diagnosis Report</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-text">Diagnosis Report</h1>
         {isLive && (
           <p className="text-xs text-green mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-green" />
@@ -248,9 +254,10 @@ function ReportContent() {
         </button>
         <button
           onClick={handlePublish}
-          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold"
+          className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
         >
           Publish to Registry
+          <span className="badge-coming-soon">Soon</span>
         </button>
       </div>
     </div>

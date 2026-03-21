@@ -186,7 +186,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
   };
 
   const handlePublish = () => {
-    toast('Tool published to registry!', 'success');
+    toast('Publishing is not yet available on testnet. Your report has been saved.', 'info');
   };
 
   return (
@@ -275,8 +275,9 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-4">
-        <button onClick={handlePublish} className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold">
+        <button onClick={handlePublish} className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
           Publish to Registry
+          <span className="badge-coming-soon">Soon</span>
         </button>
         <Link
           href="/builder/submit"

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 import { IconExternalLink, IconInfo, IconLock } from '@/components/Icons';
 import Identicon from '@/components/Identicon';
 import { truncateAddress } from '@/lib/wallet';
+
+const REGISTERED_KEY = 'grepple_agent_registered';
 
 // Mock data — replace with real API calls when backend is connected
 const MOCK_REWARDS: {
@@ -51,7 +53,8 @@ function TierBadge({ tier }: { tier: 'FULL' | 'PARTIAL' }) {
 }
 
 export default function AgentProfilePage() {
-  const { isAuthenticated, wallet } = useAuth();
+  const { isAuthenticated, wallet, user } = useAuth();
+  const [isRegistered, setIsRegistered] = useState(false);
   const rewards = MOCK_REWARDS;
 
   const address = wallet?.address || '';
@@ -59,22 +62,30 @@ export default function AgentProfilePage() {
   const tasksCompleted = rewards.length;
   const hasData = rewards.length > 0;
 
+  // Check registration state from localStorage
+  useEffect(() => {
+    if (user?.id) {
+      const saved = localStorage.getItem(`${REGISTERED_KEY}_${user.id}`);
+      if (saved === 'true') setIsRegistered(true);
+    }
+  }, [user?.id]);
+
   // Not authenticated
   if (!isAuthenticated) {
     return (
       <div className="p-6 lg:p-8 max-w-5xl mx-auto page-enter">
-        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-8">
-          Agent Profile
+        <h1 className="text-2xl sm:text-3xl font-bold text-text mb-8">
+          Agent Dashboard
         </h1>
         <div className="bg-surface border border-border rounded-xl p-12 text-center">
           <p className="text-text-dim text-base mb-4">
-            Connect to view your profile
+            Sign in to view your agent dashboard
           </p>
           <Link
             href="/agent/register"
             className="inline-block btn-gradient px-6 py-3 rounded-lg text-sm font-semibold"
           >
-            Sign In
+            Get Started
           </Link>
         </div>
       </div>
@@ -83,8 +94,8 @@ export default function AgentProfilePage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto page-enter">
-      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-8">
-        Agent Profile
+      <h1 className="text-2xl sm:text-3xl font-bold text-text mb-8">
+        Agent Dashboard
       </h1>
 
       {/* Profile Header */}
@@ -107,10 +118,19 @@ export default function AgentProfilePage() {
             </div>
           </div>
         </div>
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-dim text-green border border-green/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-green mr-2" />
-          Active
-        </span>
+        {isRegistered ? (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-dim text-green border border-green/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-green mr-2" />
+            Registered
+          </span>
+        ) : (
+          <Link
+            href="/agent/register"
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-dim text-amber border border-amber/20 hover:bg-amber/20 transition-colors"
+          >
+            Not registered &mdash; Register now
+          </Link>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -202,13 +222,15 @@ export default function AgentProfilePage() {
               No rewards yet
             </p>
             <p className="text-text-dim text-sm mb-6">
-              Submit your first tool test to start earning GREP tokens.
+              {isRegistered
+                ? 'Browse the registry and start testing tools to earn GREP tokens.'
+                : 'Register as an agent first, then start testing tools to earn GREP tokens.'}
             </p>
             <Link
-              href="/registry"
+              href={isRegistered ? '/registry' : '/agent/register'}
               className="inline-block btn-gradient px-6 py-2.5 rounded-lg text-sm font-semibold"
             >
-              Browse Tools
+              {isRegistered ? 'Browse Tools' : 'Register Now'}
             </Link>
           </div>
         )}
@@ -225,9 +247,7 @@ export default function AgentProfilePage() {
               <h3 className="text-base font-semibold text-text">
                 Redeem Tokens
               </h3>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-dim text-amber border border-amber/20">
-                Coming Soon
-              </span>
+              <span className="badge-coming-soon">Coming Soon</span>
             </div>
             <p className="text-text-dim text-sm mt-0.5">
               Balance: {totalEarned} GREP
