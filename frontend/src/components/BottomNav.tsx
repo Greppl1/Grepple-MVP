@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { IconRegistry, IconPlus, IconBarChart } from '@/components/Icons';
+import { IconRegistry, IconPlus, IconBarChart, IconSparkles } from '@/components/Icons';
 
 const items = [
   { href: '/registry', label: 'Registry', icon: IconRegistry },
+  { href: '/intent', label: 'Try', icon: IconSparkles },
   { href: '/builder/submit', label: 'Submit', icon: IconPlus },
   { href: '/agent/profile', label: 'Dashboard', icon: IconBarChart },
 ];

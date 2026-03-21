@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useRegistry } from '@/hooks/useRegistry';
 import { useAuth } from '@/providers/AuthProvider';
@@ -9,6 +11,15 @@ import { IconArrowRight } from '@/components/Icons';
 export default function LandingPage() {
   const { stats, loading, isLive } = useRegistry();
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      router.push(`/intent?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
 
   return (
     <div className="min-h-screen animate-fade-in">
@@ -22,23 +33,45 @@ export default function LandingPage() {
             for <span className="text-blue-bright">AI tools</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
             Submit your tool. We test it with real AI agents.
             The best tools get discovered and rewarded.
           </p>
 
+          {/* Intent Search */}
+          <form onSubmit={handleSearch} className="w-full max-w-xl mx-auto mt-8 mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="What do you need? e.g. &quot;swap tokens on Uniswap&quot;"
+                className="w-full bg-surface border border-border rounded-xl px-5 py-4 pr-28 text-text placeholder:text-text-dim text-lg focus:border-blue focus:outline-none focus:ring-0 transition-colors"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 btn-gradient px-5 py-2.5 rounded-lg text-sm font-medium"
+              >
+                Find Tools
+              </button>
+            </div>
+            <p className="text-text-dim text-xs mt-2">
+              Describe your task in plain language — we&apos;ll match you with the best tools
+            </p>
+          </form>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/builder/submit"
+              href="/registry"
               className="btn-gradient px-8 py-3.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
             >
-              Submit a Tool <IconArrowRight size={14} />
+              Browse Tools <IconArrowRight size={14} />
             </Link>
             <Link
-              href="/registry"
+              href="/builder/submit"
               className="btn-secondary px-8 py-3.5 rounded-xl text-sm font-semibold"
             >
-              Browse Tools
+              Submit a Tool
             </Link>
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
   IconChevronRight,
   IconMenu,
   IconX,
+  IconSparkles,
 } from '@/components/Icons';
 
 interface NavItem {
@@ -26,6 +27,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/registry', label: 'Registry', icon: IconRegistry },
+  { href: '/intent', label: 'Try Tools', icon: IconSparkles },
   { href: '/builder/submit', label: 'Submit Tool', icon: IconPlus },
   { href: '/builder/tools', label: 'My Tools', icon: IconBuilder, authRequired: true },
   { href: '/agent/profile', label: 'Dashboard', icon: IconBarChart, authRequired: true },
