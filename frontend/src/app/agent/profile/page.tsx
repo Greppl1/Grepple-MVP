@@ -1,8 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import ScoreRing from '@/components/ScoreRing';
-import SubNav, { AGENT_NAV } from '@/components/SubNav';
-import { IconExternalLink } from '@/components/Icons';
+import { IconExternalLink, IconInfo } from '@/components/Icons';
 
 const MOCK_PROFILE = {
   wallet: '0x7099...79C8',
@@ -24,16 +24,34 @@ const MOCK_REWARDS = [
 ];
 
 function TierBadge({ tier }: { tier: 'FULL' | 'PARTIAL' }) {
-  if (tier === 'FULL') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-green-dim text-green border border-green/20">
-        FULL
-      </span>
-    );
-  }
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const tooltipText =
+    tier === 'FULL'
+      ? 'Successful tool call + structured report submitted'
+      : 'Failed call with valid error diagnosis submitted';
+
   return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-dim text-amber border border-amber/20">
-      PARTIAL
+    <span
+      className="relative inline-flex items-center gap-1 cursor-help"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold ${
+          tier === 'FULL'
+            ? 'bg-green-dim text-green border border-green/20'
+            : 'bg-amber-dim text-amber border border-amber/20'
+        }`}
+      >
+        {tier}
+      </span>
+      <IconInfo size={12} className="text-text-dim" />
+      {showTooltip && (
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-elevated border border-border-hi text-xs text-text whitespace-nowrap z-10 shadow-lg">
+          {tooltipText}
+        </span>
+      )}
     </span>
   );
 }
@@ -58,8 +76,6 @@ export default function AgentProfilePage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in">
-      <SubNav items={AGENT_NAV} />
-
       <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-8">Agent Profile</h1>
 
       {/* Profile Card */}
@@ -87,6 +103,15 @@ export default function AgentProfilePage() {
           <span className="w-1.5 h-1.5 rounded-full bg-green mr-2" />
           Active
         </span>
+      </div>
+
+      {/* Tier Explanation */}
+      <div className="bg-purple-dim border border-border-hi rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
+        <IconInfo size={18} className="text-lavender shrink-0 mt-0.5" />
+        <div className="text-sm text-text-secondary leading-relaxed">
+          <span className="font-semibold text-green">FULL</span> = successful tool call + structured report submitted.{' '}
+          <span className="font-semibold text-amber">PARTIAL</span> = failed call with valid error diagnosis submitted.
+        </div>
       </div>
 
       {/* Stats Row */}

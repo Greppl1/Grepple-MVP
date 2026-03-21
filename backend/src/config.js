@@ -1,5 +1,10 @@
 require('dotenv').config();
 
+// Validate critical env vars on startup
+if (!process.env.PRIVATE_KEY && process.env.NODE_ENV !== 'test') {
+  console.warn('[config] WARNING: PRIVATE_KEY not set — using hardhat default. Do NOT use in production.');
+}
+
 const config = {
   port: process.env.PORT || 3000,
   rpcUrl: process.env.RPC_URL || 'http://127.0.0.1:8545',
@@ -13,6 +18,11 @@ const config = {
   registryApiUrl: process.env.REGISTRY_API_URL || 'http://localhost:3001',
   scoringEngineUrl: process.env.SCORING_ENGINE_URL || 'http://localhost:8001',
   rewardSystemUrl: process.env.REWARD_SYSTEM_URL || 'http://localhost:8002',
+
+  // CORS
+  corsOrigins: process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',')
+    : ['http://localhost:3000', 'http://localhost:3001'],
 };
 
 module.exports = config;

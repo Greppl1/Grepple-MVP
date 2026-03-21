@@ -4,9 +4,10 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./AAOTestToken.sol";
 
-contract AAOVault is Ownable {
+contract AAOVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     IERC20 public usdc;
@@ -41,11 +42,21 @@ contract AAOVault is Ownable {
         redemptionEnabled = false;
     }
 
+    /// @notice Builder deposits directly (msg.sender is builder)
     function deposit(uint256 usdcAmount) external {
         require(usdcAmount > 0, "Zero amount");
         usdc.safeTransferFrom(msg.sender, address(this), usdcAmount);
         builderDeposits[msg.sender] += usdcAmount;
         emit Deposited(msg.sender, usdcAmount);
+    }
+
+    /// @notice Operator deposits on behalf of builder (backend pattern)
+    function depositFor(address builder, uint256 usdcAmount) external onlyOwner {
+        require(builder != address(0), "Zero builder address");
+        require(usdcAmount > 0, "Zero amount");
+        usdc.safeTransferFrom(msg.sender, address(this), usdcAmount);
+        builderDeposits[builder] += usdcAmount;
+        emit Deposited(builder, usdcAmount);
     }
 
     function getBuilderBalance(address builder) external view returns (uint256) {
@@ -57,7 +68,8 @@ contract AAOVault is Ownable {
         emit RedemptionToggled(enabled);
     }
 
-    function requestRedemption(RedemptionRequest calldata req) external {
+    /// @notice Redemption (placeholder — disabled by default, future feature)
+    function requestRedemption(RedemptionRequest calldata req) external nonReentrant {
         require(redemptionEnabled, "Redemption disabled");
         require(msg.sender == req.agent, "Caller must be agent");
         require(req.tokenAmount > 0, "Zero token amount");

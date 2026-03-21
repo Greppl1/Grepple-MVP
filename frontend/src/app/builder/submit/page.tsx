@@ -4,8 +4,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { SCORING_ENGINE_URL } from '@/lib/contracts';
 import { useToast } from '@/components/Toast';
-import SubNav, { BUILDER_NAV } from '@/components/SubNav';
-import { IconCheck } from '@/components/Icons';
+import { IconCheck, IconArrowRight, IconChevronLeft } from '@/components/Icons';
 
 const CATEGORIES = ['Search', 'DeFi', 'DevTools', 'Database', 'AI', 'Data', 'Communication'];
 
@@ -25,6 +24,8 @@ const PLACEHOLDER_SCHEMA = `{
   "required": ["query"]
 }`;
 
+const STEP_LABELS = ['Basics', 'Configuration', 'Review & Submit'] as const;
+
 interface FormState {
   toolName: string;
   description: string;
@@ -34,50 +35,72 @@ interface FormState {
   testBudget: number;
 }
 
-function getValidationItems(form: FormState) {
-  const items: { label: string; status: 'pass' | 'warn' | 'fail' }[] = [];
+type ValidationItem = { label: string; status: 'pass' | 'warn' | 'fail' };
 
-  items.push({
-    label: 'Tool name provided',
-    status: form.toolName.length > 0 ? 'pass' : 'fail',
-  });
-  items.push({
-    label: 'Description (20+ chars)',
-    status:
-      form.description.length >= 20
-        ? 'pass'
-        : form.description.length > 0
-        ? 'warn'
-        : 'fail',
-  });
-  items.push({
-    label: 'Category selected',
-    status: form.category ? 'pass' : 'fail',
-  });
-  items.push({
-    label: 'MCP Server URL',
-    status: form.serverUrl.startsWith('http') ? 'pass' : form.serverUrl.length > 0 ? 'warn' : 'fail',
-  });
+function getStep1Validation(form: FormState): ValidationItem[] {
+  return [
+    {
+      label: 'Tool name provided',
+      status: form.toolName.length > 0 ? 'pass' : 'fail',
+    },
+    {
+      label: 'Description (20+ chars)',
+      status:
+        form.description.length >= 20
+          ? 'pass'
+          : form.description.length > 0
+          ? 'warn'
+          : 'fail',
+    },
+    {
+      label: 'Category selected',
+      status: form.category ? 'pass' : 'fail',
+    },
+  ];
+}
 
+function getStep2Validation(form: FormState): ValidationItem[] {
   let schemaValid = false;
+  const schemaEmpty = !form.inputSchema.trim();
   try {
-    if (form.inputSchema.trim()) {
+    if (!schemaEmpty) {
       JSON.parse(form.inputSchema);
       schemaValid = true;
     }
   } catch {
     // invalid
   }
-  items.push({
-    label: 'Input schema (valid JSON)',
-    status: schemaValid ? 'pass' : form.inputSchema.trim() ? 'warn' : 'fail',
-  });
-  items.push({
-    label: 'Test budget set',
-    status: form.testBudget > 0 ? 'pass' : 'fail',
-  });
 
-  return items;
+  return [
+    {
+      label: 'MCP Server URL',
+      status: form.serverUrl.startsWith('http') ? 'pass' : form.serverUrl.length > 0 ? 'warn' : 'fail',
+    },
+    {
+      label: 'Input schema (valid JSON)',
+      status: schemaValid ? 'pass' : schemaEmpty ? 'pass' : 'warn',
+    },
+    {
+      label: 'Test budget set',
+      status: form.testBudget > 0 ? 'pass' : 'fail',
+    },
+  ];
+}
+
+function isStep1Valid(form: FormState): boolean {
+  return form.toolName.length > 0 && form.description.length >= 20 && form.category.length > 0;
+}
+
+function isStep2Valid(form: FormState): boolean {
+  if (!form.serverUrl.startsWith('http')) return false;
+  if (form.inputSchema.trim()) {
+    try {
+      JSON.parse(form.inputSchema);
+    } catch {
+      return false;
+    }
+  }
+  return true;
 }
 
 function getParsedParams(schema: string) {
@@ -122,6 +145,72 @@ function StatusDot({ status }: { status: 'pass' | 'warn' | 'fail' }) {
   return <span className={`w-2 h-2 rounded-full shrink-0 ${classes[status]}`} />;
 }
 
+/* ── Step Indicator ────────────────────────────────────────── */
+
+function StepIndicator({
+  current,
+  step1Done,
+  step2Done,
+}: {
+  current: number;
+  step1Done: boolean;
+  step2Done: boolean;
+}) {
+  const stepStatus = (idx: number): 'active' | 'completed' | 'future' => {
+    if (idx === current) return 'active';
+    if (idx === 0 && step1Done) return 'completed';
+    if (idx === 1 && step2Done) return 'completed';
+    if (idx < current) return 'completed';
+    return 'future';
+  };
+
+  return (
+    <div className="flex items-center justify-center gap-0 mb-10">
+      {STEP_LABELS.map((label, idx) => {
+        const status = stepStatus(idx);
+        const circleClass =
+          status === 'active'
+            ? 'bg-blue border-blue text-white'
+            : status === 'completed'
+            ? 'bg-green-dim border-green text-green'
+            : 'bg-elevated border-border text-text-dim';
+        const labelClass =
+          status === 'active'
+            ? 'text-white'
+            : status === 'completed'
+            ? 'text-green'
+            : 'text-text-dim';
+
+        return (
+          <div key={idx} className="flex items-center">
+            {idx > 0 && (
+              <div
+                className={`w-12 sm:w-20 h-px ${
+                  idx <= current || (idx === 1 && step1Done) || (idx === 2 && step2Done)
+                    ? 'bg-blue'
+                    : 'bg-border'
+                }`}
+              />
+            )}
+            <div className="flex flex-col items-center gap-1.5">
+              <div
+                className={`w-9 h-9 rounded-full border-2 flex items-center justify-center text-sm font-semibold transition-all duration-300 ${circleClass}`}
+              >
+                {status === 'completed' ? <IconCheck size={16} /> : idx + 1}
+              </div>
+              <span className={`text-xs font-medium whitespace-nowrap ${labelClass}`}>
+                {label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Main Page ─────────────────────────────────────────────── */
+
 export default function SubmitPage() {
   const [form, setForm] = useState<FormState>({
     toolName: '',
@@ -131,6 +220,7 @@ export default function SubmitPage() {
     inputSchema: '',
     testBudget: 0.25,
   });
+  const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -142,10 +232,21 @@ export default function SubmitPage() {
     []
   );
 
-  const validationItems = getValidationItems(form);
-  const allValid = validationItems.every((i) => i.status === 'pass');
-  const passCount = validationItems.filter((i) => i.status === 'pass').length;
+  const s1Valid = isStep1Valid(form);
+  const s2Valid = isStep2Valid(form);
+  const allValid = s1Valid && s2Valid;
   const parsedParams = getParsedParams(form.inputSchema);
+
+  const currentStepValid = step === 0 ? s1Valid : step === 1 ? s2Valid : allValid;
+
+  const validationItemsForStep =
+    step === 0
+      ? getStep1Validation(form)
+      : step === 1
+      ? getStep2Validation(form)
+      : [...getStep1Validation(form), ...getStep2Validation(form)];
+
+  const passCount = validationItemsForStep.filter((i) => i.status === 'pass').length;
 
   const handleSubmit = async () => {
     if (!allValid) return;
@@ -187,164 +288,295 @@ export default function SubmitPage() {
     }
   };
 
+  /* ── Step Content Renderers ──────────────────────────────── */
+
+  const renderStep1 = () => (
+    <div className="space-y-6 animate-fade-in">
+      {/* Tool Name */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+          <CheckMark filled={form.toolName.length > 0} />
+          Tool Name
+        </label>
+        <input
+          type="text"
+          value={form.toolName}
+          onChange={(e) => update('toolName', e.target.value)}
+          placeholder="mcp-my-tool"
+          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors"
+        />
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+          <CheckMark filled={form.description.length >= 20} />
+          Description
+        </label>
+        <textarea
+          value={form.description}
+          onChange={(e) => update('description', e.target.value)}
+          placeholder="Describe what your tool does, its capabilities, and expected inputs/outputs..."
+          rows={3}
+          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim text-sm focus:outline-none focus:border-blue transition-colors resize-none"
+        />
+        {form.description.length > 0 && form.description.length < 20 && (
+          <p className="text-xs text-amber">{20 - form.description.length} more characters needed</p>
+        )}
+      </div>
+
+      {/* Category */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+          <CheckMark filled={form.category.length > 0} />
+          Category
+        </label>
+        <select
+          value={form.category}
+          onChange={(e) => update('category', e.target.value)}
+          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-blue transition-colors appearance-none cursor-pointer"
+        >
+          <option value="" className="bg-elevated text-text-dim">
+            Select...
+          </option>
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat} className="bg-elevated">
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="space-y-6 animate-fade-in">
+      {/* MCP Server URL */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+          <CheckMark filled={form.serverUrl.startsWith('http')} />
+          MCP Server URL
+        </label>
+        <input
+          type="url"
+          value={form.serverUrl}
+          onChange={(e) => update('serverUrl', e.target.value)}
+          placeholder="https://mcp.example.com/v1"
+          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors"
+        />
+      </div>
+
+      {/* Input Schema */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+          <CheckMark
+            filled={(() => {
+              try {
+                return form.inputSchema.trim() ? !!JSON.parse(form.inputSchema) : true;
+              } catch {
+                return false;
+              }
+            })()}
+          />
+          Input Schema (JSON)
+        </label>
+        <textarea
+          value={form.inputSchema}
+          onChange={(e) => update('inputSchema', e.target.value)}
+          placeholder={PLACEHOLDER_SCHEMA}
+          rows={10}
+          className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors resize-none"
+          spellCheck={false}
+        />
+      </div>
+
+      {/* Test Budget */}
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+          <CheckMark filled={form.testBudget > 0} />
+          Test Budget per Task
+        </label>
+        <div className="flex items-center gap-4">
+          <input
+            type="range"
+            min="0.10"
+            max="1.00"
+            step="0.05"
+            value={form.testBudget}
+            onChange={(e) => update('testBudget', parseFloat(e.target.value))}
+            className="flex-1 accent-blue"
+          />
+          <div className="bg-elevated border border-border rounded-lg px-4 py-2 font-mono text-sm min-w-[80px] text-center">
+            ${form.testBudget.toFixed(2)}
+          </div>
+        </div>
+        <p className="text-text-dim text-xs">
+          $0.10 - $1.00. Higher budget enables deeper analysis.
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div className="space-y-6 animate-fade-in">
+      <h3 className="text-lg font-semibold text-white">Review Your Submission</h3>
+
+      {/* Summary Card */}
+      <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-text-dim uppercase tracking-wider mb-1">Tool Name</p>
+            <p className="text-sm font-mono text-lavender">{form.toolName || '---'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-text-dim uppercase tracking-wider mb-1">Category</p>
+            <p className="text-sm text-white">{form.category || '---'}</p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="text-xs text-text-dim uppercase tracking-wider mb-1">Description</p>
+            <p className="text-sm text-text-secondary">{form.description || '---'}</p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="text-xs text-text-dim uppercase tracking-wider mb-1">Server URL</p>
+            <p className="text-sm font-mono text-lavender break-all">{form.serverUrl || '---'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-text-dim uppercase tracking-wider mb-1">Test Budget</p>
+            <p className="text-sm font-mono text-white">${form.testBudget.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-text-dim uppercase tracking-wider mb-1">Schema</p>
+            <p className="text-sm text-text-secondary">
+              {form.inputSchema.trim()
+                ? `${parsedParams.length} parameter${parsedParams.length !== 1 ? 's' : ''} defined`
+                : 'No schema provided'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Validation Checklist */}
+      <div className="bg-surface border border-border rounded-xl p-5 space-y-3">
+        <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+          Validation Checklist
+        </h4>
+        {[...getStep1Validation(form), ...getStep2Validation(form)].map((item, i) => (
+          <div key={i} className="flex items-center gap-3 text-sm">
+            <StatusDot status={item.status} />
+            <span
+              className={
+                item.status === 'pass'
+                  ? 'text-white'
+                  : item.status === 'warn'
+                  ? 'text-amber'
+                  : 'text-text-dim'
+              }
+            >
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Parsed Params Preview */}
+      {parsedParams.length > 0 && (
+        <div className="bg-surface border border-border rounded-xl p-5 space-y-3 animate-slide-up">
+          <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+            Parsed Parameters
+          </h4>
+          {parsedParams.map((p) => (
+            <div
+              key={p.name}
+              className="flex items-center justify-between bg-elevated rounded-lg px-3 py-2"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-sm text-lavender">{p.name}</span>
+                {p.required && (
+                  <span className="text-[10px] bg-red-dim text-red px-1.5 py-0.5 rounded font-medium">
+                    required
+                  </span>
+                )}
+              </div>
+              <span className="text-text-dim text-xs font-mono">{p.type}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  /* ── Render ──────────────────────────────────────────────── */
+
   return (
     <div className="p-6 lg:p-8 max-w-5xl animate-fade-in">
-      <SubNav items={BUILDER_NAV} />
-
       {/* Header */}
       <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">Submit Your Tool</h1>
       <p className="text-text-secondary mb-8">
         Register an MCP tool for automated diagnosis and registry listing.
       </p>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Form */}
-        <div className="flex-1 space-y-6">
-          {/* Tool Name */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-              <CheckMark filled={form.toolName.length > 0} />
-              Tool Name
-            </label>
-            <input
-              type="text"
-              value={form.toolName}
-              onChange={(e) => update('toolName', e.target.value)}
-              placeholder="mcp-my-tool"
-              className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors"
-            />
-          </div>
+      {/* Step Indicator */}
+      <StepIndicator current={step} step1Done={s1Valid} step2Done={s2Valid} />
 
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-              <CheckMark filled={form.description.length >= 20} />
-              Description
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) => update('description', e.target.value)}
-              placeholder="Describe what your tool does, its capabilities, and expected inputs/outputs..."
-              rows={3}
-              className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim text-sm focus:outline-none focus:border-blue transition-colors resize-none"
-            />
-            {form.description.length > 0 && form.description.length < 20 && (
-              <p className="text-xs text-amber">{20 - form.description.length} more characters needed</p>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Form Area */}
+        <div className="flex-1">
+          {step === 0 && renderStep1()}
+          {step === 1 && renderStep2()}
+          {step === 2 && renderStep3()}
+
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between mt-8">
+            {step > 0 ? (
+              <button
+                onClick={() => setStep((s) => s - 1)}
+                className="btn-secondary flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              >
+                <IconChevronLeft size={16} />
+                Back
+              </button>
+            ) : (
+              <div />
+            )}
+
+            {step < 2 ? (
+              <button
+                onClick={() => setStep((s) => s + 1)}
+                disabled={!currentStepValid}
+                className={`btn-gradient flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  !currentStepValid ? 'opacity-40 cursor-not-allowed' : ''
+                }`}
+              >
+                Next
+                <IconArrowRight size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={!allValid || submitting}
+                className={`btn-gradient flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  !allValid || submitting ? 'opacity-40 cursor-not-allowed' : ''
+                }`}
+              >
+                {submitting ? 'Submitting...' : 'Submit for Diagnosis'}
+              </button>
             )}
           </div>
-
-          {/* Category + URL row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                <CheckMark filled={form.category.length > 0} />
-                Category
-              </label>
-              <select
-                value={form.category}
-                onChange={(e) => update('category', e.target.value)}
-                className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-blue transition-colors appearance-none cursor-pointer"
-              >
-                <option value="" className="bg-elevated text-text-dim">
-                  Select...
-                </option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat} className="bg-elevated">
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                <CheckMark filled={form.serverUrl.startsWith('http')} />
-                MCP Server URL
-              </label>
-              <input
-                type="url"
-                value={form.serverUrl}
-                onChange={(e) => update('serverUrl', e.target.value)}
-                placeholder="https://mcp.example.com/v1"
-                className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Input Schema */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-              <CheckMark
-                filled={(() => {
-                  try {
-                    return form.inputSchema.trim() ? !!JSON.parse(form.inputSchema) : false;
-                  } catch {
-                    return false;
-                  }
-                })()}
-              />
-              Input Schema (JSON)
-            </label>
-            <textarea
-              value={form.inputSchema}
-              onChange={(e) => update('inputSchema', e.target.value)}
-              placeholder={PLACEHOLDER_SCHEMA}
-              rows={10}
-              className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-white placeholder-text-dim font-mono text-sm focus:outline-none focus:border-blue transition-colors resize-none"
-              spellCheck={false}
-            />
-          </div>
-
-          {/* Test Budget */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-              <CheckMark filled={form.testBudget > 0} />
-              Test Budget per Task
-            </label>
-            <div className="flex items-center gap-4">
-              <input
-                type="range"
-                min="0.10"
-                max="1.00"
-                step="0.05"
-                value={form.testBudget}
-                onChange={(e) => update('testBudget', parseFloat(e.target.value))}
-                className="flex-1 accent-blue"
-              />
-              <div className="bg-elevated border border-border rounded-lg px-4 py-2 font-mono text-sm min-w-[80px] text-center">
-                ${form.testBudget.toFixed(2)}
-              </div>
-            </div>
-            <p className="text-text-dim text-xs">
-              $0.10 - $1.00. Higher budget enables deeper analysis.
-            </p>
-          </div>
-
-          {/* Submit */}
-          <button
-            onClick={handleSubmit}
-            disabled={!allValid || submitting}
-            className={`btn-gradient px-8 py-3 rounded-xl text-sm font-semibold transition-all ${
-              !allValid || submitting ? 'opacity-40 cursor-not-allowed' : ''
-            }`}
-          >
-            {submitting ? 'Submitting...' : 'Submit for Diagnosis'}
-          </button>
         </div>
 
-        {/* Sidebar: Validation + Params */}
-        <div className="w-full lg:w-80 shrink-0 space-y-5">
-          {/* Validation Checklist */}
+        {/* Sidebar: Validation + Params (desktop only) */}
+        <div className="hidden lg:block w-80 shrink-0 space-y-5">
+          {/* Validation Checklist for current step */}
           <div className="bg-surface border border-border rounded-xl p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
                 Validation
               </h3>
               <span className="text-xs font-mono text-text-dim">
-                {passCount}/{validationItems.length}
+                {passCount}/{validationItemsForStep.length}
               </span>
             </div>
-            {validationItems.map((item, i) => (
+            {validationItemsForStep.map((item, i) => (
               <div key={i} className="flex items-center gap-3 text-sm">
                 <StatusDot status={item.status} />
                 <span
@@ -362,8 +594,8 @@ export default function SubmitPage() {
             ))}
           </div>
 
-          {/* Parsed Params */}
-          {parsedParams.length > 0 && (
+          {/* Parsed Params — only on step 2 when schema is entered */}
+          {step === 1 && parsedParams.length > 0 && (
             <div className="bg-surface border border-border rounded-xl p-5 space-y-3 animate-slide-up">
               <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
                 Parsed Parameters

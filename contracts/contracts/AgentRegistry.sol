@@ -2,8 +2,9 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract AgentRegistry is Ownable {
+contract AgentRegistry is Ownable, Pausable {
     struct AgentProfile {
         address wallet;
         address operator;
@@ -23,7 +24,8 @@ contract AgentRegistry is Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    function registerAgent(bytes32 agentIdHash) external {
+    /// @notice Self-register (caller is the agent wallet)
+    function registerAgent(bytes32 agentIdHash) external whenNotPaused {
         require(agents[msg.sender].wallet == address(0), "Already registered");
         require(agentIdToWallet[agentIdHash] == address(0), "AgentId already taken");
 
@@ -39,6 +41,26 @@ contract AgentRegistry is Ownable {
         agentIdToWallet[agentIdHash] = msg.sender;
 
         emit AgentRegistered(msg.sender, agentIdHash);
+    }
+
+    /// @notice Register on behalf of agent (operator/backend pattern)
+    function registerAgentFor(address wallet, bytes32 agentIdHash) external onlyOwner whenNotPaused {
+        require(wallet != address(0), "Zero address");
+        require(agents[wallet].wallet == address(0), "Already registered");
+        require(agentIdToWallet[agentIdHash] == address(0), "AgentId already taken");
+
+        agents[wallet] = AgentProfile({
+            wallet: wallet,
+            operator: msg.sender,
+            agentIdHash: agentIdHash,
+            registeredAt: block.timestamp,
+            isActive: true,
+            totalEarned: 0,
+            taskCount: 0
+        });
+        agentIdToWallet[agentIdHash] = wallet;
+
+        emit AgentRegistered(wallet, agentIdHash);
     }
 
     function deactivateAgent(address wallet) external onlyOwner {
@@ -60,5 +82,13 @@ contract AgentRegistry is Ownable {
         agents[wallet].totalEarned += earned;
         agents[wallet].taskCount += tasks;
         emit AgentStatsUpdated(wallet, agents[wallet].totalEarned, agents[wallet].taskCount);
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }

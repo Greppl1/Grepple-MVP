@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import SubNav, { AGENT_NAV } from '@/components/SubNav';
 import { useToast } from '@/components/Toast';
-import { IconCheck } from '@/components/Icons';
+import { IconCheck, IconInfo } from '@/components/Icons';
 
 function StepIndicator({
   step,
@@ -72,14 +71,31 @@ export default function AgentRegisterPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-2xl mx-auto animate-fade-in">
-      <SubNav items={AGENT_NAV} />
-
       <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-3">
         Register as Test Agent
       </h1>
-      <p className="text-text-secondary mb-10 text-base leading-relaxed">
+      <p className="text-text-secondary mb-6 text-base leading-relaxed">
         Connect your wallet and register to start earning tokens by testing MCP tools.
       </p>
+
+      {/* Wallet guidance */}
+      <div className="bg-purple-dim border border-border-hi rounded-xl px-5 py-4 mb-10 flex items-start gap-3">
+        <IconInfo size={18} className="text-lavender shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm text-text leading-relaxed">
+            You&apos;ll need a wallet connected to BSC Testnet (Chain ID 97). No real
+            funds needed &mdash; testnet BNB is free.
+          </p>
+          <a
+            href="https://www.bnbchain.org/en/testnet-faucet"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-sm font-medium text-lavender hover:text-blue-bright transition-colors mt-1.5"
+          >
+            Get test BNB &rarr;
+          </a>
+        </div>
+      </div>
 
       {/* Steps */}
       <div className="bg-surface border border-border rounded-xl p-6 sm:p-8 space-y-8">
@@ -104,11 +120,7 @@ export default function AgentRegisterPage() {
 
         {/* Step 2: Agent ID */}
         <div className="space-y-4">
-          <StepIndicator
-            step={2}
-            currentStep={isConnected ? (isRegistered ? 3 : 2) : 1}
-            label="Agent ID"
-          />
+          <StepIndicator step={2} currentStep={currentStep} label="Agent ID" />
           <div className="ml-[52px]">
             <p className="text-text-dim text-sm mb-2">
               Your unique agent identifier (auto-generated from wallet):
@@ -125,11 +137,7 @@ export default function AgentRegisterPage() {
 
         {/* Step 3: Confirm */}
         <div className="space-y-4">
-          <StepIndicator
-            step={3}
-            currentStep={isRegistered ? 4 : isConnected ? 3 : 1}
-            label="Confirm Registration"
-          />
+          <StepIndicator step={3} currentStep={currentStep} label="Confirm Registration" />
           <div className="ml-[52px]">
             {isRegistered ? (
               <div className="bg-green-dim border border-green/20 rounded-xl p-6 text-center space-y-4 animate-scale-in">

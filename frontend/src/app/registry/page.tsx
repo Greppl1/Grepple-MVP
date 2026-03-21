@@ -12,10 +12,26 @@ type SortKey = 'composite' | 'schemaHealth' | 'discoverability' | 'callability' 
 type SortDir = 'asc' | 'desc';
 type ViewMode = 'table' | 'grid';
 
+function ChevronDown({ className }: { className?: string }) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={className}>
+      <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronUp({ className }: { className?: string }) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={className}>
+      <path d="M2 6.5L5 3.5L8 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function SortArrow({ direction }: { direction: SortDir }) {
   return (
-    <span className="ml-1 inline-block text-purple text-[10px]">
-      {direction === 'desc' ? '\u25BC' : '\u25B2'}
+    <span className="ml-1 inline-flex items-center text-purple">
+      {direction === 'desc' ? <ChevronDown /> : <ChevronUp />}
     </span>
   );
 }
@@ -42,7 +58,7 @@ function MetricBar({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-text-dim w-24 shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-1.5 rounded-full bg-elevated overflow-hidden">
+      <div className="flex-1 h-2 rounded-full bg-elevated overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${scoreBg(value)}`}
           style={{ width: `${value}%`, opacity: 0.7 }}
@@ -53,6 +69,12 @@ function MetricBar({ label, value }: { label: string; value: number }) {
       </span>
     </div>
   );
+}
+
+function tableScoreColor(v: number): string {
+  if (v >= 85) return 'text-green';
+  if (v >= 60) return 'text-white';
+  return 'text-amber';
 }
 
 function RegistryContent() {
@@ -130,6 +152,11 @@ function RegistryContent() {
 
   return (
     <div className="p-6 lg:p-8 min-h-screen animate-fade-in">
+      {/* Testnet demo banner */}
+      <div className="testnet-banner mb-6">
+        Testnet Demo &mdash; Scores and rankings shown are simulated data
+      </div>
+
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Registry</h1>
@@ -172,20 +199,22 @@ function RegistryContent() {
       </div>
 
       {/* Category pills */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all border ${
-              activeCategory === cat
-                ? 'bg-purple/20 text-white border-purple/40'
-                : 'bg-surface text-text-secondary border-border hover:text-white hover:border-border-hi'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      <div className="relative mb-6">
+        <div className="flex items-center gap-2 flex-wrap overflow-x-auto pb-1 scrollbar-none">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all border whitespace-nowrap ${
+                activeCategory === cat
+                  ? 'bg-purple/20 text-white border-purple/40'
+                  : 'bg-surface text-text-secondary border-border hover:text-white hover:border-border-hi'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content area */}
@@ -217,7 +246,7 @@ function RegistryContent() {
                   {filtered.map((tool, idx) => (
                     <tr
                       key={tool.id}
-                      className="border-b border-border/50 hover:bg-elevated/50 transition-colors"
+                      className="border-b border-border/50 row-hover transition-colors"
                     >
                       <td className="px-3 py-3 text-sm font-mono text-text-dim">{idx + 1}</td>
                       <td className="px-3 py-3">
@@ -232,7 +261,9 @@ function RegistryContent() {
                             <CategoryBadge category={tool.category} />
                           </span>
                           <span className="block text-xs text-text-dim mt-0.5 truncate max-w-xs">
-                            {tool.description}
+                            {tool.description.length > 60
+                              ? tool.description.slice(0, 60) + '...'
+                              : tool.description}
                           </span>
                         </Link>
                       </td>
@@ -242,7 +273,7 @@ function RegistryContent() {
                       <td className="px-3 py-3">
                         <Link href={`/registry/${tool.id}`} className="flex items-center gap-2">
                           <span
-                            className={`font-mono text-sm font-bold ${scoreColor(tool.composite)}`}
+                            className={`font-mono text-sm font-bold ${tableScoreColor(tool.composite)}`}
                           >
                             {tool.composite}
                           </span>

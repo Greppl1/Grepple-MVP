@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import SubNav, { AGENT_NAV } from '@/components/SubNav';
-import { IconLock, IconUnlock } from '@/components/Icons';
+import { IconLock, IconUnlock, IconInfo } from '@/components/Icons';
 
 const MOCK_BALANCE = 12.5;
 const REDEMPTION_ENABLED = false;
@@ -69,8 +68,6 @@ export default function AgentRedeemPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
-      <SubNav items={AGENT_NAV} />
-
       <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-8">Redeem Tokens</h1>
 
       {/* Balance Display */}
@@ -100,14 +97,15 @@ export default function AgentRedeemPage() {
           <span className="text-green text-sm font-medium">Redemption is open!</span>
         </div>
       ) : (
-        <div className="bg-amber-dim border border-amber/20 rounded-xl px-5 py-4 mb-6 flex items-center gap-3">
-          <IconLock size={18} className="text-amber shrink-0" />
+        <div className="bg-amber-dim border border-amber/20 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
+          <IconLock size={18} className="text-amber shrink-0 mt-0.5" />
           <div>
-            <span className="text-amber text-sm font-medium block">
-              Vault redemption is currently disabled.
+            <span className="text-amber text-sm font-semibold block mb-1">
+              Vault redemption is not yet active.
             </span>
-            <span className="text-amber/70 text-xs">
-              Tokens accumulate now &mdash; value unlocks later.
+            <span className="text-amber/70 text-sm leading-relaxed">
+              Your testnet tokens are accumulating as on-chain contribution records.
+              When the vault opens, you&apos;ll be able to redeem them for USDC.
             </span>
           </div>
         </div>

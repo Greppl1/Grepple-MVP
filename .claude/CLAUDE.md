@@ -342,10 +342,10 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 
 | 层 | 测试数 | 状态 |
 |----|--------|------|
-| 合约（Mocha/Chai） | 53 | ✅ all passing |
-| 后端 API（Jest） | 40 | ✅ all passing |
-| 前端（Next.js build） | — | ✅ compiles, 0 errors |
-| **总计** | **93** | **✅** |
+| 合约（Mocha/Chai） | 53 | ✅ all passing（含 Pausable + taskHash 唯一性 + ReentrancyGuard） |
+| 后端 API（Jest） | 40 | ✅ all passing（含 txQueue + webhookAuth + 地址校验） |
+| 前端（Next.js build） | 12 pages | ✅ compiles, 0 errors |
+| **总计** | **93+** | **✅** |
 
 ### 队友对接 Issues
 
@@ -415,6 +415,30 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] 移除假代码编辑器模式
 - [x] 修复 ScoreRing 在 Balance 中的滥用（改为数字展示）
 - [x] 空状态处理（Registry 无结果 + Clear filters、Rewards 空列表、Transactions 空列表）
+
+**Step 14: 后端 + 合约安全加固** ✅
+- [x] AAOTestToken：添加 `mintedTaskHashes` 映射防重复 mint + `Pausable` 紧急暂停
+- [x] AgentRegistry：添加 `registerAgentFor(address, bytes32)` operator 模式 + `Pausable`
+- [x] AAOVault：添加 `depositFor(address, uint256)` operator 模式 + `ReentrancyGuard`
+- [x] 后端 `txQueue.js`：事务队列防 nonce 冲突 + `tx.wait()` 60 秒超时
+- [x] 后端 `webhookAuth.js`：Webhook API key 认证（`WEBHOOK_API_KEY` 环境变量）
+- [x] 后端 `logger.js`：结构化 JSON 日志（请求日志 + 交易日志 + 错误日志）
+- [x] `mintService.js`：链上 `isTaskMinted()` 检查防重启后重复 mint + `validateAddress` + 自动 `updateAgentStats`
+- [x] `agentService.js`：使用 `registerAgentFor` + `Promise.all` 并行查询 rewards（O(n) → O(1) RPC 时间）
+- [x] `vaultService.js`：使用 `depositFor` + hash 比较 `.toLowerCase()` + fetch 10 秒超时
+- [x] `vault.js` 路由：redeem 加 `agentAuth` + `redeemRateLimiter` + `mint_ids` 数组校验
+- [x] `rewards.js` 路由：webhook 加 `webhookAuth` 中间件
+- [x] `app.js`：CORS 限制配置域名（`CORS_ORIGINS` 环境变量）+ 错误信息脱敏
+- [x] `config.js`：启动时警告未设置 `PRIVATE_KEY`
+- [x] 合约编译通过，53 tests passing；后端 40 tests passing
+
+**已知限制（非当前优先级）：**
+- Redeem 功能仅为占位接口，默认关闭，用户不涉及真实兑换。真钱是未来的事情
+- MockUSDC 使用 18 decimals（真实 USDC 为 6），迁移 mainnet 时需适配
+- `builderDeposits` 只记录累计充值，不反映消耗后余额
+- `processedRedemptions` hash 包含 `block.timestamp`，未来需改为基于 mintId 的防重放
+- 缺少 off-chain indexer（The Graph / Ponder），统计数据暂为 mock
+- 幂等性 Map 仍为内存级，生产环境需 Redis/DB 持久化
 
 **Step 12: 对接联调**
 - [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents 全部 endpoint）
@@ -641,21 +665,24 @@ contracts/                # Solidity 合约 + Hardhat 项目
 
 backend/                  # Node.js API 服务
   src/
-    app.js                # Express app setup
+    app.js                # Express app setup (CORS 限制 + 错误脱敏 + 请求日志)
     server.js             # Entry point
-    config.js             # Contract addresses, RPC config
+    config.js             # Contract addresses, RPC config, CORS origins
     routes/
-      rewards.js
-      vault.js
-      agents.js
+      rewards.js          # mint + webhook (API key 认证) + status
+      vault.js            # deposit + balance + redeem (agentAuth + rate limit)
+      agents.js           # register + profile + rewards
     services/
-      mintService.js
-      vaultService.js
-      agentService.js
+      mintService.js      # Mint 逻辑 + 链上幂等检查 + updateAgentStats
+      vaultService.js     # Deposit (depositFor) + redeem + hash 比较修复
+      agentService.js     # Register (registerAgentFor) + Promise.all 并行查询
       contractService.js  # Shared ethers.js contract interaction layer
+      txQueue.js          # 事务队列 (nonce 管理 + tx.wait 超时)
+      logger.js           # 结构化 JSON 日志
     middleware/
       agentAuth.js        # Signature verification (ethers.verifyMessage)
       rateLimiter.js      # Per-wallet rate limiting
+      webhookAuth.js      # API key 认证 (WEBHOOK_API_KEY)
   test/
     rewards.test.js
     vault.test.js

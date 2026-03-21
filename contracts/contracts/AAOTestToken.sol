@@ -3,8 +3,9 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract AAOTestToken is ERC20, Ownable {
+contract AAOTestToken is ERC20, Ownable, Pausable {
     enum RewardTier { FULL, PARTIAL, NONE }
 
     struct TokenMintRecord {
@@ -20,6 +21,7 @@ contract AAOTestToken is ERC20, Ownable {
     mapping(address => bool) public authorizedMinters;
     mapping(uint256 => TokenMintRecord) public mintRecords;
     mapping(address => uint256[]) private _agentMintIds;
+    mapping(bytes32 => bool) public mintedTaskHashes;
 
     uint256 public nextMintId;
     uint256 public rewardAmount;
@@ -67,9 +69,12 @@ contract AAOTestToken is ERC20, Ownable {
         bytes32 taskHash,
         bytes32 callRecordHash,
         RewardTier tier
-    ) external onlyAuthorizedMinter returns (uint256 mintId) {
+    ) external onlyAuthorizedMinter whenNotPaused returns (uint256 mintId) {
         require(agent != address(0), "Zero agent address");
         require(amount > 0, "Zero amount");
+        require(!mintedTaskHashes[taskHash], "Task already minted");
+
+        mintedTaskHashes[taskHash] = true;
 
         mintId = nextMintId++;
         mintRecords[mintId] = TokenMintRecord({
@@ -88,6 +93,10 @@ contract AAOTestToken is ERC20, Ownable {
         emit TokenMinted(mintId, agent, amount, taskHash, tier);
     }
 
+    function isTaskMinted(bytes32 taskHash) external view returns (bool) {
+        return mintedTaskHashes[taskHash];
+    }
+
     function getMintRecord(uint256 mintId) external view returns (TokenMintRecord memory) {
         require(mintId < nextMintId, "Mint record does not exist");
         return mintRecords[mintId];
@@ -95,5 +104,13 @@ contract AAOTestToken is ERC20, Ownable {
 
     function getMintsByAgent(address agent) external view returns (uint256[] memory) {
         return _agentMintIds[agent];
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }

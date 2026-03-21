@@ -35,9 +35,9 @@ body {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-border-hi); }
 
 /* Gradient text utility */
@@ -62,6 +62,12 @@ body {
 .btn-gradient:active {
   transform: translateY(0);
 }
+.btn-gradient:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
 /* Secondary button */
 .btn-secondary {
@@ -82,13 +88,27 @@ body {
 }
 .card-glow:hover {
   border-color: var(--color-border-hi);
-  box-shadow: 0 0 40px rgba(74, 108, 247, 0.06);
+  box-shadow: 0 0 40px rgba(74, 108, 247, 0.08);
 }
 
 /* Hero gradient background */
 .hero-gradient {
   background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(74, 108, 247, 0.12) 0%, transparent 70%),
               radial-gradient(ellipse 40% 40% at 70% 10%, rgba(123, 107, 168, 0.08) 0%, transparent 60%);
+}
+
+/* Testnet banner */
+.testnet-banner {
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.08) 0%, rgba(74, 108, 247, 0.08) 100%);
+  border: 1px solid rgba(245, 166, 35, 0.2);
+}
+
+/* Table row hover — visible */
+.row-hover {
+  transition: background 0.15s;
+}
+.row-hover:hover {
+  background: rgba(26, 23, 64, 0.6);
 }
 
 /* Animations */
@@ -112,6 +132,10 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(-100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
 
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
@@ -128,6 +152,9 @@ body {
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+.animate-slide-left {
+  animation: slide-left 0.25s ease-out;
+}
 
 /* Staggered children animation */
 .stagger-children > * {
@@ -140,9 +167,13 @@ body {
 .stagger-children > *:nth-child(4) { animation-delay: 180ms; }
 .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
 .stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 480ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 540ms; }
 
 /* Focus ring */
-.focus-ring:focus-visible {
+*:focus-visible {
   outline: 2px solid var(--color-blue);
   outline-offset: 2px;
 }
@@ -161,5 +192,17 @@ body {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
     z-index: 40;
+    animation: fade-in 0.2s ease-out;
   }
+}
+
+/* Logo with "grep" highlighted */
+.logo-grep {
+  background: linear-gradient(135deg, #9B8EC8, #5B7FFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-ple {
+  color: var(--color-text-secondary);
 }
