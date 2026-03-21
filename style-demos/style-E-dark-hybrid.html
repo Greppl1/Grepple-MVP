@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grepple - AAO Launchpad | Style E: Dark Hybrid</title>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0a0a;--bg-card:#141414;--bg-card-hover:#1a1a1a;
+    --border:#222;--border-hover:#333;
+    --text:#e5e5e5;--text-muted:#888;--text-dim:#555;
+    --green:#00ff88;--green-dim:#00cc6a;--green-glow:rgba(0,255,136,.15);
+    --blue:#3b82f6;--blue-glow:rgba(59,130,246,.15);
+    --amber:#f59e0b;--amber-glow:rgba(245,158,11,.15);
+    --red:#ef4444;
+    --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC',sans-serif;
+    --mono:'SF Mono',SFMono-Regular,ui-monospace,'Cascadia Code','Fira Code',monospace;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font);background:var(--bg);color:var(--text);
+    line-height:1.6;overflow-x:hidden;
+    background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);
+    background-size:24px 24px;
+  }
+
+  /* ---- NAV ---- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    background:rgba(10,10,10,.8);border-bottom:1px solid var(--border);
+  }
+  .nav-inner{
+    max-width:1200px;margin:0 auto;padding:0 24px;
+    display:flex;align-items:center;justify-content:space-between;height:56px;
+  }
+  .nav-logo{font-weight:700;font-size:18px;letter-spacing:-.02em;color:#fff}
+  .nav-logo span{color:var(--green)}
+  .nav-links{display:flex;gap:28px;list-style:none}
+  .nav-links a{color:var(--text-muted);text-decoration:none;font-size:14px;transition:color .2s}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{
+    background:var(--green);color:#000;font-weight:600;font-size:13px;
+    padding:7px 18px;border-radius:6px;text-decoration:none;transition:all .2s;
+  }
+  .nav-cta:hover{box-shadow:0 0 20px rgba(0,255,136,.3);transform:translateY(-1px)}
+
+  /* ---- HERO ---- */
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:120px 24px 80px;
+    position:relative;
+  }
+  .hero::before{
+    content:'';position:absolute;top:20%;left:50%;transform:translate(-50%,-50%);
+    width:600px;height:600px;
+    background:radial-gradient(circle,rgba(0,255,136,.06) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);
+    border-radius:999px;padding:6px 16px;font-size:13px;color:var(--green);
+    margin-bottom:32px;font-weight:500;
+  }
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .hero h1{
+    font-size:clamp(48px,8vw,88px);font-weight:800;letter-spacing:-.04em;
+    line-height:1;color:#fff;margin-bottom:24px;
+    text-shadow:0 0 80px rgba(0,255,136,.2),0 0 160px rgba(0,255,136,.1);
+  }
+  .hero h1 span{
+    background:linear-gradient(135deg,var(--green),#00cc88,var(--blue));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .hero-cn{
+    font-size:clamp(18px,2.5vw,24px);color:var(--text);
+    margin-bottom:12px;font-weight:500;letter-spacing:.02em;
+  }
+  .hero-en{
+    font-size:clamp(14px,1.6vw,17px);color:var(--text-muted);
+    margin-bottom:48px;max-width:500px;
+  }
+  .hero-actions{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+  .btn-primary{
+    background:#fff;color:#000;font-weight:600;font-size:15px;
+    padding:12px 32px;border-radius:8px;text-decoration:none;
+    transition:all .2s;border:none;cursor:pointer;
+  }
+  .btn-primary:hover{box-shadow:0 0 30px rgba(255,255,255,.15);transform:translateY(-2px)}
+  .btn-secondary{
+    background:transparent;color:var(--text);font-weight:500;font-size:15px;
+    padding:12px 32px;border-radius:8px;text-decoration:none;
+    border:1px solid var(--border);transition:all .2s;cursor:pointer;
+  }
+  .btn-secondary:hover{border-color:var(--text-muted);color:#fff}
+
+  /* ---- SECTIONS ---- */
+  section{padding:100px 24px}
+  .section-inner{max-width:1200px;margin:0 auto}
+  .section-label{
+    font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--green);margin-bottom:12px;
+  }
+  .section-title{
+    font-size:clamp(28px,4vw,42px);font-weight:700;color:#fff;
+    letter-spacing:-.03em;margin-bottom:16px;
+  }
+  .section-desc{font-size:16px;color:var(--text-muted);max-width:560px;margin-bottom:56px}
+
+  /* ---- FEATURES ---- */
+  .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .feature-card{
+    background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+    padding:32px;transition:all .3s;position:relative;overflow:hidden;
+  }
+  .feature-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--green),transparent);
+    opacity:0;transition:opacity .3s;
+  }
+  .feature-card:hover{
+    border-color:var(--border-hover);background:var(--bg-card-hover);
+    transform:translateY(-4px);
+    box-shadow:0 8px 40px rgba(0,0,0,.4),0 0 0 1px rgba(0,255,136,.05);
+  }
+  .feature-card:hover::before{opacity:1}
+  .feature-icon{
+    width:48px;height:48px;border-radius:10px;display:flex;align-items:center;
+    justify-content:center;font-size:24px;margin-bottom:20px;
+  }
+  .feature-card:nth-child(1) .feature-icon{background:var(--green-glow)}
+  .feature-card:nth-child(2) .feature-icon{background:var(--blue-glow)}
+  .feature-card:nth-child(3) .feature-icon{background:var(--amber-glow)}
+  .feature-card h3{font-size:18px;font-weight:600;color:#fff;margin-bottom:4px}
+  .feature-card .en{font-size:13px;color:var(--text-dim);margin-bottom:12px;font-family:var(--mono)}
+  .feature-card p{font-size:14px;color:var(--text-muted);line-height:1.7}
+
+  /* ---- TOOL CARDS ---- */
+  .tools-section{background:rgba(255,255,255,.01)}
+  .tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .tool-card{
+    background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+    padding:24px;transition:all .3s;
+  }
+  .tool-card:hover{
+    border-color:var(--border-hover);
+    box-shadow:0 4px 32px rgba(0,0,0,.3);transform:translateY(-2px);
+  }
+  .tool-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+  .tool-name{font-weight:600;font-size:16px;color:#fff}
+  .tool-author{font-size:12px;color:var(--text-dim);font-family:var(--mono);margin-top:2px}
+  .tool-score{
+    font-size:28px;font-weight:700;font-family:var(--mono);line-height:1;
+  }
+  .tool-score-label{font-size:11px;color:var(--text-dim);text-align:right;margin-top:2px}
+  .score-high{color:var(--green)}
+  .score-mid{color:var(--amber)}
+  .score-blue{color:var(--blue)}
+  .tool-desc{font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6}
+  .tool-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tool-tag{
+    font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:4px;
+    background:rgba(255,255,255,.04);color:var(--text-muted);border:1px solid rgba(255,255,255,.06);
+  }
+  .tool-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-top:16px;border-top:1px solid var(--border)}
+  .metric{text-align:center}
+  .metric-value{font-size:15px;font-weight:600;font-family:var(--mono)}
+  .metric-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+  .metric-green .metric-value{color:var(--green)}
+  .metric-blue .metric-value{color:var(--blue)}
+  .metric-amber .metric-value{color:var(--amber)}
+
+  /* ---- HOW IT WORKS ---- */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative}
+  .steps::before{
+    content:'';position:absolute;top:40px;left:calc(16.66% + 24px);
+    right:calc(16.66% + 24px);height:2px;
+    background:linear-gradient(90deg,var(--green),var(--blue),var(--amber));
+    opacity:.3;
+  }
+  .step{text-align:center;position:relative}
+  .step-number{
+    width:80px;height:80px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 24px;font-size:28px;font-weight:700;
+    position:relative;z-index:1;
+  }
+  .step:nth-child(1) .step-number{
+    background:rgba(0,255,136,.08);border:2px solid rgba(0,255,136,.2);color:var(--green);
+  }
+  .step:nth-child(2) .step-number{
+    background:rgba(59,130,246,.08);border:2px solid rgba(59,130,246,.2);color:var(--blue);
+  }
+  .step:nth-child(3) .step-number{
+    background:rgba(245,158,11,.08);border:2px solid rgba(245,158,11,.2);color:var(--amber);
+  }
+  .step h3{font-size:18px;font-weight:600;color:#fff;margin-bottom:4px}
+  .step .step-en{font-size:12px;font-family:var(--mono);color:var(--text-dim);margin-bottom:12px}
+  .step p{font-size:14px;color:var(--text-muted);max-width:280px;margin:0 auto;line-height:1.7}
+  .step-arrow{font-size:20px;color:var(--text-dim);display:none}
+
+  /* ---- CTA ---- */
+  .cta-section{text-align:center;padding:120px 24px;position:relative}
+  .cta-section::before{
+    content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+    width:800px;height:400px;
+    background:radial-gradient(ellipse,rgba(0,255,136,.04),transparent 70%);
+    pointer-events:none;
+  }
+  .cta-section .section-title{margin-bottom:12px}
+  .cta-section .section-desc{margin:0 auto 40px;text-align:center}
+
+  /* ---- FOOTER ---- */
+  footer{
+    border-top:1px solid var(--border);padding:40px 24px;
+    text-align:center;font-size:13px;color:var(--text-dim);
+  }
+  footer a{color:var(--text-muted);text-decoration:none}
+  footer a:hover{color:#fff}
+
+  /* ---- RESPONSIVE ---- */
+  @media(max-width:900px){
+    .features-grid,.tools-grid,.steps{grid-template-columns:1fr}
+    .steps::before{display:none}
+    .nav-links{display:none}
+  }
+  @media(max-width:600px){
+    section{padding:64px 16px}
+    .hero{padding:100px 16px 60px}
+    .hero-actions{flex-direction:column;align-items:center}
+  }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  .fade-up{animation:fadeUp .6s ease-out both}
+  .fade-up:nth-child(2){animation-delay:.1s}
+  .fade-up:nth-child(3){animation-delay:.2s}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo"><span>G</span>repple</div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#registry">Registry</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="https://github.com" target="_blank">GitHub</a></li>
+    </ul>
+    <a href="#" class="nav-cta">Start Building</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">AAO Launchpad</div>
+  <h1><span>Grepple</span></h1>
+  <p class="hero-cn">让 agent 帮你的 MCP 工具被发现、被选中、被成功调用</p>
+  <p class="hero-en">Make your MCP tools discoverable, selectable, and successfully invoked by agents.</p>
+  <div class="hero-actions">
+    <a href="#" class="btn-primary">Submit Your Tool</a>
+    <a href="#registry" class="btn-secondary">Browse Registry</a>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-label">Core Capabilities</div>
+    <div class="section-title">三步解锁工具价值</div>
+    <div class="section-desc">Grepple 帮助开发者诊断、注册并推广 MCP 工具，让 AI agents 自动发现和调用你的工具。</div>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="feature-icon">&#x1F50D;</div>
+        <h3>智能诊断</h3>
+        <div class="en">Diagnose</div>
+        <p>自动分析你的 MCP 工具描述、schema 和调用链，识别 agent 理解障碍，给出优化建议。Tool description quality scoring and optimization suggestions.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">&#x1F4CB;</div>
+        <h3>公开注册表</h3>
+        <div class="en">Registry</div>
+        <p>所有通过诊断的工具进入公开排行榜，按评分排序，让 agent 高效发现最佳工具。Public leaderboard ranked by quality score.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feature-icon">&#x1F3C6;</div>
+        <h3>激励奖励</h3>
+        <div class="en">Rewards</div>
+        <p>工具被 agent 成功调用越多，获得的奖励积分越高。Top builders earn recognition and rewards for high-performing tools.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOL CARDS -->
+<section id="registry" class="tools-section">
+  <div class="section-inner">
+    <div class="section-label">Public Registry</div>
+    <div class="section-title">热门工具排行</div>
+    <div class="section-desc">实时更新的 MCP 工具排行，基于 agent 调用成功率和描述质量综合评分。</div>
+    <div class="tools-grid">
+
+      <div class="tool-card fade-up">
+        <div class="tool-header">
+          <div>
+            <div class="tool-name">mcp-web-search</div>
+            <div class="tool-author">@anthropic</div>
+          </div>
+          <div>
+            <div class="tool-score score-high">98</div>
+            <div class="tool-score-label">Score</div>
+          </div>
+        </div>
+        <div class="tool-desc">高质量网页搜索工具，支持多语言查询和结构化结果返回。Reliable web search with structured JSON output.</div>
+        <div class="tool-tags">
+          <span class="tool-tag">search</span>
+          <span class="tool-tag">web</span>
+          <span class="tool-tag">multilingual</span>
+        </div>
+        <div class="tool-metrics">
+          <div class="metric metric-green">
+            <div class="metric-value">99.2%</div>
+            <div class="metric-label">Success Rate</div>
+          </div>
+          <div class="metric metric-blue">
+            <div class="metric-value">12.4k</div>
+            <div class="metric-label">Calls / Day</div>
+          </div>
+          <div class="metric metric-amber">
+            <div class="metric-value">142ms</div>
+            <div class="metric-label">Avg Latency</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card fade-up">
+        <div class="tool-header">
+          <div>
+            <div class="tool-name">mcp-code-executor</div>
+            <div class="tool-author">@openai</div>
+          </div>
+          <div>
+            <div class="tool-score score-blue">91</div>
+            <div class="tool-score-label">Score</div>
+          </div>
+        </div>
+        <div class="tool-desc">安全沙箱中执行代码，支持 Python、JS、Go。Sandboxed code execution supporting multiple languages.</div>
+        <div class="tool-tags">
+          <span class="tool-tag">code</span>
+          <span class="tool-tag">sandbox</span>
+          <span class="tool-tag">execution</span>
+        </div>
+        <div class="tool-metrics">
+          <div class="metric metric-green">
+            <div class="metric-value">94.7%</div>
+            <div class="metric-label">Success Rate</div>
+          </div>
+          <div class="metric metric-blue">
+            <div class="metric-value">8.1k</div>
+            <div class="metric-label">Calls / Day</div>
+          </div>
+          <div class="metric metric-amber">
+            <div class="metric-value">320ms</div>
+            <div class="metric-label">Avg Latency</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card fade-up">
+        <div class="tool-header">
+          <div>
+            <div class="tool-name">mcp-db-query</div>
+            <div class="tool-author">@supabase</div>
+          </div>
+          <div>
+            <div class="tool-score score-mid">84</div>
+            <div class="tool-score-label">Score</div>
+          </div>
+        </div>
+        <div class="tool-desc">自然语言转 SQL 查询，支持 Postgres/MySQL。Natural language to SQL with read-only safety mode.</div>
+        <div class="tool-tags">
+          <span class="tool-tag">database</span>
+          <span class="tool-tag">sql</span>
+          <span class="tool-tag">nl2sql</span>
+        </div>
+        <div class="tool-metrics">
+          <div class="metric metric-green">
+            <div class="metric-value">87.3%</div>
+            <div class="metric-label">Success Rate</div>
+          </div>
+          <div class="metric metric-blue">
+            <div class="metric-value">3.2k</div>
+            <div class="metric-label">Calls / Day</div>
+          </div>
+          <div class="metric metric-amber">
+            <div class="metric-value">580ms</div>
+            <div class="metric-label">Avg Latency</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-inner">
+    <div class="section-label">Workflow</div>
+    <div class="section-title">工作流程</div>
+    <div class="section-desc">三步让你的工具上线并被全球 agent 调用。</div>
+    <div class="steps">
+      <div class="step fade-up">
+        <div class="step-number">1</div>
+        <h3>提交工具</h3>
+        <div class="step-en">Submit</div>
+        <p>上传你的 MCP 工具 manifest，包括工具名称、描述、参数 schema 和调用示例。</p>
+      </div>
+      <div class="step fade-up">
+        <div class="step-number">2</div>
+        <h3>自动诊断</h3>
+        <div class="step-en">Diagnose</div>
+        <p>Grepple agent 自动测试工具可发现性、可调用性，给出评分和改进建议。</p>
+      </div>
+      <div class="step fade-up">
+        <div class="step-number">3</div>
+        <h3>发布上线</h3>
+        <div class="step-en">Launch</div>
+        <p>工具通过诊断后自动进入公开注册表，开始被全球 agent 发现和调用。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-inner">
+    <div class="section-label">Get Started</div>
+    <div class="section-title">让你的工具被世界看见</div>
+    <div class="section-desc">加入 Grepple，成为 MCP 工具生态的先行者。Join the registry and let agents find your tools.</div>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">Submit Your First Tool</a>
+      <a href="#" class="btn-secondary">Read the Docs</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+    <div><span style="color:#fff;font-weight:600">Grepple</span> &middot; AAO Launchpad &copy; 2026</div>
+    <div style="display:flex;gap:24px">
+      <a href="#">Docs</a>
+      <a href="#">GitHub</a>
+      <a href="#">Discord</a>
+      <a href="#">Twitter</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Intersection Observer for fade-in -->
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animationPlayState = 'running';
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.fade-up').forEach(el => {
+    el.style.animationPlayState = 'paused';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

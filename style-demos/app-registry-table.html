@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grepple — Registry Table View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0D0B2E;
+  --surface: #14112E;
+  --elevated: #1A1740;
+  --purple: #7B6BA8;
+  --lavender: #9B8EC8;
+  --blue: #4A6CF7;
+  --blue-bright: #5B7FFF;
+  --green: #18DC7E;
+  --amber: #F5A623;
+  --red: #FF4757;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8B85AA;
+  --text-dim: #6B6590;
+  --border: #2D2855;
+  --radius: 12px;
+  --gradient: linear-gradient(135deg, #7B6BA8, #4A6CF7);
+  --sidebar-w: 240px;
+  --sidebar-collapsed: 64px;
+  --topbar-h: 72px;
+}
+
+html { font-size: 14px; }
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+.sidebar.collapsed { width: var(--sidebar-collapsed); }
+
+.sidebar-header {
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 10px;
+}
+.logo {
+  font-weight: 700;
+  font-size: 1.45rem;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  user-select: none;
+}
+.logo .l-g { color: #FFF; }
+.logo .l-r { color: #7B6BA8; }
+.logo .l-e1 { color: #9B8EC8; }
+.logo .l-p1 { color: #FFF; }
+.logo .l-p2 { color: #4A6CF7; }
+.logo .l-l { color: #5B7FFF; }
+.logo .l-e2 { color: #FFF; }
+
+.collapse-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  width: 28px; height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.collapse-btn:hover { background: var(--elevated); color: var(--text-primary); }
+.sidebar.collapsed .collapse-btn { margin-left: 0; }
+.sidebar.collapsed .logo { display: none; }
+.sidebar.collapsed .collapse-btn svg { transform: rotate(180deg); }
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nav-item:hover { background: var(--elevated); color: var(--text-primary); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(123,107,168,0.18), rgba(74,108,247,0.18));
+  color: var(--text-primary);
+  border: 1px solid rgba(123,107,168,0.25);
+}
+.nav-item svg { flex-shrink: 0; width: 20px; height: 20px; }
+.nav-label { transition: opacity 0.2s; }
+.sidebar.collapsed .nav-label { opacity: 0; pointer-events: none; }
+.sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.wallet-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--elevated);
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.wallet-btn:hover { border-color: var(--purple); background: rgba(123,107,168,0.1); }
+.wallet-btn svg { flex-shrink: 0; }
+.wallet-label { transition: opacity 0.2s; }
+.sidebar.collapsed .wallet-label { opacity: 0; width: 0; }
+.sidebar.collapsed .wallet-btn { justify-content: center; padding: 10px; }
+
+/* ─── MAIN ─── */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar.collapsed ~ .main { margin-left: var(--sidebar-collapsed); }
+
+/* ─── TOP BAR ─── */
+.topbar {
+  height: var(--topbar-h);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 20px;
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.topbar-search {
+  flex: 1;
+  max-width: 380px;
+  position: relative;
+}
+.topbar-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.topbar-search input {
+  width: 100%;
+  padding: 9px 14px 9px 40px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.topbar-search input::placeholder { color: var(--text-dim); }
+.topbar-search input:focus { border-color: var(--purple); }
+
+.topbar-filters {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.filter-select {
+  padding: 9px 32px 9px 14px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B6590' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.2s;
+}
+.filter-select:hover, .filter-select:focus { border-color: var(--purple); }
+.filter-select option { background: var(--surface); }
+
+/* ─── TABLE AREA ─── */
+.content {
+  padding: 28px 32px 40px;
+}
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.stat-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.stat-icon.purple { background: rgba(123,107,168,0.15); color: var(--purple); }
+.stat-icon.blue { background: rgba(74,108,247,0.15); color: var(--blue); }
+.stat-icon.green { background: rgba(24,220,126,0.15); color: var(--green); }
+.stat-icon.amber { background: rgba(245,166,35,0.15); color: var(--amber); }
+.stat-value { font-size: 1.4rem; font-weight: 700; }
+.stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+thead th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  white-space: nowrap;
+  user-select: none;
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 10;
+}
+thead th.sortable { cursor: pointer; }
+thead th.sortable:hover { color: var(--lavender); }
+tbody tr {
+  border-bottom: 1px solid rgba(45,40,85,0.5);
+  transition: background 0.15s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(123,107,168,0.06); }
+tbody td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.rank-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  color: var(--text-dim);
+  width: 50px;
+  text-align: center;
+}
+.tool-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tool-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.tool-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.tool-builder {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+.category-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(123,107,168,0.12);
+  color: var(--lavender);
+  border: 1px solid rgba(123,107,168,0.15);
+}
+.category-badge.defi { background: rgba(74,108,247,0.12); color: var(--blue-bright); border-color: rgba(74,108,247,0.15); }
+.category-badge.data { background: rgba(24,220,126,0.12); color: var(--green); border-color: rgba(24,220,126,0.15); }
+.category-badge.social { background: rgba(245,166,35,0.12); color: var(--amber); border-color: rgba(245,166,35,0.15); }
+.category-badge.infra { background: rgba(155,142,200,0.12); color: var(--lavender); border-color: rgba(155,142,200,0.15); }
+
+.score-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.score-cell.high { color: var(--green); }
+.score-cell.mid { color: var(--amber); }
+.score-cell.low { color: var(--red); }
+
+.composite-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.composite-bar {
+  width: 48px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.composite-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s;
+}
+.composite-fill.high { background: var(--green); }
+.composite-fill.mid { background: var(--amber); }
+.composite-fill.low { background: var(--red); }
+
+.sparkline-cell { padding: 0; }
+.sparkline {
+  width: 80px;
+  height: 32px;
+  display: block;
+}
+
+.time-cell {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+/* ─── PAGINATION ─── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.pagination-info {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.pagination-controls {
+  display: flex;
+  gap: 4px;
+}
+.page-btn {
+  width: 34px; height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.825rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.page-btn:hover { border-color: var(--purple); color: var(--text-primary); }
+.page-btn.active {
+  background: var(--gradient);
+  border-color: transparent;
+  color: #fff;
+}
+.page-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1100px) {
+  .stats-row { flex-wrap: wrap; }
+  .stat-card { min-width: calc(50% - 12px); }
+}
+@media (max-width: 900px) {
+  .sidebar { width: var(--sidebar-collapsed); }
+  .sidebar .logo { display: none; }
+  .sidebar .nav-label { opacity: 0; pointer-events: none; }
+  .sidebar .nav-item { justify-content: center; padding: 10px; }
+  .sidebar .wallet-label { opacity: 0; width: 0; }
+  .sidebar .wallet-btn { justify-content: center; padding: 10px; }
+  .sidebar .collapse-btn { display: none; }
+  .main { margin-left: var(--sidebar-collapsed); }
+  .topbar { padding: 0 20px; }
+  .content { padding: 20px; }
+  .topbar-filters { display: none; }
+}
+@media (max-width: 700px) {
+  .table-wrap { overflow-x: auto; }
+  table { min-width: 900px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <span class="l-g">g</span><span class="l-r">r</span><span class="l-e1">e</span><span class="l-p1">p</span><span class="l-p2">p</span><span class="l-l">l</span><span class="l-e2">e</span>
+    </div>
+    <button class="collapse-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="nav-label">Registry</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span class="nav-label">Builder</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+      <span class="nav-label">Agent</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <span class="nav-label">Rewards</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="wallet-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h.01"/></svg>
+      <span class="wallet-label">Connect Wallet</span>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main" id="main">
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <h1 class="topbar-title">Registry</h1>
+    <div class="topbar-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search tools by name, builder, or category...">
+    </div>
+    <div class="topbar-filters">
+      <select class="filter-select">
+        <option>All Categories</option>
+        <option>DeFi</option>
+        <option>Data</option>
+        <option>Social</option>
+        <option>Infrastructure</option>
+      </select>
+      <select class="filter-select">
+        <option>Sort: Composite Score</option>
+        <option>Sort: Success Rate</option>
+        <option>Sort: Discoverability</option>
+        <option>Sort: Last Tested</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </div>
+        <div><div class="stat-value">142</div><div class="stat-label">Total Tools</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div><div class="stat-value">89.2%</div><div class="stat-label">Avg Success Rate</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div><div class="stat-value">3,847</div><div class="stat-label">Calls (7d)</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        </div>
+        <div><div class="stat-value">58</div><div class="stat-label">Active Builders</div></div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px; text-align:center">#</th>
+            <th class="sortable">Tool Name</th>
+            <th>Category</th>
+            <th class="sortable">Composite</th>
+            <th class="sortable">Schema</th>
+            <th class="sortable">Discovery</th>
+            <th class="sortable">Callability</th>
+            <th class="sortable">Success Rate</th>
+            <th>7d Trend</th>
+            <th class="sortable">Last Tested</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="pagination">
+        <div class="pagination-info">Showing 1 - 10 of 142 tools</div>
+        <div class="pagination-controls">
+          <button class="page-btn" disabled>&laquo;</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">...</button>
+          <button class="page-btn">15</button>
+          <button class="page-btn">&raquo;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───
+const tools = [
+  { name: "Uniswap V3 Swap", builder: "defi-labs.eth", cat: "defi", catLabel: "DeFi", icon: "U", iconBg: "#4A6CF7", composite: 96, schema: 98, discovery: 94, callability: 97, success: 98.4, trend: [82,85,90,88,93,95,96], tested: "2 hours ago" },
+  { name: "Chainlink Price Feed", builder: "oracle-dao.eth", cat: "data", catLabel: "Data", icon: "C", iconBg: "#18DC7E", composite: 94, schema: 96, discovery: 92, callability: 95, success: 97.1, trend: [88,87,90,91,93,94,94], tested: "4 hours ago" },
+  { name: "Aave Lending Pool", builder: "aave-contrib.eth", cat: "defi", catLabel: "DeFi", icon: "A", iconBg: "#7B6BA8", composite: 91, schema: 93, discovery: 88, callability: 92, success: 94.8, trend: [85,86,88,89,90,91,91], tested: "6 hours ago" },
+  { name: "ENS Resolver", builder: "ens-tools.eth", cat: "infra", catLabel: "Infra", icon: "E", iconBg: "#9B8EC8", composite: 88, schema: 91, discovery: 85, callability: 90, success: 91.2, trend: [80,82,84,86,87,88,88], tested: "12 hours ago" },
+  { name: "The Graph Subquery", builder: "graphql-builder", cat: "data", catLabel: "Data", icon: "G", iconBg: "#18DC7E", composite: 85, schema: 88, discovery: 82, callability: 87, success: 88.5, trend: [78,80,82,83,84,85,85], tested: "1 day ago" },
+  { name: "Farcaster Cast", builder: "social-stack.eth", cat: "social", catLabel: "Social", icon: "F", iconBg: "#F5A623", composite: 79, schema: 82, discovery: 76, callability: 80, success: 82.3, trend: [70,72,74,75,77,78,79], tested: "1 day ago" },
+  { name: "IPFS Pin Service", builder: "storage-labs", cat: "infra", catLabel: "Infra", icon: "I", iconBg: "#5B7FFF", composite: 74, schema: 78, discovery: 70, callability: 75, success: 76.8, trend: [68,70,71,72,73,74,74], tested: "2 days ago" },
+  { name: "Lens Post Publisher", builder: "lens-dev.eth", cat: "social", catLabel: "Social", icon: "L", iconBg: "#F5A623", composite: 71, schema: 75, discovery: 68, callability: 72, success: 73.4, trend: [65,66,67,68,69,70,71], tested: "2 days ago" },
+  { name: "GMX Perps Engine", builder: "perps-builder.eth", cat: "defi", catLabel: "DeFi", icon: "G", iconBg: "#4A6CF7", composite: 62, schema: 68, discovery: 58, callability: 64, success: 65.7, trend: [55,57,58,59,60,61,62], tested: "3 days ago" },
+  { name: "Token Metadata Fetch", builder: "meta-utils", cat: "data", catLabel: "Data", icon: "T", iconBg: "#18DC7E", composite: 53, schema: 55, discovery: 50, callability: 56, success: 52.1, trend: [60,58,56,55,54,53,53], tested: "5 days ago" }
+];
+
+function scoreClass(v) { return v >= 85 ? 'high' : v >= 60 ? 'mid' : 'low'; }
+
+function sparklineSVG(points, cls) {
+  const w = 80, h = 32, pad = 4;
+  const min = Math.min(...points), max = Math.max(...points);
+  const range = max - min || 1;
+  const coords = points.map((p, i) => {
+    const x = pad + (i / (points.length - 1)) * (w - pad * 2);
+    const y = pad + (1 - (p - min) / range) * (h - pad * 2);
+    return `${x},${y}`;
+  });
+  const color = cls === 'high' ? '#18DC7E' : cls === 'mid' ? '#F5A623' : '#FF4757';
+  const pathD = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c).join(' ');
+  const areaD = pathD + ` L${pad + (w - pad * 2)},${h - pad} L${pad},${h - pad} Z`;
+  return `<svg class="sparkline" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g-${cls}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.3"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${areaD}" fill="url(#g-${cls})"/><path d="${pathD}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = tools.map((t, i) => {
+    const cc = scoreClass(t.composite);
+    const sc = scoreClass(t.schema);
+    const dc = scoreClass(t.discovery);
+    const clc = scoreClass(t.callability);
+    const suc = scoreClass(t.success);
+    const trendCls = scoreClass(t.trend[t.trend.length - 1]);
+    return `<tr>
+      <td class="rank-cell">${i + 1}</td>
+      <td><div class="tool-cell"><div class="tool-icon" style="background:${t.iconBg}22; color:${t.iconBg}; font-weight:700; font-family:'JetBrains Mono',monospace">${t.icon}</div><div><div class="tool-name">${t.name}</div><div class="tool-builder">${t.builder}</div></div></div></td>
+      <td><span class="category-badge ${t.cat}">${t.catLabel}</span></td>
+      <td><div class="composite-cell"><span class="score-cell ${cc}">${t.composite}</span><div class="composite-bar"><div class="composite-fill ${cc}" style="width:${t.composite}%"></div></div></div></td>
+      <td class="score-cell ${sc}">${t.schema}</td>
+      <td class="score-cell ${dc}">${t.discovery}</td>
+      <td class="score-cell ${clc}">${t.callability}</td>
+      <td class="score-cell ${suc}">${t.success.toFixed(1)}%</td>
+      <td class="sparkline-cell">${sparklineSVG(t.trend, trendCls)}</td>
+      <td class="time-cell">${t.tested}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+renderTable();
+</script>
+</body>
+</html>

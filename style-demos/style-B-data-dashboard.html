@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grepple - AAO Launchpad</title>
+<style>
+  /* ── Reset & Base ─────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --border:    #30363d;
+    --border-hi: #3d444d;
+    --text:      #e6edf3;
+    --text-dim:  #8b949e;
+    --cyan:      #58d5c2;
+    --cyan-dim:  rgba(88,213,194,.12);
+    --cyan-mid:  rgba(88,213,194,.25);
+    --teal:      #2dd4a8;
+    --amber:     #f0b840;
+    --red:       #f85149;
+    --blue:      #58a6ff;
+    --mono:      'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    --sans:      -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', sans-serif;
+    --radius:    10px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── Utility ──────────────────────────────────────── */
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Nav ───────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,17,23,.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .inner {
+    max-width: 1140px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 18px; font-weight: 700; color: var(--cyan);
+    letter-spacing: .5px;
+  }
+  .nav-logo span { color: var(--text-dim); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    color: var(--text-dim); text-decoration: none; font-size: 14px; transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── Hero ──────────────────────────────────────────── */
+  .hero {
+    padding: 160px 0 100px;
+    text-align: center;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse at center, rgba(88,213,194,.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--cyan-dim);
+    border: 1px solid var(--cyan-mid);
+    border-radius: 999px;
+    padding: 5px 16px;
+    font-size: 12px; font-family: var(--mono);
+    color: var(--cyan);
+    margin-bottom: 28px;
+  }
+  .hero-badge .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .35; }
+  }
+
+  .hero h1 {
+    font-family: var(--mono);
+    font-size: clamp(42px, 6vw, 72px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .hero h1 .accent { color: var(--cyan); }
+
+  .hero .tagline-zh {
+    margin-top: 24px;
+    font-size: clamp(16px, 2.2vw, 20px);
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .hero .tagline-en {
+    margin-top: 8px;
+    font-size: 14px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    opacity: .65;
+  }
+
+  .hero-cta {
+    margin-top: 40px;
+    display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    text-decoration: none;
+    transition: all .2s;
+    border: none; cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--cyan); color: var(--bg);
+  }
+  .btn-primary:hover { box-shadow: 0 0 24px rgba(88,213,194,.35); transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--text-dim); }
+
+  /* ── Stats bar ────────────────────────────────────── */
+  .stats-bar {
+    margin-top: 64px;
+    display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 28px; font-weight: 700; color: var(--cyan);
+  }
+  .stat-label {
+    font-size: 12px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* ── Section shared ───────────────────────────────── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--cyan); margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .section-desc {
+    color: var(--text-dim); font-size: 15px; max-width: 560px;
+  }
+
+  /* ── Registry / Dashboard ─────────────────────────── */
+  .registry {
+    padding: 80px 0;
+  }
+  .registry-header {
+    display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 32px;
+  }
+  .registry-controls {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .pill {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px; font-family: var(--mono);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    background: transparent;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .pill.active, .pill:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: var(--cyan-dim);
+  }
+
+  /* ── Tool cards grid ──────────────────────────────── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color .2s, box-shadow .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .tool-card:hover {
+    border-color: var(--border-hi);
+    box-shadow: 0 0 0 1px var(--border-hi), 0 8px 32px rgba(0,0,0,.35);
+  }
+  .tool-card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .tool-card.rank-1::after { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .tool-card.rank-2::after { background: linear-gradient(90deg, var(--teal), transparent); }
+  .tool-card.rank-3::after { background: linear-gradient(90deg, var(--blue), transparent); }
+  .tool-card.rank-4::after { background: linear-gradient(90deg, var(--amber), transparent); }
+
+  .card-top {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;
+  }
+  .card-name {
+    font-family: var(--mono);
+    font-size: 16px; font-weight: 700;
+  }
+  .card-name small {
+    display: block;
+    font-weight: 400; font-size: 12px; color: var(--text-dim);
+    margin-top: 3px; font-family: var(--sans);
+  }
+  .card-rank {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    white-space: nowrap;
+  }
+
+  /* Overall score circle */
+  .overall-score {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px;
+  }
+  .score-ring {
+    position: relative;
+    width: 56px; height: 56px; flex-shrink: 0;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .ring-bg {
+    fill: none; stroke: var(--border); stroke-width: 4;
+  }
+  .score-ring .ring-fg {
+    fill: none; stroke-width: 4; stroke-linecap: round;
+    transition: stroke-dashoffset .6s ease;
+  }
+  .score-ring .ring-value {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 16px; font-weight: 700;
+  }
+  .overall-meta { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .overall-meta strong { color: var(--text); font-weight: 600; }
+
+  /* Metric rows */
+  .metrics { display: flex; flex-direction: column; gap: 10px; }
+  .metric-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .metric-label {
+    width: 90px; flex-shrink: 0;
+    font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px;
+  }
+  .metric-bar-wrap {
+    flex: 1; height: 6px;
+    background: rgba(255,255,255,.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .metric-bar {
+    height: 100%; border-radius: 3px;
+    transition: width .8s ease;
+  }
+  .metric-val {
+    width: 40px; text-align: right;
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+  }
+
+  /* Sparkline */
+  .sparkline-row {
+    margin-top: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sparkline-label { font-size: 11px; color: var(--text-dim); }
+  .sparkline svg { display: block; }
+  .sparkline-delta {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+  }
+  .delta-up { color: var(--teal); }
+  .delta-down { color: var(--red); }
+
+  /* ── How it works ─────────────────────────────────── */
+  .how-it-works {
+    padding: 80px 0 100px;
+  }
+  .how-header { text-align: center; margin-bottom: 56px; }
+  .how-header .section-desc { margin: 0 auto; }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    position: relative;
+  }
+
+  /* connecting line */
+  .steps-grid::before {
+    content: '';
+    position: absolute;
+    top: 40px; left: calc(16.66% + 24px); right: calc(16.66% + 24px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), var(--border), transparent);
+  }
+
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    text-align: center;
+    position: relative;
+    transition: border-color .2s, transform .2s;
+  }
+  .step-card:hover {
+    border-color: var(--cyan-mid);
+    transform: translateY(-3px);
+  }
+  .step-num {
+    width: 48px; height: 48px;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    background: var(--cyan-dim);
+    border: 1px solid var(--cyan-mid);
+    font-family: var(--mono);
+    font-size: 18px; font-weight: 700; color: var(--cyan);
+  }
+  .step-title {
+    font-size: 18px; font-weight: 700; margin-bottom: 6px;
+  }
+  .step-title .step-en {
+    font-family: var(--mono); font-size: 13px; color: var(--cyan); font-weight: 600;
+    display: block; margin-bottom: 4px;
+  }
+  .step-desc {
+    font-size: 14px; color: var(--text-dim); line-height: 1.7;
+  }
+
+  /* Arrow between steps (desktop only) */
+  .step-arrow {
+    display: none;
+  }
+
+  /* ── Footer ───────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    text-align: center;
+    font-size: 13px; color: var(--text-dim);
+  }
+  footer a { color: var(--cyan); text-decoration: none; }
+
+  /* ── Responsive ───────────────────────────────────── */
+  @media (max-width: 768px) {
+    .hero { padding: 120px 0 60px; }
+    .stats-bar { gap: 24px; }
+    .stat-num { font-size: 22px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .steps-grid::before { display: none; }
+    .registry-header { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 36px; }
+    .hero .tagline-zh { font-size: 15px; }
+    .tool-card { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Nav ─────────────────────────────────────────── -->
+<nav>
+  <div class="inner">
+    <div class="nav-logo">grepple<span>/ registry</span></div>
+    <div class="nav-links">
+      <a href="#registry">Registry</a>
+      <a href="#how">How it works</a>
+      <a href="#">Docs</a>
+      <a href="#">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── Hero ────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge"><span class="dot"></span> AAO Launchpad &mdash; Now Live</div>
+    <h1>Grep<span class="accent">ple</span></h1>
+    <p class="tagline-zh">让 agent 帮你的 MCP 工具被发现、被选中、被成功调用</p>
+    <p class="tagline-en">Make your MCP tools discoverable by agents</p>
+
+    <div class="hero-cta">
+      <a href="#" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Submit a Tool
+      </a>
+      <a href="#registry" class="btn btn-outline">Browse Registry</a>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-num">1,247</div>
+        <div class="stat-label">Tools Indexed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">86.3%</div>
+        <div class="stat-label">Avg Schema Health</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3.2M</div>
+        <div class="stat-label">Agent Calls / Week</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">412</div>
+        <div class="stat-label">Builders</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Registry Dashboard ──────────────────────────── -->
+<section class="registry" id="registry">
+  <div class="container">
+    <div class="registry-header">
+      <div>
+        <div class="section-label">Live Registry</div>
+        <h2 class="section-title">Top Ranked Tools</h2>
+        <p class="section-desc">实时排行榜 &mdash; 由 agent 测试驱动的评分体系</p>
+      </div>
+      <div class="registry-controls">
+        <button class="pill active">All</button>
+        <button class="pill">Data</button>
+        <button class="pill">Dev Tools</button>
+        <button class="pill">Infra</button>
+        <button class="pill">Finance</button>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+
+      <!-- Card 1 -->
+      <div class="tool-card rank-1">
+        <div class="card-top">
+          <div class="card-name">
+            sql-query-agent
+            <small>by DataForge &middot; v2.4.1</small>
+          </div>
+          <span class="card-rank">#1 Overall</span>
+        </div>
+        <div class="overall-score">
+          <div class="score-ring">
+            <svg width="56" height="56" viewBox="0 0 56 56">
+              <circle class="ring-bg" cx="28" cy="28" r="24"/>
+              <circle class="ring-fg" cx="28" cy="28" r="24"
+                stroke="var(--cyan)"
+                stroke-dasharray="150.8"
+                stroke-dashoffset="9.05"/>
+            </svg>
+            <div class="ring-value" style="color:var(--cyan)">94</div>
+          </div>
+          <div class="overall-meta">
+            <strong>Composite Score</strong><br>
+            Agent 可发现性极高，调用成功率领先
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric-row">
+            <span class="metric-label">Discover</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:96%;background:var(--cyan)"></div></div>
+            <span class="metric-val" style="color:var(--cyan)">96</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Callability</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:92%;background:var(--teal)"></div></div>
+            <span class="metric-val" style="color:var(--teal)">92</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Schema</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:98%;background:var(--blue)"></div></div>
+            <span class="metric-val" style="color:var(--blue)">98</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Success</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:91%;background:var(--teal)"></div></div>
+            <span class="metric-val" style="color:var(--teal)">91%</span>
+          </div>
+        </div>
+        <div class="sparkline-row">
+          <span class="sparkline-label">7d trend</span>
+          <span class="sparkline">
+            <svg width="80" height="24" viewBox="0 0 80 24">
+              <polyline points="0,18 12,14 24,16 36,10 48,8 60,6 72,4 80,2" fill="none" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="0,18 12,14 24,16 36,10 48,8 60,6 72,4 80,2" fill="url(#sparkGrad1)" stroke="none" opacity=".15"/>
+              <defs><linearGradient id="sparkGrad1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--cyan)"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>
+            </svg>
+          </span>
+          <span class="sparkline-delta delta-up">+2.4</span>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="tool-card rank-2">
+        <div class="card-top">
+          <div class="card-name">
+            github-pr-review
+            <small>by DevOpsKit &middot; v1.8.0</small>
+          </div>
+          <span class="card-rank">#2 Overall</span>
+        </div>
+        <div class="overall-score">
+          <div class="score-ring">
+            <svg width="56" height="56" viewBox="0 0 56 56">
+              <circle class="ring-bg" cx="28" cy="28" r="24"/>
+              <circle class="ring-fg" cx="28" cy="28" r="24"
+                stroke="var(--teal)"
+                stroke-dasharray="150.8"
+                stroke-dashoffset="19.6"/>
+            </svg>
+            <div class="ring-value" style="color:var(--teal)">87</div>
+          </div>
+          <div class="overall-meta">
+            <strong>Composite Score</strong><br>
+            Schema 规范完整，错误处理优秀
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric-row">
+            <span class="metric-label">Discover</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:88%;background:var(--cyan)"></div></div>
+            <span class="metric-val" style="color:var(--cyan)">88</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Callability</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:85%;background:var(--teal)"></div></div>
+            <span class="metric-val" style="color:var(--teal)">85</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Schema</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:94%;background:var(--blue)"></div></div>
+            <span class="metric-val" style="color:var(--blue)">94</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Success</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:82%;background:var(--teal)"></div></div>
+            <span class="metric-val" style="color:var(--teal)">82%</span>
+          </div>
+        </div>
+        <div class="sparkline-row">
+          <span class="sparkline-label">7d trend</span>
+          <span class="sparkline">
+            <svg width="80" height="24" viewBox="0 0 80 24">
+              <polyline points="0,12 12,14 24,10 36,12 48,8 60,10 72,6 80,5" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="sparkline-delta delta-up">+1.1</span>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="tool-card rank-3">
+        <div class="card-top">
+          <div class="card-name">
+            k8s-deploy-helper
+            <small>by CloudNative &middot; v3.1.2</small>
+          </div>
+          <span class="card-rank">#3 Overall</span>
+        </div>
+        <div class="overall-score">
+          <div class="score-ring">
+            <svg width="56" height="56" viewBox="0 0 56 56">
+              <circle class="ring-bg" cx="28" cy="28" r="24"/>
+              <circle class="ring-fg" cx="28" cy="28" r="24"
+                stroke="var(--blue)"
+                stroke-dasharray="150.8"
+                stroke-dashoffset="28.65"/>
+            </svg>
+            <div class="ring-value" style="color:var(--blue)">81</div>
+          </div>
+          <div class="overall-meta">
+            <strong>Composite Score</strong><br>
+            可调用性高，文档待补全
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric-row">
+            <span class="metric-label">Discover</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:76%;background:var(--cyan)"></div></div>
+            <span class="metric-val" style="color:var(--cyan)">76</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Callability</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:89%;background:var(--teal)"></div></div>
+            <span class="metric-val" style="color:var(--teal)">89</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Schema</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:82%;background:var(--blue)"></div></div>
+            <span class="metric-val" style="color:var(--blue)">82</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Success</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:78%;background:var(--amber)"></div></div>
+            <span class="metric-val" style="color:var(--amber)">78%</span>
+          </div>
+        </div>
+        <div class="sparkline-row">
+          <span class="sparkline-label">7d trend</span>
+          <span class="sparkline">
+            <svg width="80" height="24" viewBox="0 0 80 24">
+              <polyline points="0,8 12,10 24,6 36,12 48,14 60,10 72,8 80,9" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="sparkline-delta delta-down">-0.3</span>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="tool-card rank-4">
+        <div class="card-top">
+          <div class="card-name">
+            stripe-payment-mcp
+            <small>by FinStack &middot; v1.2.0</small>
+          </div>
+          <span class="card-rank">#4 Overall</span>
+        </div>
+        <div class="overall-score">
+          <div class="score-ring">
+            <svg width="56" height="56" viewBox="0 0 56 56">
+              <circle class="ring-bg" cx="28" cy="28" r="24"/>
+              <circle class="ring-fg" cx="28" cy="28" r="24"
+                stroke="var(--amber)"
+                stroke-dasharray="150.8"
+                stroke-dashoffset="37.7"/>
+            </svg>
+            <div class="ring-value" style="color:var(--amber)">75</div>
+          </div>
+          <div class="overall-meta">
+            <strong>Composite Score</strong><br>
+            新上线工具，Schema 健康度待提升
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric-row">
+            <span class="metric-label">Discover</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:82%;background:var(--cyan)"></div></div>
+            <span class="metric-val" style="color:var(--cyan)">82</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Callability</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:74%;background:var(--amber)"></div></div>
+            <span class="metric-val" style="color:var(--amber)">74</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Schema</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:68%;background:var(--amber)"></div></div>
+            <span class="metric-val" style="color:var(--amber)">68</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Success</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:76%;background:var(--amber)"></div></div>
+            <span class="metric-val" style="color:var(--amber)">76%</span>
+          </div>
+        </div>
+        <div class="sparkline-row">
+          <span class="sparkline-label">7d trend</span>
+          <span class="sparkline">
+            <svg width="80" height="24" viewBox="0 0 80 24">
+              <polyline points="0,20 12,16 24,18 36,12 48,10 60,8 72,6 80,4" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="sparkline-delta delta-up">+4.7</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── How It Works ────────────────────────────────── -->
+<section class="how-it-works" id="how">
+  <div class="container">
+    <div class="how-header">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-title">三步上线你的 MCP 工具</h2>
+      <p class="section-desc">From submission to production-ready, powered by agent-driven diagnostics.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-title">
+          <span class="step-en">Submit</span>
+          提交工具
+        </div>
+        <p class="step-desc">提交你的 MCP tool manifest。我们解析 schema、描述和参数定义，生成初始指纹。</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-title">
+          <span class="step-en">Diagnose</span>
+          Agent 诊断
+        </div>
+        <p class="step-desc">多个 agent 尝试发现并调用你的工具，自动评估 discoverability、callability 和 schema 健康度。</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-title">
+          <span class="step-en">Launch</span>
+          上线排行
+        </div>
+        <p class="step-desc">获得评分和改进建议。优化后重新提交，进入公开排行榜，被更多 agent 选中和调用。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Footer ──────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <p style="font-family:var(--mono); margin-bottom: 6px;">
+      <span style="color:var(--cyan)">grepple</span><span style="color:var(--text-dim)">/</span>registry
+    </p>
+    <p>Built for the agentic era &middot; <a href="#">GitHub</a> &middot; <a href="#">Docs</a> &middot; <a href="#">Discord</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
