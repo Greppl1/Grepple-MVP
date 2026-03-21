@@ -14,6 +14,10 @@ class Settings:
     anthropic_version: str
     zian_webhook_url: str = ""
     zian_webhook_api_key: str = ""
+    cors_origins: tuple[str, ...] = (
+        "https://grepple.vercel.app",
+        "http://localhost:3000",
+    )
     app_title: str = "AAO Launchpad Scoring Engine"
 
 

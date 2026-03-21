@@ -15,14 +15,26 @@ from scoring_engine.config import get_settings
 
 try:
     from fastapi import FastAPI, HTTPException  # type: ignore
+    from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 except ImportError:  # pragma: no cover - exercised in local environment
     from scoring_engine.compat.fastapi import FastAPI, HTTPException
+
+    CORSMiddleware = None  # type: ignore[assignment,misc]
 
 
 def create_app(db_path: str | Path | None = None) -> FastAPI:
     del db_path
     settings = get_settings()
     app = FastAPI(title=f"{settings.app_title} Reward System")
+
+    if CORSMiddleware is not None:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=list(settings.cors_origins),
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     @app.post("/api/rewards/mint")
     async def mint_reward(payload: dict[str, object]) -> RewardResult:

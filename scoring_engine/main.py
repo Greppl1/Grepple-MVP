@@ -16,8 +16,11 @@ from scoring_engine.score_formulas import compute_scores, scores_to_dict
 
 try:
     from fastapi import FastAPI, HTTPException  # type: ignore
+    from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 except ImportError:  # pragma: no cover - exercised in local environment
     from scoring_engine.compat.fastapi import FastAPI, HTTPException
+
+    CORSMiddleware = None  # type: ignore[assignment,misc]
 
 
 def create_app(
@@ -29,6 +32,15 @@ def create_app(
         store=store, llm_client=llm_client or AnthropicLLMClient(settings)
     )
     app = FastAPI(title=settings.app_title)
+
+    if CORSMiddleware is not None:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=list(settings.cors_origins),
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     @app.post("/api/v1/diagnose")
     async def diagnose(payload: ToolInput) -> DiagnosticReport:
