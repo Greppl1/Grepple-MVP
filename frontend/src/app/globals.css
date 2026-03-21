@@ -3,9 +3,9 @@
 @theme inline {
   --color-bg: #0D0B2E;
   --color-bg-nav: rgba(13, 11, 46, 0.92);
-  --color-surface: #14112E;
-  --color-elevated: #1A1740;
-  --color-elevated-2: #221E4A;
+  --color-surface: #151333;
+  --color-elevated: #1D1A45;
+  --color-elevated-2: #252252;
   --color-purple: #7B6BA8;
   --color-purple-dim: rgba(123, 107, 168, 0.1);
   --color-lavender: #9B8EC8;
@@ -40,15 +40,11 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-border-hi); }
 
-/* Gradient text utility — kept for rare uses, prefer solid colors */
-.gradient-text {
-  background: linear-gradient(135deg, #9B8EC8, #5B7FFF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Accent text — preferred over gradient */
+/* Accent text */
 .accent-text {
   color: var(--color-blue-bright);
 }
@@ -58,7 +54,7 @@ body {
   background: linear-gradient(135deg, #7B6BA8, #4A6CF7);
   color: white;
   box-shadow: 0 4px 20px rgba(74, 108, 247, 0.25);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
 }
 .btn-gradient:hover {
   transform: translateY(-1px);
@@ -68,10 +64,12 @@ body {
   transform: translateY(0);
 }
 .btn-gradient:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  transform: none;
+  background: var(--color-elevated);
+  color: var(--color-text-dim);
   box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+  opacity: 1;
 }
 
 /* Secondary button */
@@ -93,27 +91,33 @@ body {
 }
 .card-glow:hover {
   border-color: var(--color-border-hi);
-  box-shadow: 0 0 40px rgba(74, 108, 247, 0.08);
+  box-shadow: 0 0 40px rgba(74, 108, 247, 0.15), 0 0 80px rgba(123, 107, 168, 0.06);
 }
 
 /* Hero gradient background */
 .hero-gradient {
-  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(74, 108, 247, 0.12) 0%, transparent 70%),
-              radial-gradient(ellipse 40% 40% at 70% 10%, rgba(123, 107, 168, 0.08) 0%, transparent 60%);
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(74, 108, 247, 0.14) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 40% at 70% 10%, rgba(123, 107, 168, 0.1) 0%, transparent 60%);
 }
 
 /* Testnet banner */
 .testnet-banner {
   background: linear-gradient(90deg, rgba(245, 166, 35, 0.08) 0%, rgba(74, 108, 247, 0.08) 100%);
   border: 1px solid rgba(245, 166, 35, 0.2);
+  color: var(--color-amber);
+  font-size: 0.75rem;
+  padding: 0.375rem 1rem;
+  border-radius: 0.5rem;
+  text-align: center;
 }
 
-/* Table row hover — visible */
+/* Table row hover */
 .row-hover {
   transition: background 0.15s;
+  cursor: pointer;
 }
 .row-hover:hover {
-  background: rgba(26, 23, 64, 0.6);
+  background: rgba(29, 26, 69, 0.6);
 }
 
 /* Animations */
@@ -140,6 +144,10 @@ body {
 @keyframes slide-left {
   from { opacity: 0; transform: translateX(-100%); }
   to { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .animate-slide-in {
@@ -204,3 +212,31 @@ body {
 /* Logo: "grep" white, "ple" purple */
 .logo-grep { color: #FFFFFF; }
 .logo-ple { color: #7B6BA8; }
+
+/* Command palette overlay */
+.cmd-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  animation: fade-in 0.15s ease-out;
+}
+.cmd-panel {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 2rem));
+  z-index: 201;
+  animation: scale-in 0.15s ease-out;
+}
+
+/* Identicon */
+.identicon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  border-radius: 50%;
+  overflow: hidden;
+}

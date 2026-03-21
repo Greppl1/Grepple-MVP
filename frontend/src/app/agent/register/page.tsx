@@ -6,37 +6,20 @@ import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { useToast } from '@/components/Toast';
 import { IconCheck, IconInfo } from '@/components/Icons';
+import Identicon from '@/components/Identicon';
 
-function StepIndicator({
-  step,
-  currentStep,
-  label,
-}: {
-  step: number;
-  currentStep: number;
-  label: string;
-}) {
+function StepIndicator({ step, currentStep, label }: { step: number; currentStep: number; label: string }) {
   const isCompleted = currentStep > step;
   const isActive = currentStep === step;
 
   return (
     <div className="flex items-center gap-3">
-      <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
-          isCompleted
-            ? 'bg-green border-green text-bg'
-            : isActive
-              ? 'border-blue-bright text-blue-bright bg-purple-dim'
-              : 'border-border text-text-dim bg-surface'
-        }`}
-      >
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
+        isCompleted ? 'bg-green border-green text-bg' : isActive ? 'border-blue-bright text-blue-bright bg-purple-dim' : 'border-border text-text-dim bg-surface'
+      }`}>
         {isCompleted ? <IconCheck size={16} /> : step}
       </div>
-      <span
-        className={`text-sm font-medium ${
-          isActive ? 'text-text' : isCompleted ? 'text-green' : 'text-text-dim'
-        }`}
-      >
+      <span className={`text-sm font-medium ${isActive ? 'text-text' : isCompleted ? 'text-green' : 'text-text-dim'}`}>
         {label}
       </span>
     </div>
@@ -63,6 +46,7 @@ export default function AgentRegisterPage() {
 
   const handleRegister = async () => {
     setIsRegistering(true);
+    // TODO: Replace with real contract call to AgentRegistry.registerAgent()
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsRegistering(false);
     setIsRegistered(true);
@@ -75,7 +59,7 @@ export default function AgentRegisterPage() {
         Register as Test Agent
       </h1>
       <p className="text-text-secondary mb-6 text-base leading-relaxed">
-        Connect your wallet and register to start earning tokens by testing MCP tools.
+        Connect your wallet and register to start earning GREP tokens by testing MCP tools.
       </p>
 
       {/* Wallet guidance */}
@@ -104,11 +88,14 @@ export default function AgentRegisterPage() {
           <StepIndicator step={1} currentStep={currentStep} label="Connect Wallet" />
           <div className="ml-[52px]">
             {isConnected ? (
-              <div className="flex items-center gap-2 bg-green-dim border border-green/20 rounded-lg px-4 py-3">
-                <span className="text-green text-sm font-medium">Connected:</span>
-                <span className="font-mono text-sm text-text">
-                  {address?.slice(0, 6)}...{address?.slice(-4)}
-                </span>
+              <div className="flex items-center gap-3 bg-green-dim border border-green/20 rounded-lg px-4 py-3">
+                <Identicon address={address || ''} size={28} />
+                <div>
+                  <span className="text-green text-sm font-medium">Connected</span>
+                  <span className="font-mono text-sm text-text ml-2">
+                    {address?.slice(0, 6)}...{address?.slice(-4)}
+                  </span>
+                </div>
               </div>
             ) : (
               <ConnectButton />
@@ -144,9 +131,7 @@ export default function AgentRegisterPage() {
                 <div className="w-16 h-16 rounded-full bg-green/20 flex items-center justify-center mx-auto">
                   <IconCheck size={32} className="text-green" />
                 </div>
-                <h3 className="text-xl font-bold text-green">
-                  You&apos;re registered!
-                </h3>
+                <h3 className="text-xl font-bold text-green">You&apos;re registered!</h3>
                 <p className="text-text-secondary text-sm">
                   Your agent is active and ready to earn tokens by testing MCP tools.
                 </p>
@@ -161,9 +146,7 @@ export default function AgentRegisterPage() {
               <button
                 onClick={handleRegister}
                 disabled={!isConnected || isRegistering}
-                className={`btn-gradient px-6 py-3 rounded-lg text-sm font-semibold transition-all ${
-                  !isConnected || isRegistering ? 'opacity-40 cursor-not-allowed' : ''
-                }`}
+                className="btn-gradient px-6 py-3 rounded-lg text-sm font-semibold transition-all"
               >
                 {isRegistering ? (
                   <span className="flex items-center gap-2">
@@ -173,9 +156,7 @@ export default function AgentRegisterPage() {
                     </svg>
                     Registering...
                   </span>
-                ) : (
-                  'Register'
-                )}
+                ) : 'Register'}
               </button>
             )}
           </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ScoreRing from '@/components/ScoreRing';
+import Identicon from '@/components/Identicon';
 import { IconExternalLink, IconInfo } from '@/components/Icons';
 
 const MOCK_PROFILE = {
@@ -25,11 +26,9 @@ const MOCK_REWARDS = [
 
 function TierBadge({ tier }: { tier: 'FULL' | 'PARTIAL' }) {
   const [showTooltip, setShowTooltip] = useState(false);
-
-  const tooltipText =
-    tier === 'FULL'
-      ? 'Successful tool call + structured report submitted'
-      : 'Failed call with valid error diagnosis submitted';
+  const tooltipText = tier === 'FULL'
+    ? 'Successful tool call + structured report submitted'
+    : 'Failed call with valid error diagnosis submitted';
 
   return (
     <span
@@ -37,13 +36,9 @@ function TierBadge({ tier }: { tier: 'FULL' | 'PARTIAL' }) {
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold ${
-          tier === 'FULL'
-            ? 'bg-green-dim text-green border border-green/20'
-            : 'bg-amber-dim text-amber border border-amber/20'
-        }`}
-      >
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold ${
+        tier === 'FULL' ? 'bg-green-dim text-green border border-green/20' : 'bg-amber-dim text-amber border border-amber/20'
+      }`}>
         {tier}
       </span>
       <IconInfo size={12} className="text-text-dim" />
@@ -62,17 +57,82 @@ function StatCard({ label, value, suffix }: { label: string; value: string | num
       <p className="text-text-dim text-sm mb-1">{label}</p>
       <p className="text-2xl font-bold text-text">
         {value}
-        {suffix && (
-          <span className="text-sm font-normal text-text-secondary ml-1">{suffix}</span>
-        )}
+        {suffix && <span className="text-sm font-normal text-text-secondary ml-1">{suffix}</span>}
       </p>
     </div>
+  );
+}
+
+// Mobile-friendly expandable row
+function RewardRow({ reward, expanded, onToggle }: {
+  reward: typeof MOCK_REWARDS[0];
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      <tr
+        onClick={onToggle}
+        className="border-b border-border/50 hover:bg-elevated/50 transition-colors cursor-pointer md:cursor-default"
+      >
+        <td className="px-6 py-4 font-mono text-text-secondary">#{reward.mintId}</td>
+        <td className="px-6 py-4 font-mono text-xs text-text-secondary hidden sm:table-cell">
+          {reward.taskId.slice(0, 20)}...
+        </td>
+        <td className="px-6 py-4 text-text">{reward.toolId}</td>
+        <td className="px-6 py-4"><TierBadge tier={reward.tier} /></td>
+        <td className="px-6 py-4 text-right font-mono text-text">
+          {reward.amount.toFixed(1)} <span className="text-text-dim">GREP</span>
+        </td>
+        <td className="px-6 py-4 text-text-secondary hidden md:table-cell">{reward.date}</td>
+        <td className="px-6 py-4 hidden lg:table-cell">
+          <a
+            href={`https://testnet.bscscan.com/tx/${reward.txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-mono text-xs text-lavender hover:text-blue-bright transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {reward.txHash.slice(0, 8)}...{reward.txHash.slice(-6)}
+            <IconExternalLink size={10} />
+          </a>
+        </td>
+      </tr>
+      {/* Expanded detail for mobile */}
+      {expanded && (
+        <tr className="md:hidden border-b border-border/50 bg-elevated/30">
+          <td colSpan={5} className="px-6 py-3 space-y-2 text-xs">
+            <div className="flex justify-between">
+              <span className="text-text-dim">Date</span>
+              <span className="text-text-secondary">{reward.date}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-text-dim">Task</span>
+              <span className="text-text-secondary font-mono">{reward.taskId.slice(0, 24)}...</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-text-dim">Tx Hash</span>
+              <a
+                href={`https://testnet.bscscan.com/tx/${reward.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-mono text-lavender hover:text-blue-bright transition-colors"
+              >
+                {reward.txHash.slice(0, 10)}...{reward.txHash.slice(-6)}
+                <IconExternalLink size={10} />
+              </a>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
 export default function AgentProfilePage() {
   const profile = MOCK_PROFILE;
   const rewards = MOCK_REWARDS;
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in">
@@ -81,9 +141,7 @@ export default function AgentProfilePage() {
       {/* Profile Card */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-5">
-          <div className="w-14 h-14 rounded-full bg-elevated border-2 border-border-hi flex items-center justify-center shrink-0">
-            <span className="text-2xl text-lavender">A</span>
-          </div>
+          <Identicon address={profile.walletFull} size={56} />
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <span className="font-mono text-base text-text">{profile.wallet}</span>
@@ -120,7 +178,6 @@ export default function AgentProfilePage() {
           <p className="text-text-dim text-sm mb-1">Total Earned</p>
           <p className="text-3xl font-bold text-text">
             {profile.totalEarned}
-            {/* GREP is the platform reward token earned by agents for testing MCP tools */}
             <span className="text-sm font-normal text-text-secondary ml-1">GREP</span>
           </p>
         </div>
@@ -141,6 +198,7 @@ export default function AgentProfilePage() {
       <div className="bg-surface border border-border rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-border">
           <h2 className="text-lg font-semibold text-text">Rewards History</h2>
+          <p className="text-xs text-text-dim mt-0.5 md:hidden">Tap a row to see details</p>
         </div>
         {rewards.length > 0 ? (
           <div className="overflow-x-auto">
@@ -158,33 +216,12 @@ export default function AgentProfilePage() {
               </thead>
               <tbody>
                 {rewards.map((reward) => (
-                  <tr
+                  <RewardRow
                     key={reward.mintId}
-                    className="border-b border-border/50 hover:bg-elevated/50 transition-colors"
-                  >
-                    <td className="px-6 py-4 font-mono text-text-secondary">#{reward.mintId}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-text-secondary hidden sm:table-cell">
-                      {reward.taskId.slice(0, 20)}...
-                    </td>
-                    <td className="px-6 py-4 text-text">{reward.toolId}</td>
-                    <td className="px-6 py-4"><TierBadge tier={reward.tier} /></td>
-                    <td className="px-6 py-4 text-right font-mono text-text">
-                      {reward.amount.toFixed(1)}{' '}
-                      <span className="text-text-dim">GREP</span>
-                    </td>
-                    <td className="px-6 py-4 text-text-secondary hidden md:table-cell">{reward.date}</td>
-                    <td className="px-6 py-4 hidden lg:table-cell">
-                      <a
-                        href={`https://testnet.bscscan.com/tx/${reward.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-mono text-xs text-lavender hover:text-blue-bright transition-colors"
-                      >
-                        {reward.txHash.slice(0, 8)}...{reward.txHash.slice(-6)}
-                        <IconExternalLink size={10} />
-                      </a>
-                    </td>
-                  </tr>
+                    reward={reward}
+                    expanded={expandedRow === reward.mintId}
+                    onToggle={() => setExpandedRow(expandedRow === reward.mintId ? null : reward.mintId)}
+                  />
                 ))}
               </tbody>
             </table>

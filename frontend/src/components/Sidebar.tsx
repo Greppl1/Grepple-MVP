@@ -12,6 +12,7 @@ import {
   IconChevronRight,
   IconMenu,
   IconX,
+  IconSearch,
 } from './Icons';
 
 interface NavChild {
@@ -116,6 +117,22 @@ export default function Sidebar() {
         </button>
       </div>
 
+      {/* Cmd+K hint */}
+      {!collapsed && (
+        <button
+          onClick={() => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+          }}
+          className="mx-3 mt-3 flex items-center gap-2 px-3 py-2 bg-elevated border border-border rounded-lg text-text-dim hover:text-text-secondary hover:border-border-hi transition-all text-xs"
+        >
+          <IconSearch size={14} />
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="font-mono text-[10px] bg-surface px-1.5 py-0.5 rounded border border-border">
+            ⌘K
+          </kbd>
+        </button>
+      )}
+
       {/* Nav */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto" role="navigation" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => {
@@ -130,7 +147,7 @@ export default function Sidebar() {
                 href={hasChildren ? item.children![0].href : item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isParentActive
-                    ? 'text-white'
+                    ? 'text-white bg-elevated/50'
                     : 'text-text-secondary hover:text-white hover:bg-elevated'
                 }`}
                 onClick={() => { if (mobileOpen && !hasChildren) setMobileOpen(false); }}
@@ -170,7 +187,7 @@ export default function Sidebar() {
       {!collapsed && (
         <div className="px-3 mb-3">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-amber bg-amber-dim border border-amber/20">
-            <span className="w-2 h-2 rounded-full bg-amber shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-amber shrink-0 animate-pulse" />
             BSC Testnet
           </div>
         </div>
@@ -232,7 +249,15 @@ export default function Sidebar() {
         <Link href="/">
           <Logo collapsed={false} />
         </Link>
-        <div className="w-[22px]" />
+        <button
+          onClick={() => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+          }}
+          className="text-text-dim hover:text-text transition-colors"
+          aria-label="Search"
+        >
+          <IconSearch size={20} />
+        </button>
       </div>
 
       {/* Mobile overlay */}

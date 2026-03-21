@@ -17,6 +17,7 @@ export interface SupabaseTool {
   cluster: string | null;
   section: string | null;
   repo_description: string | null;
+  builder_wallet: string | null;
 }
 
 export interface SupabaseBenchmark {
@@ -44,13 +45,13 @@ export interface SupabaseBenchmark {
 }
 
 export interface SupabaseStats {
-  total_repos: string;
-  repos_with_tools: string;
-  total_tools: string;
-  tools_with_schema: string;
-  total_clusters: string;
-  total_diagnostics: string;
-  total_benchmark_results: string;
+  total_repos: number | string;
+  repos_with_tools: number | string;
+  total_tools: number | string;
+  tools_with_schema: number | string;
+  total_clusters: number | string;
+  total_diagnostics: number | string;
+  total_benchmark_results: number | string;
 }
 
 export interface ClusterSummary {
@@ -162,7 +163,7 @@ export function mapToFrontendTool(
     id: String(tool.id),
     name: tool.tool_name,
     category: clusterToCategory(tool.cluster),
-    builder: tool.repo_name ?? 'unknown',
+    builder: tool.builder_wallet ?? tool.repo_name ?? 'unknown',
     composite: scores.composite,
     metrics: {
       schemaHealth: scores.schemaHealth,

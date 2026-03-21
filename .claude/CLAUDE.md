@@ -416,6 +416,46 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] 修复 ScoreRing 在 Balance 中的滥用（改为数字展示）
 - [x] 空状态处理（Registry 无结果 + Clear filters、Rewards 空列表、Transactions 空列表）
 
+**Step 16: UI/UX 深度重构 (2026-03-21)** ✅
+- [x] **Landing Page 重写**：Hero 文案从 MCP 黑话改为 builder 可理解的语言（"Ship MCP tools that agents actually use"）
+- [x] **Landing 统计栏**：从硬编码假数据改为 useRegistry() hook 真实数据，loading 时显示骨架屏
+- [x] **Landing 角色入口**：新增 Builder / Agent 双卡片入口，明确两类用户的 value prop
+- [x] **Landing Logo 修复**：`logo-p2/logo-l/logo-e2` 不存在的 CSS class 改为正确的 `logo-grep` + `logo-ple`
+- [x] **Landing 意图搜索**：新增 "Find the right tool" 搜索区块，提交后跳转 Registry 带 query
+- [x] **Registry 数据接入**：从 `import TOOLS from mock-data` 改为 `useRegistry()` hook（Supabase 或 mock fallback）
+- [x] **Registry 分页**：50 items/page，支持 2000+ 工具不卡死，分页导航 + 计数
+- [x] **Registry 可点击行**：`<tr>` 添加 `onClick` + `cursor: pointer`（通过 `.row-hover` class）
+- [x] **Registry Skeleton Loading**：数据加载时显示 SkeletonTable 而非空白
+- [x] **Registry 数据源指示**：显示 "Live data" 或 "Demo mode" banner
+- [x] **Detail 页面 Breadcrumb**：`Registry > tool-name` 面包屑替代简单 back link
+- [x] **Detail 页面 useToolDetail**：从 mock 改为 useToolDetail() hook
+- [x] **Detail 页面 Loading**：SkeletonPage 替代空白 loading
+- [x] **CommandPalette (⌘K)**：全局搜索组件，搜索 pages + tools，键盘导航 (↑↓/Enter/Esc)
+- [x] **Sidebar ⌘K 入口**：Sidebar 添加 Search 按钮 + ⌘K 快捷键提示
+- [x] **Mobile Search 按钮**：移动端 header 右侧添加搜索图标触发 CommandPalette
+- [x] **ScoreRing 唯一 ID**：`useId()` 生成唯一 gradient ID，多个 ScoreRing 不冲突
+- [x] **ScoreRing 颜色语义化**：≥85 绿色渐变、60-84 紫蓝渐变、<60 橙色渐变
+- [x] **Identicon 组件**：基于钱包地址的确定性 5x5 像素头像，替代固定 "A" 字母
+- [x] **Agent Profile Identicon**：使用 Identicon 替代硬编码字母头像
+- [x] **Agent Register Identicon**：连接钱包后显示 Identicon
+- [x] **表格移动端展开行**：Profile rewards 表格支持 tap-to-expand，显示 Date/Task/TxHash 详情
+- [x] **Report 分数动态化**：基于 toolName hash 生成不同分数，不同工具得到不同诊断结果
+- [x] **Report "Apply" 改为 "Copy"**：suggestions 改为 Copy to clipboard（`navigator.clipboard.writeText`）
+- [x] **Report "Run Again" 修复**：从 `window.location.reload()` 改为 "Submit Another Tool" 导航
+- [x] **Submit 表单 Auto-save**：localStorage 自动保存 draft，刷新/返回不丢失数据
+- [x] **Submit Draft 恢复**：打开页面时自动恢复 draft + toast 提示 + "Clear draft" 按钮
+- [x] **Category 增加**：新增 Cloud / Productivity 类别适配 Supabase 数据
+- [x] **按钮 Disabled 状态**：从 `opacity-40 + 渐变背景` 改为 `bg-elevated + text-dim`，视觉更明确
+- [x] **Card Hover 增强**：`card-glow` alpha 从 0.08 提升至 0.15，添加 80px 扩散
+- [x] **颜色对比度提升**：surface #151333、elevated #1D1A45、elevated-2 #252252，与 bg 更明显分层
+- [x] **Error Boundary**：`app/error.tsx` 错误边界组件，组件崩溃不再白屏
+- [x] **404 页面增强**：更友好的 not-found 页面，双入口（Home + Registry）
+- [x] **移除 SubNav 重复**：页面不再 import SubNav，sidebar 统一导航
+- [x] **Category Pills 修复**：从 `flex-wrap overflow-x-auto` 改为仅 `overflow-x-auto` 不 wrap
+- [x] **Scrollbar-none 工具类**：添加 `.scrollbar-none` 隐藏滚动条
+- [x] **Testnet Banner 统一**：Landing 和内页使用一致的 banner 策略
+- [x] **前端 build 通过**：12 pages, 0 errors
+
 **Step 14: 后端 + 合约安全加固** ✅
 - [x] AAOTestToken：添加 `mintedTaskHashes` 映射防重复 mint + `Pausable` 紧急暂停
 - [x] AgentRegistry：添加 `registerAgentFor(address, bytes32)` operator 模式 + `Pausable`
