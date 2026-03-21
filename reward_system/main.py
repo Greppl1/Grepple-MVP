@@ -10,7 +10,7 @@ from reward_system.external_eval import (
     build_reward_from_external_eval,
 )
 from reward_system.models.reward import RewardResult, TestTaskEvent
-from reward_system.rewards import process_reward_event
+from reward_system.rewards import process_reward_event, send_webhook
 from scoring_engine.config import get_settings
 
 try:
@@ -31,9 +31,12 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
         except ValidationError as exc:
             raise HTTPException(status_code=400, detail=f"Malformed reward event: {exc.errors()[0]['msg']}") from exc
         try:
-            return process_reward_event(event)
+            reward = process_reward_event(event)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if settings.zian_webhook_url:
+            send_webhook(reward, settings.zian_webhook_url)
+        return reward
 
     @app.post("/api/v1/external-eval")
     async def external_eval(payload: ExternalEvaluationRequest) -> ExternalEvaluationResponse:
@@ -41,6 +44,8 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
             reward = build_reward_from_external_eval(payload)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if settings.zian_webhook_url:
+            send_webhook(reward, settings.zian_webhook_url)
         return ExternalEvaluationResponse(report=payload.report, reward=reward)
 
     return app

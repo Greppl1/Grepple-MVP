@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 
+import httpx
+
 from reward_system.models.reward import RewardResult, RewardTier, TestTaskEvent
 
 
@@ -46,6 +48,28 @@ def process_reward_event(event: TestTaskEvent) -> RewardResult:
         eventTimestamp=event.data.timestamp,
         processedAt=datetime.now(UTC).isoformat(),
     )
+
+
+def send_webhook(reward: RewardResult, webhook_url: str) -> dict[str, object]:
+    payload = reward.model_dump(mode="json", by_alias=True)
+    try:
+        response = httpx.post(webhook_url, json=payload, timeout=10.0)
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        return {
+            "success": False,
+            "status_code": exc.response.status_code,
+            "error": str(exc),
+        }
+    except httpx.HTTPError as exc:
+        return {
+            "success": False,
+            "error": str(exc),
+        }
+    return {
+        "success": True,
+        "status_code": response.status_code,
+    }
 
 
 def _validate_eip55_checksum(wallet: str) -> bool | None:

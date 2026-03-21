@@ -12,6 +12,7 @@ class Settings:
     anthropic_api_key: str | None
     anthropic_model: str
     anthropic_version: str
+    zian_webhook_url: str = ""
     app_title: str = "AAO Launchpad Scoring Engine"
 
 
@@ -24,4 +25,5 @@ def get_settings() -> Settings:
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
         anthropic_version=os.getenv("ANTHROPIC_VERSION", "2023-06-01"),
+        zian_webhook_url=os.getenv("ZIAN_WEBHOOK_URL", ""),
     )
