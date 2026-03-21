@@ -206,33 +206,41 @@ Zian 通过链上读取或监听事件获取数据：
 - [x] 部署 V3.1 到 BSC Testnet Proxy: `0xA4DD665e9F1F57080C01fD83d48d1485Fae09c01` — 2026-03-21
 - [x] V3.2: 添加 CallRecord 调用记录（recordCall, verifyCallRecord, computeCallRecordHash）— 2026-03-21
 - [x] 链上升级 Proxy 到 V3.2，62 个测试全通过 — 2026-03-21
+- [x] API 层：Express + TypeScript + SQLite，483 repos / 2114 tools 导入 — 2026-03-21
+- [x] 更新 Issue #4 (进度)、#2 (Zian 对接)、#6 (Jerry 对接) — 2026-03-21
 
 ---
 
 ## 八、待办任务
 
+### 紧急（Hackathon Demo 必须）
+- [ ] 跑 cross-model benchmark（2114 工具 x 3 模型），产出评分数据
+- [ ] benchmark 数据灌入链下 DB（diagnostic_reports 表需加 model_id 字段）
+- [ ] benchmark 数据写入链上合约（batchRecordBenchmarkRuns）
+- [ ] 实现 `POST /api/registry/score`（接收 DiagnosticReport → 写 DB + 链上）
+- [ ] 部署 API 到 Railway/Render（SQLite 需持久文件系统，不适合 Vercel serverless）
+- [ ] 前端对接：grepple.vercel.app/registry 替换 mock 数据为真实 API
+
 ### Phase 1: 智能合约（补充）
 - [ ] 在 BSCScan 上验证合约源码
-- [ ] 通知 Zian 新合约地址 + ABI + 角色授权方式
-- [ ] 通知 Jerry WRITER_ROLE 授权流程
+- [x] 通知 Zian 新合约地址 + ABI + 角色授权方式（Issue #2 已回复）
+- [x] 通知 Jerry WRITER_ROLE 授权流程（Issue #6 已回复）
 
 ### Phase 2: 后端 API
-- [ ] 初始化后端项目（`api/` 目录，Node.js + TypeScript）
-- [ ] 实现数据写入脚本（populate.js — 批量注册工具 + benchmark 数据）
-- [ ] 实现 Registry 查询 API（读取链上数据，组合链下元数据返回）
-- [ ] 实现搜索和排名接口
+- [x] 初始化后端项目（`api/` 目录，Node.js + TypeScript）
+- [x] 实现 Registry 查询 API（工具搜索、cluster/section 筛选、fuzzy 查询）
+- [ ] 实现数据写入脚本（benchmark 数据 → DB + 链上）
 - [ ] 编写 API 测试
 
 ### Phase 3: 链下数据层
-- [ ] 设计链下元数据存储方案（先用 HTTP，后迁移 IPFS）
-- [ ] 实现链上事件监听服务（同步到本地 DB 加速查询）
-- [ ] 数据库 schema 设计
+- [x] SQLite 数据库设计（repos, tools, diagnostic_reports 三表）
+- [x] 导入 tools_with_schema_v3.json（483 repos, 2114 tools）
+- [ ] Jerry 的 static analysis 数据导入（schema health + discoverability）
 
 ### Phase 4: 前端
-- [ ] 初始化前端项目（`frontend/` 目录）
+- [ ] 前端目前由其他人维护（grepple.vercel.app），需对接我的 API
 - [ ] 排名列表页（按 cluster 筛选、排序）
 - [ ] 工具详情页（benchmark 历史、多模型对比）
-- [ ] 搜索功能
 
 ---
 
@@ -247,7 +255,7 @@ cd contracts && forge test -vv
 ### 数据写入验证
 ```bash
 source contracts/.env
-PROXY=0x28DA2E88e4d2d2E0aAc3F848D2d5C8d7Ad86805e
+PROXY=0xA4DD665e9F1F57080C01fD83d48d1485Fae09c01
 
 # 查询总工具数
 cast call $PROXY "totalTools()(uint256)" --rpc-url $BSC_TESTNET_RPC
@@ -272,14 +280,22 @@ Grepple-MVP/
 ├── contracts/                  # Foundry 智能合约项目
 │   ├── src/
 │   │   ├── IToolRegistry.sol   # 标准接口定义
-│   │   └── AAORegistry.sol     # 主合约（UUPS + AccessControl + Pausable）
-│   ├── test/AAORegistry.t.sol  # 47 个测试用例
-│   ├── script/Deploy.s.sol     # UUPS proxy 部署脚本
+│   │   └── AAORegistry.sol     # 主合约 V3.2（UUPS + AccessControl + Pausable）
+│   ├── test/AAORegistry.t.sol  # 62 个测试用例
+│   ├── script/
+│   │   ├── Deploy.s.sol        # UUPS proxy 部署脚本
+│   │   └── Upgrade.s.sol       # 升级脚本
 │   ├── lib/                    # forge-std + openzeppelin
 │   ├── .env                    # 私钥和 RPC（已 gitignore）
 │   └── foundry.toml            # Foundry 配置
-├── api/                        # 后端 API（待建）
-├── frontend/                   # 前端页面（待建）
+├── api/                        # 后端 API（Express + TypeScript + SQLite）
+│   ├── src/
+│   │   ├── server.ts           # Express 路由
+│   │   └── db.ts               # SQLite 初始化 + JSON 导入
+│   ├── data/
+│   │   └── tools_with_schema_v3.json  # 2114 工具数据
+│   ├── package.json
+│   └── tsconfig.json
 ├── .claude/CLAUDE.md           # 本文件
 └── .gitignore
 ```
