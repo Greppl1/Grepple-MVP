@@ -13,8 +13,8 @@ AAO Launchpad 是一个让 builder 提交 MCP 工具、由 agent 真实调用并
 - **合约名称：** AAORegistry (UUPS Proxy)
 - **链：** BSC Testnet (Chain ID: 97)
 - **Proxy 地址（使用这个）：** `0xA4DD665e9F1F57080C01fD83d48d1485Fae09c01`
-- **Implementation 地址：** `0xd037652DB8ff4f68640d1223735B2503Fff9000c`
-- **合约版本：** 3.1.0
+- **Implementation 地址：** `0x408189DE06f7bdb785eDdD7C536306B82fb808fF` (V3.2)
+- **合约版本：** 3.2.0
 - **旧合约（已弃用）：** `0xcdd2fc...` (V1), `0x28DA2E...` (V3.0)
 - **RPC：** `https://data-seed-prebsc-1-s1.binance.org:8545`
 - **Admin：** deployer wallet (private key in contracts/.env)
@@ -125,6 +125,7 @@ struct BenchmarkRun {
 | 函数 | 用途 |
 |------|------|
 | `registerTool(...)` | 注册新工具 |
+| `recordCall(hash, toolId, agentWallet, success)` | 记录单次调用（供 Zian 验证）|
 | `updateToolMetadata(...)` | 更新工具元数据 |
 | `deactivateTool(toolId)` | 停用工具 |
 | `reactivateTool(toolId)` | 重新激活 |
@@ -152,6 +153,10 @@ struct BenchmarkRun {
 | `getAllClusterIds()` | 所有 cluster ID |
 | `totalTools()` | 工具总数 |
 | `getToolIds(start, count)` | 分页获取工具 ID |
+| `verifyCallRecord(hash)` | 验证调用记录是否存在（Zian 用）|
+| `getCallRecord(hash)` | 获取调用记录详情 |
+| `getToolCallRecords(toolId)` | 某工具的所有调用记录 hash |
+| `getAgentCallRecords(wallet)` | 某 agent 的所有调用记录 hash |
 | `supportsInterface(interfaceId)` | ERC-165 接口发现 |
 
 ### Helper
@@ -160,6 +165,7 @@ struct BenchmarkRun {
 | `computeToolId(name, url)` | 计算 toolId |
 | `computeModelId(modelName)` | 计算 modelId |
 | `computeClusterId(clusterName)` | 计算 clusterId |
+| `computeCallRecordHash(callRecordId)` | 计算调用记录 hash（与 Zian 一致）|
 
 ---
 
@@ -198,6 +204,8 @@ Zian 通过链上读取或监听事件获取数据：
 - [x] V3.1 修复：custom errors, abi.encode 防碰撞, VERSION 常量, 清理模板文件 — 2026-03-21
 - [x] 编写合约测试 50 个用例全通过 — 2026-03-21
 - [x] 部署 V3.1 到 BSC Testnet Proxy: `0xA4DD665e9F1F57080C01fD83d48d1485Fae09c01` — 2026-03-21
+- [x] V3.2: 添加 CallRecord 调用记录（recordCall, verifyCallRecord, computeCallRecordHash）— 2026-03-21
+- [x] 链上升级 Proxy 到 V3.2，62 个测试全通过 — 2026-03-21
 
 ---
 
@@ -233,7 +241,7 @@ Zian 通过链上读取或监听事件获取数据：
 ### 合约验证
 ```bash
 cd contracts && forge test -vv
-# 50 tests passed, 0 failed (V3.1 with custom errors + collision test)
+# 62 tests passed, 0 failed (V3.2 with call records)
 ```
 
 ### 数据写入验证

@@ -31,6 +31,16 @@ interface IToolRegistry {
         bool    active;
     }
 
+    /// @notice On-chain record of a single tool call by an agent.
+    ///         Stored for cross-verification with Zian's settlement layer.
+    struct CallRecord {
+        bytes32 toolId;
+        address agentWallet;
+        bool    success;
+        uint64  timestamp;
+        bool    exists;
+    }
+
     /// @notice A single benchmark run result, append-only (never overwritten).
     struct BenchmarkRun {
         uint64  runId;
@@ -55,6 +65,8 @@ interface IToolRegistry {
     error RateOutOfRange(uint8 rate);
     error ArrayLengthMismatch();
     error NoResultsForModel(bytes32 toolId, bytes32 modelId);
+    error CallRecordAlreadyExists(bytes32 callRecordHash);
+    error CallRecordNotFound(bytes32 callRecordHash);
 
     // ===== Events =====
 
@@ -63,6 +75,7 @@ interface IToolRegistry {
     event ToolDeactivated(bytes32 indexed toolId);
     event ToolReactivated(bytes32 indexed toolId);
     event BenchmarkRecorded(bytes32 indexed toolId, bytes32 indexed modelId, uint64 runId, uint8 invokeRate);
+    event CallRecorded(bytes32 indexed callRecordHash, bytes32 indexed toolId, address indexed agentWallet, bool success);
 
     // ===== Write =====
 
@@ -111,6 +124,15 @@ interface IToolRegistry {
         string calldata benchmarkVersion
     ) external;
 
+    /// @notice Record a tool call for cross-verification with settlement layer.
+    /// @param callRecordHash keccak256(UTF-8 bytes of call_record_id) — must match Zian's hash.
+    function recordCall(
+        bytes32 callRecordHash,
+        bytes32 toolId,
+        address agentWallet,
+        bool    success
+    ) external;
+
     // ===== Read =====
 
     /// @notice Get core tool record.
@@ -131,6 +153,12 @@ interface IToolRegistry {
     /// @notice Total number of registered tools.
     function totalTools() external view returns (uint256);
 
+    /// @notice Check if a call record hash exists on-chain (for Zian's settlement verification).
+    function verifyCallRecord(bytes32 callRecordHash) external view returns (bool);
+
+    /// @notice Get full call record by its hash.
+    function getCallRecord(bytes32 callRecordHash) external view returns (CallRecord memory);
+
     // ===== Helpers =====
 
     /// @notice Deterministic, collision-resistant tool ID derivation.
@@ -141,4 +169,7 @@ interface IToolRegistry {
 
     /// @notice Deterministic cluster ID derivation.
     function computeClusterId(string calldata clusterName) external pure returns (bytes32);
+
+    /// @notice Compute callRecordHash the same way Zian does: keccak256(UTF-8 bytes of callRecordId).
+    function computeCallRecordHash(string calldata callRecordId) external pure returns (bytes32);
 }

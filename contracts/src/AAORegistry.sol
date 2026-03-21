@@ -24,7 +24,7 @@ contract AAORegistry is
     // ===== Constants =====
 
     /// @notice Semantic version, incremented on each upgrade.
-    string public constant VERSION = "3.1.0";
+    string public constant VERSION = "3.2.0";
 
     /// @notice Role that can register tools, record benchmarks, and update metadata.
     bytes32 public constant WRITER_ROLE = keccak256("WRITER_ROLE");
@@ -61,10 +61,21 @@ contract AAORegistry is
     /// @dev Quick existence check for clusters
     mapping(bytes32 => bool) private _clusterExists;
 
+    // ===== Call Record Storage (V3.2) =====
+
+    /// @dev callRecordHash => CallRecord
+    mapping(bytes32 => CallRecord) private _callRecords;
+
+    /// @dev toolId => callRecordHash[]
+    mapping(bytes32 => bytes32[]) private _toolCallRecords;
+
+    /// @dev agentWallet => callRecordHash[]
+    mapping(address => bytes32[]) private _agentCallRecords;
+
     // ===== Storage gap for future upgrades =====
 
     /// @dev Reserved storage slots for future versions (UUPS best practice).
-    uint256[44] private __gap;
+    uint256[41] private __gap;
 
     // ===== Constructor + Initializer =====
 
@@ -341,6 +352,32 @@ contract AAORegistry is
         _tools[_toolId].lastUpdated = uint64(block.timestamp);
     }
 
+    /// @inheritdoc IToolRegistry
+    /// @dev callRecordHash = keccak256(UTF-8 bytes of call_record_id).
+    ///      Must match the hash Zian writes into TokenMintRecord.
+    function recordCall(
+        bytes32 _callRecordHash,
+        bytes32 _toolId,
+        address _agentWallet,
+        bool    _success
+    ) external override onlyRole(WRITER_ROLE) whenNotPaused {
+        if (!_tools[_toolId].exists) revert ToolNotFound(_toolId);
+        if (_callRecords[_callRecordHash].exists) revert CallRecordAlreadyExists(_callRecordHash);
+
+        _callRecords[_callRecordHash] = CallRecord({
+            toolId: _toolId,
+            agentWallet: _agentWallet,
+            success: _success,
+            timestamp: uint64(block.timestamp),
+            exists: true
+        });
+
+        _toolCallRecords[_toolId].push(_callRecordHash);
+        _agentCallRecords[_agentWallet].push(_callRecordHash);
+
+        emit CallRecorded(_callRecordHash, _toolId, _agentWallet, _success);
+    }
+
     // ===== Read Functions (free) =====
 
     /// @inheritdoc IToolRegistry
@@ -371,6 +408,39 @@ contract AAORegistry is
         external view override returns (uint64)
     {
         return _toolRunCount[_toolId];
+    }
+
+    /// @inheritdoc IToolRegistry
+    function verifyCallRecord(bytes32 _callRecordHash)
+        external view override returns (bool)
+    {
+        return _callRecords[_callRecordHash].exists;
+    }
+
+    /// @inheritdoc IToolRegistry
+    function getCallRecord(bytes32 _callRecordHash)
+        external view override returns (CallRecord memory)
+    {
+        if (!_callRecords[_callRecordHash].exists) revert CallRecordNotFound(_callRecordHash);
+        return _callRecords[_callRecordHash];
+    }
+
+    /// @notice Get all call record hashes for a tool.
+    /// @param _toolId Tool to query.
+    /// @return Array of call record hashes.
+    function getToolCallRecords(bytes32 _toolId)
+        external view returns (bytes32[] memory)
+    {
+        return _toolCallRecords[_toolId];
+    }
+
+    /// @notice Get all call record hashes for an agent.
+    /// @param _agentWallet Agent wallet address.
+    /// @return Array of call record hashes.
+    function getAgentCallRecords(address _agentWallet)
+        external view returns (bytes32[] memory)
+    {
+        return _agentCallRecords[_agentWallet];
     }
 
     /// @inheritdoc IToolRegistry
@@ -453,5 +523,14 @@ contract AAORegistry is
         external pure override returns (bytes32)
     {
         return keccak256(abi.encodePacked(_clusterName));
+    }
+
+    /// @inheritdoc IToolRegistry
+    /// @dev Identical to Zian's hash: keccak256(UTF-8 bytes of callRecordId).
+    ///      Example: computeCallRecordHash("cr_20260320_xyz789")
+    function computeCallRecordHash(string calldata _callRecordId)
+        external pure override returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(_callRecordId));
     }
 }

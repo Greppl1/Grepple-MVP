@@ -72,7 +72,7 @@ contract AAORegistryTest is Test {
     }
 
     function test_version() public view {
-        assertEq(keccak256(bytes(registry.VERSION())), keccak256(bytes("3.1.0")));
+        assertEq(keccak256(bytes(registry.VERSION())), keccak256(bytes("3.2.0")));
     }
 
     // ===== ERC-165 =====
@@ -506,5 +506,127 @@ contract AAORegistryTest is Test {
     function test_revert_initializeImplementation() public {
         vm.expectRevert();
         implementation.initialize(address(0x99));
+    }
+
+    // ===== Call Records =====
+
+    function test_recordCall() public {
+        _registerTool(toolId, clusterId);
+
+        bytes32 crHash = keccak256(abi.encodePacked("cr_20260320_xyz789"));
+        address agent = address(0xA1);
+
+        vm.prank(writer);
+        registry.recordCall(crHash, toolId, agent, true);
+
+        assertTrue(registry.verifyCallRecord(crHash));
+
+        IToolRegistry.CallRecord memory cr = registry.getCallRecord(crHash);
+        assertEq(cr.toolId, toolId);
+        assertEq(cr.agentWallet, agent);
+        assertTrue(cr.success);
+        assertTrue(cr.exists);
+    }
+
+    function test_recordCall_failedCall() public {
+        _registerTool(toolId, clusterId);
+
+        bytes32 crHash = keccak256(abi.encodePacked("cr_20260320_fail001"));
+        address agent = address(0xA2);
+
+        vm.prank(writer);
+        registry.recordCall(crHash, toolId, agent, false);
+
+        IToolRegistry.CallRecord memory cr = registry.getCallRecord(crHash);
+        assertFalse(cr.success);
+    }
+
+    function test_recordCall_indexesByToolAndAgent() public {
+        _registerTool(toolId, clusterId);
+
+        address agent = address(0xA1);
+        bytes32 crHash1 = keccak256(abi.encodePacked("cr_001"));
+        bytes32 crHash2 = keccak256(abi.encodePacked("cr_002"));
+
+        vm.prank(writer);
+        registry.recordCall(crHash1, toolId, agent, true);
+        vm.prank(writer);
+        registry.recordCall(crHash2, toolId, agent, true);
+
+        bytes32[] memory toolCrs = registry.getToolCallRecords(toolId);
+        assertEq(toolCrs.length, 2);
+        assertEq(toolCrs[0], crHash1);
+        assertEq(toolCrs[1], crHash2);
+
+        bytes32[] memory agentCrs = registry.getAgentCallRecords(agent);
+        assertEq(agentCrs.length, 2);
+    }
+
+    function test_revert_recordCall_toolNotFound() public {
+        bytes32 crHash = keccak256(abi.encodePacked("cr_xxx"));
+        vm.prank(writer);
+        vm.expectRevert(abi.encodeWithSelector(IToolRegistry.ToolNotFound.selector, toolId));
+        registry.recordCall(crHash, toolId, address(0xA1), true);
+    }
+
+    function test_revert_recordCall_duplicate() public {
+        _registerTool(toolId, clusterId);
+        bytes32 crHash = keccak256(abi.encodePacked("cr_dup"));
+
+        vm.prank(writer);
+        registry.recordCall(crHash, toolId, address(0xA1), true);
+
+        vm.prank(writer);
+        vm.expectRevert(abi.encodeWithSelector(IToolRegistry.CallRecordAlreadyExists.selector, crHash));
+        registry.recordCall(crHash, toolId, address(0xA1), true);
+    }
+
+    function test_revert_recordCall_unauthorized() public {
+        _registerTool(toolId, clusterId);
+        bytes32 crHash = keccak256(abi.encodePacked("cr_unauth"));
+
+        vm.prank(unauthorized);
+        vm.expectRevert();
+        registry.recordCall(crHash, toolId, address(0xA1), true);
+    }
+
+    function test_verifyCallRecord_nonexistent() public view {
+        bytes32 crHash = keccak256(abi.encodePacked("cr_nonexistent"));
+        assertFalse(registry.verifyCallRecord(crHash));
+    }
+
+    function test_revert_getCallRecord_notFound() public {
+        bytes32 crHash = keccak256(abi.encodePacked("cr_notfound"));
+        vm.expectRevert(abi.encodeWithSelector(IToolRegistry.CallRecordNotFound.selector, crHash));
+        registry.getCallRecord(crHash);
+    }
+
+    function test_computeCallRecordHash() public view {
+        bytes32 computed = registry.computeCallRecordHash("cr_20260320_xyz789");
+        assertEq(computed, keccak256(abi.encodePacked("cr_20260320_xyz789")));
+    }
+
+    function test_computeCallRecordHash_matchesZianFormat() public view {
+        // Zian uses: keccak256(call_record_id UTF-8 bytes)
+        // We must produce the same hash
+        string memory callRecordId = "cr_20260320_xyz789";
+        bytes32 ourHash = registry.computeCallRecordHash(callRecordId);
+        bytes32 zianHash = keccak256(bytes(callRecordId));
+        assertEq(ourHash, zianHash);
+    }
+
+    function test_emit_CallRecorded() public {
+        _registerTool(toolId, clusterId);
+        bytes32 crHash = keccak256(abi.encodePacked("cr_evt"));
+        address agent = address(0xA1);
+
+        vm.prank(writer);
+        vm.expectEmit(true, true, true, true);
+        emit IToolRegistry.CallRecorded(crHash, toolId, agent, true);
+        registry.recordCall(crHash, toolId, agent, true);
+    }
+
+    function test_version_updated() public view {
+        assertEq(keccak256(bytes(registry.VERSION())), keccak256(bytes("3.2.0")));
     }
 }
