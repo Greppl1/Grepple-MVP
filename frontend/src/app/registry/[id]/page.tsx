@@ -6,7 +6,17 @@ import { useToolDetail } from '@/hooks/useRegistry';
 import ScoreRing from '@/components/ScoreRing';
 import Sparkline from '@/components/Sparkline';
 import { SkeletonPage } from '@/components/Skeleton';
-import { IconChevronRight, IconChevronLeft, IconExternalLink } from '@/components/Icons';
+import { useToast } from '@/components/Toast';
+import {
+  IconChevronRight,
+  IconChevronLeft,
+  IconExternalLink,
+  IconCopy,
+  IconArrowRight,
+} from '@/components/Icons';
+import type { Tool } from '@/lib/mock-data';
+
+/* ─── Helpers ──────────────────────────────────────────────────────── */
 
 function barColor(value: number) {
   if (value >= 85) return 'bg-green';
@@ -33,6 +43,82 @@ function CategoryBadge({ category }: { category: string }) {
     </span>
   );
 }
+
+/* ─── Code Block with Copy ─────────────────────────────────────────── */
+
+function CodeBlock({ code, label }: { code: string; label?: string }) {
+  const { toast } = useToast();
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    toast('Copied to clipboard', 'success');
+  };
+  return (
+    <div className="relative bg-bg rounded-lg border border-border overflow-hidden">
+      {label && (
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-elevated/50">
+          <span className="text-xs text-text-dim font-mono">{label}</span>
+          <button
+            onClick={handleCopy}
+            className="btn-ghost text-xs px-2 py-1 flex items-center gap-1 rounded hover:bg-elevated transition-colors"
+          >
+            <IconCopy size={14} /> Copy
+          </button>
+        </div>
+      )}
+      <pre className="p-4 text-sm font-mono text-text-secondary overflow-x-auto whitespace-pre">
+        {code}
+      </pre>
+      {!label && (
+        <button
+          onClick={handleCopy}
+          className="absolute top-2 right-2 p-1.5 rounded hover:bg-elevated transition-colors text-text-dim hover:text-white"
+        >
+          <IconCopy size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ─── Integration Helpers ──────────────────────────────────────────── */
+
+function generateMcpConfig(tool: Tool): string {
+  const serverName = tool.repoName?.split('/').pop() ?? tool.name.replace(/[^a-zA-Z0-9]/g, '_');
+  const sourceFile = tool.sourceFile ?? 'index.js';
+  return JSON.stringify(
+    {
+      mcpServers: {
+        [serverName]: {
+          command: 'node',
+          args: [sourceFile],
+        },
+      },
+    },
+    null,
+    2,
+  );
+}
+
+function generateInstallCommands(tool: Tool): string {
+  if (!tool.githubUrl) return '# No repository URL available';
+  const repoName = tool.repoName?.split('/').pop() ?? 'mcp-server';
+  return `git clone ${tool.githubUrl}\ncd ${repoName}\nnpm install && npm start`;
+}
+
+function formatSchema(schemaStr: string | undefined): string | null {
+  if (!schemaStr) return null;
+  try {
+    const schema = JSON.parse(schemaStr);
+    if (schema.properties) {
+      return JSON.stringify(schema.properties, null, 2);
+    }
+    return JSON.stringify(schema, null, 2);
+  } catch {
+    return null;
+  }
+}
+
+/* ─── Page Component ───────────────────────────────────────────────── */
 
 export default function ToolDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -70,6 +156,9 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
 
   const sparklineColor =
     tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623';
+
+  const hasIntegration = !!tool.githubUrl || !!tool.repoName;
+  const formattedSchema = formatSchema(tool.inputSchema);
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto page-enter">
@@ -120,6 +209,113 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
+      {/* ────────────────────────────────────────────────────────────── */}
+      {/* HOW TO USE THIS TOOL — the key section                       */}
+      {/* ────────────────────────────────────────────────────────────── */}
+      <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+        <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+          <IconArrowRight size={18} className="text-lavender" />
+          How to Use This Tool
+        </h2>
+
+        {hasIntegration ? (
+          <div className="space-y-6">
+            {/* Source Repository */}
+            <div>
+              <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">
+                Source Repository
+              </h3>
+              <div className="bg-elevated rounded-lg border border-border p-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-lavender/10 border border-lavender/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-lavender">
+                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white font-mono truncate">
+                    {tool.repoName ?? 'Repository'}
+                  </p>
+                  {tool.githubUrl && (
+                    <a
+                      href={tool.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-lavender hover:text-white transition-colors inline-flex items-center gap-1 mt-0.5"
+                    >
+                      {tool.githubUrl.replace('https://github.com/', 'github.com/')}
+                      <IconExternalLink size={10} />
+                    </a>
+                  )}
+                  {tool.sourceFile && (
+                    <p className="text-xs text-text-dim mt-1">
+                      File: <span className="font-mono text-text-secondary">{tool.sourceFile}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Step 1: Install & Run */}
+            <div>
+              <h3 className="text-sm font-semibold text-text-secondary mb-3">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-lavender/20 text-lavender text-xs font-bold mr-2">1</span>
+                Install &amp; Run the MCP Server
+              </h3>
+              <CodeBlock code={generateInstallCommands(tool)} label="Terminal" />
+            </div>
+
+            {/* Step 2: MCP Client Config */}
+            <div>
+              <h3 className="text-sm font-semibold text-text-secondary mb-3">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-lavender/20 text-lavender text-xs font-bold mr-2">2</span>
+                Add to Your MCP Client
+              </h3>
+              <CodeBlock code={generateMcpConfig(tool)} label="mcp_config.json" />
+              <p className="text-xs text-text-dim mt-2">
+                Works with: Claude Desktop, Cursor, Windsurf, and any MCP-compatible client.
+              </p>
+            </div>
+
+            {/* Step 3: Input Schema */}
+            {formattedSchema && (
+              <div>
+                <h3 className="text-sm font-semibold text-text-secondary mb-3">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-lavender/20 text-lavender text-xs font-bold mr-2">3</span>
+                  Input Schema
+                </h3>
+                <CodeBlock code={formattedSchema} label="Parameters" />
+              </div>
+            )}
+          </div>
+        ) : (
+          /* No integration data available */
+          <div className="text-center py-8">
+            <div className="w-12 h-12 rounded-full bg-elevated-2 border border-border flex items-center justify-center mx-auto mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-dim">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+            </div>
+            <p className="text-text-secondary text-sm mb-1">
+              Integration details not available for this tool.
+            </p>
+            <p className="text-text-dim text-xs mb-5">
+              Submit it for diagnosis to generate a full integration report.
+            </p>
+            <Link
+              href="/builder/submit"
+              className="btn-gradient px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+            >
+              Submit for Diagnosis
+              <IconArrowRight size={14} />
+            </Link>
+          </div>
+        )}
+      </div>
+
       {/* Trend Section */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-6">
         <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">
@@ -164,10 +360,32 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-4">
-        <button className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
-          <IconExternalLink size={14} />
-          View on BscScan
-        </button>
+        {tool.githubUrl ? (
+          <a
+            href={tool.githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-gradient px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+          >
+            <IconExternalLink size={14} />
+            View on GitHub
+          </a>
+        ) : (
+          <button
+            disabled
+            className="bg-elevated text-text-dim px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2 cursor-not-allowed"
+          >
+            <IconExternalLink size={14} />
+            View on GitHub
+          </button>
+        )}
+        <Link
+          href="/builder/submit"
+          className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+        >
+          Submit for Diagnosis
+          <IconArrowRight size={14} />
+        </Link>
         <Link
           href="/registry"
           className="px-5 py-2.5 rounded-xl text-sm font-semibold text-text-secondary hover:text-white transition-colors inline-flex items-center gap-2"

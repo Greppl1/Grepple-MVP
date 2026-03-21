@@ -194,6 +194,24 @@ function ExecutionPanel({
             </p>
           </div>
 
+          {/* Quick Integration */}
+          {tool.githubUrl && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-xs font-medium text-text-secondary mb-2">Quick Setup</p>
+              <div className="bg-bg rounded-lg p-3 font-mono text-xs text-text-dim overflow-x-auto">
+                git clone {tool.githubUrl}<br/>
+                cd {tool.repoName?.split('/').pop() ?? 'server'}<br/>
+                npm install && npm start
+              </div>
+              <Link
+                href={`/registry/${tool.id}`}
+                className="text-xs text-blue hover:underline mt-2 inline-block"
+              >
+                View full integration guide →
+              </Link>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
             <Link

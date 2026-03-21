@@ -236,6 +236,10 @@ export function mapToFrontendTool(
       ? formatTimeAgo(benchmark.executed_at)
       : 'Never',
     description: tool.tool_description ?? '',
+    githubUrl: tool.github_url ?? undefined,
+    repoName: tool.repo_name ?? undefined,
+    sourceFile: tool.source_file ?? undefined,
+    inputSchema: tool.parsed_schema ?? undefined,
   };
 }
 
