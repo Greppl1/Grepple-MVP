@@ -8,14 +8,18 @@ const mintRateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 })
 
 /**
  * POST /api/rewards/mint
- * Body: { agent_wallet, task_id, call_record_id, tier: "FULL"|"PARTIAL"|"NONE" }
+ * Accepts both snake_case and camelCase fields:
+ *   { agent_wallet|agentWallet, task_id|taskId, call_record_id|callRecordId, tier }
  */
 router.post('/mint', agentAuth, mintRateLimiter, async (req, res, next) => {
   try {
-    const { agent_wallet, task_id, call_record_id, tier } = req.body;
+    const agent_wallet = req.body.agent_wallet || req.body.agentWallet;
+    const task_id = req.body.task_id || req.body.taskId;
+    const call_record_id = req.body.call_record_id || req.body.callRecordId;
+    const tier = req.body.tier;
 
     if (!agent_wallet || !task_id) {
-      return res.status(400).json({ error: 'agent_wallet and task_id are required' });
+      return res.status(400).json({ error: 'agent_wallet/agentWallet and task_id/taskId are required' });
     }
     if (!tier) {
       return res.status(400).json({ error: 'tier is required' });
@@ -29,6 +33,33 @@ router.post('/mint', agentAuth, mintRateLimiter, async (req, res, next) => {
     });
 
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/rewards/webhook
+ * Receives Jerry's test_task_completed event or RewardResult directly.
+ * No auth required (server-to-server, will add API key later).
+ */
+router.post('/webhook', mintRateLimiter, async (req, res, next) => {
+  try {
+    const body = req.body;
+
+    // Jerry's test_task_completed event
+    if (body.event === 'test_task_completed' && body.data) {
+      const result = await mintService.processTestTaskCompleted(body);
+      return res.json(result);
+    }
+
+    // Jerry's RewardResult format (has rewardTier field)
+    if (body.rewardTier || body.reward_tier) {
+      const result = await mintService.processRewardResult(body);
+      return res.json(result);
+    }
+
+    return res.status(400).json({ error: 'Unrecognized event format' });
   } catch (err) {
     next(err);
   }

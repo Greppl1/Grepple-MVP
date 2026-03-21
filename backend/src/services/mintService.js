@@ -13,10 +13,28 @@ const RewardTier = {
 };
 
 /**
+ * Normalize camelCase/snake_case fields from Jerry's events
+ */
+function normalizeEventData(data) {
+  return {
+    task_id: data.task_id || data.taskId,
+    agent_wallet: data.agent_wallet || data.agentWallet,
+    tool_id: data.tool_id || data.toolId,
+    result: data.result,
+    scores: data.scores ? {
+      call_success: data.scores.call_success ?? data.scores.callSuccess,
+      structured_report: data.scores.structured_report ?? data.scores.structuredReport,
+    } : null,
+    timestamp: data.timestamp,
+  };
+}
+
+/**
  * Determine RewardTier from Jerry's test_task_completed event
  */
 function determineRewardTier(event) {
-  const { result, scores } = event.data || event;
+  const raw = event.data || event;
+  const { result, scores } = normalizeEventData(raw);
 
   if (result === 'success' && scores && scores.call_success && scores.structured_report) {
     return RewardTier.FULL;
@@ -63,6 +81,13 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
     rewardTier = tier;
   } else {
     throw new Error('Tier is required');
+  }
+
+  // Check if agent is registered
+  const registryContract = contractService.getRegistryContract();
+  const isRegistered = await registryContract.isRegisteredAgent(agent_wallet);
+  if (!isRegistered) {
+    throw new Error('Agent not registered');
   }
 
   // NONE tier -> rejected, don't mint
@@ -147,19 +172,40 @@ function getMintStatus(task_id) {
 }
 
 /**
- * Process a Jerry test_task_completed event
+ * Process a Jerry test_task_completed event (accepts both camelCase and snake_case)
  */
 async function processTestTaskCompleted(event) {
-  const { task_id, agent_wallet } = event.data || event;
+  const raw = event.data || event;
+  const normalized = normalizeEventData(raw);
 
   const rewardTier = determineRewardTier(event);
   const tierName = Object.keys(RewardTier).find((k) => RewardTier[k] === rewardTier);
 
   return mintReward({
-    agent_wallet,
-    task_id,
-    call_record_id: `cr_${task_id}`,
+    agent_wallet: normalized.agent_wallet,
+    task_id: normalized.task_id,
+    call_record_id: `cr_${normalized.task_id}`,
     tier: tierName,
+  });
+}
+
+/**
+ * Process Jerry's RewardResult directly (from /api/rewards/mint response)
+ */
+async function processRewardResult(rewardResult) {
+  const taskId = rewardResult.taskId || rewardResult.task_id;
+  const agentWallet = rewardResult.agentWallet || rewardResult.agent_wallet;
+  const rewardTier = rewardResult.rewardTier || rewardResult.reward_tier;
+
+  // Map Jerry's tier names to ours
+  const tierMap = { full: 'FULL', partial: 'PARTIAL', none: 'NONE' };
+  const tier = tierMap[rewardTier?.toLowerCase()] || rewardTier?.toUpperCase();
+
+  return mintReward({
+    agent_wallet: agentWallet,
+    task_id: taskId,
+    call_record_id: `cr_${taskId}`,
+    tier,
   });
 }
 
@@ -170,10 +216,12 @@ function clearMintedTasks() {
 
 module.exports = {
   RewardTier,
+  normalizeEventData,
   determineRewardTier,
   calculateAmount,
   mintReward,
   getMintStatus,
   processTestTaskCompleted,
+  processRewardResult,
   clearMintedTasks,
 };

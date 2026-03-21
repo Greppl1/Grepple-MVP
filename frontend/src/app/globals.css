@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #0D0B2E;
+  --color-bg-nav: rgba(13, 11, 46, 0.88);
+  --color-surface: #14112E;
+  --color-elevated: #1A1740;
+  --color-purple: #7B6BA8;
+  --color-purple-dim: rgba(123, 107, 168, 0.1);
+  --color-lavender: #9B8EC8;
+  --color-blue: #4A6CF7;
+  --color-blue-bright: #5B7FFF;
+  --color-green: #18DC7E;
+  --color-green-dim: rgba(24, 220, 126, 0.1);
+  --color-amber: #F5A623;
+  --color-amber-dim: rgba(245, 166, 35, 0.15);
+  --color-red: #FF4757;
+  --color-red-dim: rgba(255, 71, 87, 0.15);
+  --color-text: #FFFFFF;
+  --color-text-secondary: #8B85AA;
+  --color-text-dim: #6B6590;
+  --color-border: #2D2855;
+  --color-border-hi: #3D3575;
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-hi); }
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #9B8EC8, #5B7FFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient button */
+.btn-gradient {
+  background: linear-gradient(135deg, #7B6BA8, #4A6CF7);
+  color: white;
+  box-shadow: 0 4px 20px rgba(74, 108, 247, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(74, 108, 247, 0.35);
+}

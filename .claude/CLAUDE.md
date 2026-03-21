@@ -1,26 +1,31 @@
-# Zian — 链上交易 & 奖励结算层
+# Zian — 链上交易 & 奖励结算层 + 前端
 
 ## 一、项目概览
 
-AAO Launchpad 是一个 MCP 工具诊断 + 发布 + 测试闭环平台：builder 提交工具，平台 agent 真实调用并评分，工具进入公共 registry 被其他 agent 发现使用。我（Zian）负责最下游的**链上交易与奖励结算层**——当 Jerry 的评分引擎完成测试、Fiona 的 Registry 记录了结果后，我的模块负责：给测试 agent 发放 testnet token 作为贡献凭证，管理 builder 充值的 USDC 金库，以及未来开启兑换时的验证逻辑。
+AAO Launchpad 是一个 MCP 工具诊断 + 发布 + 测试闭环平台：builder 提交工具，平台 agent 真实调用并评分，工具进入公共 registry 被其他 agent 发现使用。我（Zian）负责**链上交易与奖励结算层**以及**全平台前端**。
 
-**上下游关系：** Jerry（评分引擎）→ Fiona（Registry 写入）→ **Zian（token 发放 + 金库结算）**
+**上下游关系：** Jerry（评分引擎）→ Fiona（Registry 写入）→ **Zian（token 发放 + 金库结算 + 前端）**
 
 ---
 
 ## 二、模块职责边界
 
-### 做什么
-- 测试网 Token 合约（BSC/Base testnet，ERC-20）：发放、记录、查询
+### A. 链上交易 & 奖励结算（已完成）
+- 测试网 Token 合约（BSC Testnet，ERC-20）：发放、记录、查询
 - 金库合约（Vault）：USDC 存入、余额管理、兑换验证逻辑（开关默认关闭）
 - 链上交互记录与 testnet token 的双重匹配验证机制
 - Agent 钱包接入标准：注册、接收 token、发起兑换请求的接口规范
 - Agentic security：agent 身份验证、防女巫攻击设计
 
+### B. 前端（待开发）
+- Builder Dashboard：提交 MCP tool、查看诊断报告、一键应用改写建议、管理 budget
+- Registry 公开页面：工具排名列表、详情页、历史诊断记录、按 category/分数/时间筛选
+- 用户意图入口：输入任务意图 → 匹配工具推荐 → 查看执行结果
+- 钱包集成：Builder 充值、Agent 奖励查看、兑换操作
+
 ### 不做什么
 - 不做评分计算（Jerry 的事）
-- 不做 Registry 数据结构和查询（Fiona 的事）
-- 不做前端展示
+- 不做 Registry 数据结构和查询 API（Fiona 的事）
 - 不做 MCP tool 的诊断调用
 
 ---
@@ -338,17 +343,60 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 | 层 | 测试数 | 状态 |
 |----|--------|------|
 | 合约（Mocha/Chai） | 53 | ✅ all passing |
-| 后端 API（Jest） | 39 | ✅ all passing |
-| **总计** | **92** | **✅** |
+| 后端 API（Jest） | 40 | ✅ all passing |
+| 前端（Next.js build） | — | ✅ compiles, 0 errors |
+| **总计** | **93** | **✅** |
 
 ### 队友对接 Issues
 
-- GitHub Issue #1：Jerry（评分引擎）— 事件格式 + 奖励规则
-- GitHub Issue #2：Fiona（Registry）— callRecordHash 验证 + 接口格式
+- GitHub Issue #1：Jerry（评分引擎）— 事件格式 + 奖励规则 ✅ 已回复确认，camelCase 兼容已实现
+- GitHub Issue #2：Fiona（Registry）— callRecordHash 验证 + 接口格式 ⏳ 等 Fiona 部署
+- GitHub Issue #5：Zian 任务 ✅ 已回复进度更新
+- GitHub Issue #6：对接文档 ✅ 已回复对接完成
+
+### Jerry 对接详情
+
+- 后端新增 `POST /api/rewards/webhook`：接收 Jerry 的 `test_task_completed` 事件或 `RewardResult`
+- camelCase / snake_case 双格式兼容（`taskId`/`task_id` 等）
+- 前端 Builder 提交页直连 Jerry 的 `POST /api/v1/diagnose`
+- 环境变量：`SCORING_ENGINE_URL`（默认 localhost:8001）、`REWARD_SYSTEM_URL`（默认 localhost:8002）
 
 ### 待办任务
 
-（全部完成，无待办）
+**Step 7: 前端脚手架 + 项目结构** ✅
+- [x] 初始化前端项目（Next.js 16 + TailwindCSS v4 + TypeScript）
+- [x] 配置路由结构（Builder Dashboard、Registry、Agent）
+- [x] 集成钱包连接（wagmi + RainbowKit，支持 BSC Testnet）
+- [x] 配置合约地址常量（src/lib/contracts.ts）
+- [x] 搭建通用 Layout（可折叠侧边栏 + 钱包连接）
+
+**Step 8: Builder Dashboard** ✅
+- [x] 提交 MCP Tool 双模式页（Simple 表单 + Editor 代码编辑器，toggle 切换）
+- [x] 诊断报告展示页（Terminal 动画 → Dashboard 数据视图自动切换）
+- [x] 改写建议展示 + Apply 按钮
+- [x] Builder Budget 管理页（USDC 充值、余额/消耗卡片、交易历史表格）
+- [x] 已发布工具管理列表（ScoreRing、状态 badge、趋势 Sparkline）
+
+**Step 9: Registry 公开页面** ✅
+- [x] 工具排名列表页（表格 + 统一大小卡片双视图，toggle 切换，默认表格）
+- [x] 筛选 & 排序（category pills、搜索、列头排序）
+- [x] 搜索功能（实时关键词过滤）
+
+**Step 10: 用户意图入口**
+- [ ] 意图输入页（自然语言输入框）— 待 Fiona Registry API 就绪后对接
+- [ ] 工具推荐结果页
+- [ ] 执行结果展示
+
+**Step 11: Agent & 钱包页面** ✅
+- [x] Agent 注册页（3 步引导：连接钱包 → Agent ID → 确认注册）
+- [x] Agent Profile 页（钱包地址、stats 卡片、奖励历史表格 + BscScan 链接）
+- [x] 兑换页面（余额展示、状态 banner、mint 选择、Coming Soon 提示）
+
+**Step 12: 对接联调**
+- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents 全部 endpoint）
+- [ ] 前端 ↔ Jerry 评分 API 联调（诊断报告数据）
+- [ ] 前端 ↔ Fiona Registry API 联调（工具列表、详情、搜索）
+- [ ] 端到端流程测试：Builder 提交 → 诊断 → Launch → Registry 展示 → Agent 测试 → Token 发放
 
 ---
 
@@ -375,11 +423,11 @@ cd contracts && npx hardhat test test/AAOTestToken.test.js
 ```
 
 **验证检查点：**
-- [ ] 只有 authorizedMinter 能调用 mint
-- [ ] mint 后 agent 余额正确增加
-- [ ] mintRecord 写入且可查询
-- [ ] getMintsByAgent 返回正确的 mintId 列表
-- [ ] 未授权地址 mint 会 revert
+- [x] 只有 authorizedMinter 能调用 mint
+- [x] mint 后 agent 余额正确增加
+- [x] mintRecord 写入且可查询
+- [x] getMintsByAgent 返回正确的 mintId 列表
+- [x] 未授权地址 mint 会 revert
 
 ### 7.2 Agent 注册表验证
 
@@ -397,11 +445,11 @@ cd contracts && npx hardhat test test/AgentRegistry.test.js
 ```
 
 **验证检查点：**
-- [ ] 注册后 isRegisteredAgent 返回 true
-- [ ] agentIdToWallet 反查正确
-- [ ] 重复注册会 revert
-- [ ] deactivateAgent 后 isActive 变 false
-- [ ] 未注册地址查询返回空/默认值
+- [x] 注册后 isRegisteredAgent 返回 true
+- [x] agentIdToWallet 反查正确
+- [x] 重复注册会 revert
+- [x] deactivateAgent 后 isActive 变 false
+- [x] 未注册地址查询返回空/默认值
 
 ### 7.3 Vault 金库验证
 
@@ -431,11 +479,11 @@ cd contracts && npx hardhat test test/AAOVault.test.js
 ```
 
 **验证检查点：**
-- [ ] deposit 后 builderBalance 正确增加
-- [ ] deposit 后 Vault 合约 USDC 余额正确
-- [ ] redemptionEnabled 默认 false
-- [ ] toggleRedemption 只有 owner 能调用
-- [ ] redemptionEnabled=false 时 requestRedemption revert
+- [x] deposit 后 builderBalance 正确增加
+- [x] deposit 后 Vault 合约 USDC 余额正确
+- [x] redemptionEnabled 默认 false
+- [x] toggleRedemption 只有 owner 能调用
+- [x] redemptionEnabled=false 时 requestRedemption revert
 
 ### 7.4 Mint 奖励逻辑验证（模拟 Jerry 事件）
 
@@ -487,11 +535,11 @@ cd backend && npm test -- --grep "mint rewards"
 ```
 
 **验证检查点：**
-- [ ] `result=success` → mint FULL amount，tier=FULL
-- [ ] `result=failed_with_diagnosis` → mint 50% amount，tier=PARTIAL
-- [ ] `result=invalid` → 不 mint，返回 rejected
-- [ ] 同一 task_id 不能重复 mint（幂等性）
-- [ ] agent 未注册时 mint 失败
+- [x] `result=success` → mint FULL amount，tier=FULL
+- [x] `result=failed_with_diagnosis` → mint 50% amount，tier=PARTIAL
+- [x] `result=invalid` → 不 mint，返回 rejected
+- [x] 同一 task_id 不能重复 mint（幂等性）
+- [x] agent 未注册时 mint 失败
 
 ### 7.5 兑换验证机制验证（模拟 Fiona Registry 数据）
 
@@ -524,11 +572,11 @@ cd backend && npm test -- --grep "redemption validation"
 ```
 
 **验证检查点：**
-- [ ] callRecordHash 匹配 → 验证通过
-- [ ] callRecordHash 不匹配 → 验证失败
-- [ ] mintId 不属于请求的 agent → 验证失败
-- [ ] 已兑换的 mintId 再次兑换 → 验证失败（防重放）
-- [ ] redemptionEnabled=false → 直接拒绝，不走验证逻辑
+- [x] callRecordHash 匹配 → 验证通过
+- [x] callRecordHash 不匹配 → 验证失败
+- [x] mintId 不属于请求的 agent → 验证失败
+- [x] 已兑换的 mintId 再次兑换 → 验证失败（防重放）
+- [x] redemptionEnabled=false → 直接拒绝，不走验证逻辑
 
 ### 7.6 集成对接验证 Checklist（其他模块就绪后）
 
@@ -590,6 +638,28 @@ backend/                  # Node.js API 服务
     agents.test.js
     redemption.test.js
     security.test.js
+
+frontend/                   # React/Next.js 前端
+  src/
+    app/                    # Next.js App Router 页面
+      layout.tsx            # 全局 Layout（导航、钱包连接）
+      page.tsx              # 首页 / 用户意图入口
+      builder/
+        submit/page.tsx     # 提交 MCP Tool
+        report/[id]/page.tsx # 诊断报告详情
+        budget/page.tsx     # Budget 管理（充值、余额）
+        tools/page.tsx      # 已发布工具列表
+      registry/
+        page.tsx            # Registry 排名列表
+        [id]/page.tsx       # 工具详情页
+      agent/
+        register/page.tsx   # Agent 注册
+        profile/page.tsx    # Agent Profile + 奖励历史
+        redeem/page.tsx     # 兑换页面
+    components/             # 可复用组件
+    hooks/                  # 自定义 hooks（合约交互、API 调用）
+    lib/                    # 工具函数、合约 ABI、常量
+    providers/              # Web3 Provider、主题等
 ```
 
 ### 命名规范
@@ -601,16 +671,21 @@ backend/                  # Node.js API 服务
 
 ### 提交信息格式
 ```
-[Settlement] feat: 描述     # 新功能
-[Settlement] fix: 描述      # 修复
-[Settlement] test: 描述     # 测试
-[Settlement] refactor: 描述 # 重构
-[Settlement] docs: 描述     # 文档
+[Settlement] feat: 描述     # 链上/后端新功能
+[Settlement] fix: 描述      # 链上/后端修复
+[Frontend] feat: 描述       # 前端新功能
+[Frontend] fix: 描述        # 前端修复
+[*] test: 描述              # 测试
+[*] refactor: 描述          # 重构
+[*] docs: 描述              # 文档
 ```
 
 ### 技术栈
 - 合约：Solidity ^0.8.20 + OpenZeppelin 5.x
-- 框架：Hardhat
+- 合约框架：Hardhat 2.x
 - 测试网：BSC Testnet（chainId: 97）
 - 后端：Node.js + Express
-- 测试：Mocha/Chai（合约）、Jest（后端 API）
+- 前端：Next.js + React + TypeScript + TailwindCSS
+- 钱包集成：wagmi + viem + RainbowKit（BSC Testnet）
+- 合约测试：Mocha/Chai
+- 后端测试：Jest

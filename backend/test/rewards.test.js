@@ -2,6 +2,13 @@ const { ethers } = require('ethers');
 const mintService = require('../src/services/mintService');
 const contractService = require('../src/services/contractService');
 
+// Mock contract for AgentRegistry
+function createMockRegistryContract(registeredWallets = new Set()) {
+  return {
+    isRegisteredAgent: jest.fn(async (wallet) => registeredWallets.has(wallet)),
+  };
+}
+
 // Mock contract for AAOTestToken
 function createMockTokenContract() {
   let mintIdCounter = 0;
@@ -50,10 +57,16 @@ function createMockTokenContract() {
 describe('Mint Service', () => {
   let mockToken;
 
+  const registeredWallets = new Set([
+    '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+    '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+  ]);
+
   beforeEach(() => {
     mintService.clearMintedTasks();
     mockToken = createMockTokenContract();
-    contractService.setContracts({ token: mockToken });
+    const mockRegistry = createMockRegistryContract(registeredWallets);
+    contractService.setContracts({ token: mockToken, registry: mockRegistry });
   });
 
   describe('determineRewardTier', () => {
@@ -184,6 +197,18 @@ describe('Mint Service', () => {
 
       expect(result1).toEqual(result2);
       expect(mockToken.mint).toHaveBeenCalledTimes(1); // Only called once
+    });
+
+    test('unregistered agent cannot mint', async () => {
+      await expect(
+        mintService.mintReward({
+          agent_wallet: '0x0000000000000000000000000000000000000001',
+          task_id: 'task_unregistered',
+          call_record_id: 'cr_unreg',
+          tier: 'FULL',
+        })
+      ).rejects.toThrow('Agent not registered');
+      expect(mockToken.mint).not.toHaveBeenCalled();
     });
 
     test('invalid tier string throws error', async () => {

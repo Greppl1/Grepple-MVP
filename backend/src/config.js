@@ -11,6 +11,8 @@ const config = {
   },
   rewardAmount: process.env.REWARD_AMOUNT || '1000000000000000000', // 1 token (18 decimals)
   registryApiUrl: process.env.REGISTRY_API_URL || 'http://localhost:3001',
+  scoringEngineUrl: process.env.SCORING_ENGINE_URL || 'http://localhost:8001',
+  rewardSystemUrl: process.env.REWARD_SYSTEM_URL || 'http://localhost:8002',
 };
 
 module.exports = config;
