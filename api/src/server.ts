@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { getDb, initDb, importToolsJson } from "./db";
+import { getDb, initDb, importToolsJson, importBenchmarkJson } from "./db";
 
 const app = express();
 app.use(cors());
@@ -9,6 +9,7 @@ app.use(express.json());
 // --- Init DB on startup ---
 initDb();
 importToolsJson();
+importBenchmarkJson();
 
 // --- Health check ---
 app.get("/api/health", (_req, res) => {
@@ -216,10 +217,88 @@ app.get("/api/registry/stats", (_req, res) => {
   res.json(stats);
 });
 
+// --- Benchmark results ---
+app.get("/api/registry/benchmark", (req, res) => {
+  const db = getDb();
+  const { tool_name, cluster, model_id, limit = "50", offset = "0" } = req.query;
+
+  let where = "1=1";
+  const params: any[] = [];
+
+  if (tool_name) { where += " AND b.tool_name = ?"; params.push(tool_name); }
+  if (cluster) { where += " AND b.cluster = ?"; params.push(cluster); }
+  if (model_id) { where += " AND b.model_id = ?"; params.push(model_id); }
+
+  const countRow = db.prepare(
+    `SELECT COUNT(*) as total FROM benchmark_results b WHERE ${where}`
+  ).get(...params) as { total: number };
+
+  params.push(Number(limit), Number(offset));
+
+  const results = db.prepare(`
+    SELECT * FROM benchmark_results b WHERE ${where}
+    ORDER BY b.tool_name, b.model_id
+    LIMIT ? OFFSET ?
+  `).all(...params);
+
+  db.close();
+
+  res.json({
+    total: countRow.total,
+    results: results.map((r: any) => ({
+      ...r,
+      task_tiers: r.task_tiers ? JSON.parse(r.task_tiers) : null,
+      schema_metrics: r.schema_metrics ? JSON.parse(r.schema_metrics) : null,
+      description_metrics: r.description_metrics ? JSON.parse(r.description_metrics) : null,
+      diagnosis_issues: r.diagnosis_issues ? JSON.parse(r.diagnosis_issues) : null,
+      cross_model_analysis: r.cross_model_analysis ? JSON.parse(r.cross_model_analysis) : null,
+    })),
+  });
+});
+
+// --- Benchmark summary per tool (cross-model view) ---
+app.get("/api/registry/benchmark/:toolName", (req, res) => {
+  const db = getDb();
+  const { toolName } = req.params;
+
+  const results = db.prepare(`
+    SELECT * FROM benchmark_results WHERE tool_name = ? ORDER BY model_id
+  `).all(toolName) as any[];
+
+  if (results.length === 0) {
+    db.close();
+    return res.status(404).json({ error: "No benchmark data for this tool" });
+  }
+
+  const crossModel = results[0].cross_model_analysis
+    ? JSON.parse(results[0].cross_model_analysis) : null;
+
+  db.close();
+
+  res.json({
+    tool_name: toolName,
+    cluster: results[0].cluster,
+    failure_mode: results[0].failure_mode,
+    cross_model_analysis: crossModel,
+    models: results.map((r: any) => ({
+      model_id: r.model_id,
+      invoke_rate: r.invoke_rate,
+      mention_rate: r.mention_rate,
+      silent_rate: r.silent_rate,
+      error_rate: r.error_rate,
+      total_runs: r.total_runs,
+      task_tiers: r.task_tiers ? JSON.parse(r.task_tiers) : null,
+    })),
+    schema_metrics: results[0].schema_metrics ? JSON.parse(results[0].schema_metrics) : null,
+    description_metrics: results[0].description_metrics ? JSON.parse(results[0].description_metrics) : null,
+    diagnosis_issues: results[0].diagnosis_issues ? JSON.parse(results[0].diagnosis_issues) : null,
+  });
+});
+
 // --- Submit diagnostic report (Jerry calls this) ---
 app.post("/api/registry/score", (req, res) => {
-  // Placeholder — will be implemented after benchmark
-  res.status(501).json({ error: "Not yet implemented. Waiting for benchmark data." });
+  // Placeholder — will be implemented after full benchmark
+  res.status(501).json({ error: "Not yet implemented. Waiting for full benchmark data." });
 });
 
 // --- Call record (Zian verification) ---
