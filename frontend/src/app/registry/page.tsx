@@ -10,7 +10,7 @@ import ScoreRing from '@/components/ScoreRing';
 import { SkeletonTable } from '@/components/Skeleton';
 import { IconSearch, IconTable, IconGrid } from '@/components/Icons';
 
-type SortKey = 'composite' | 'schemaHealth' | 'discoverability' | 'callability' | 'successRate' | 'name';
+type SortKey = 'composite' | 'schemaHealth' | 'discoverability' | 'successRate' | 'name';
 type SortDir = 'asc' | 'desc';
 type ViewMode = 'table' | 'grid';
 
@@ -371,7 +371,6 @@ function RegistryContent() {
                 <div className="flex-1 flex flex-col gap-2 mb-4">
                   <MetricBar label="Schema Health" value={tool.metrics.schemaHealth} />
                   <MetricBar label="Discoverability" value={tool.metrics.discoverability} />
-                  <MetricBar label="Callability" value={tool.metrics.callability} />
                   <MetricBar label="Success Rate" value={tool.metrics.successRate} />
                 </div>
 

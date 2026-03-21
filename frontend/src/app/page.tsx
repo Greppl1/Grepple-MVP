@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useState } from 'react';
+import { useAuth } from '@/providers/AuthProvider';
+import AuthModal from '@/components/AuthModal';
 import { useRegistry } from '@/hooks/useRegistry';
 import {
   IconArrowRight,
@@ -16,6 +18,8 @@ import {
 
 export default function LandingPage() {
   const { stats, loading, isLive } = useRegistry();
+  const { isAuthenticated, user } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
 
   return (
     <div className="min-h-screen">
@@ -25,21 +29,24 @@ export default function LandingPage() {
           <span className="logo-grep">grep</span><span className="logo-ple">ple</span>
         </span>
         <div className="flex items-center gap-4">
-          <ConnectButton.Custom>
-            {({ account, chain, openConnectModal, openAccountModal, mounted }) => {
-              const connected = mounted && account && chain;
-              return (
-                <button
-                  onClick={connected ? openAccountModal : openConnectModal}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-all btn-gradient"
-                >
-                  {connected ? account.displayName : 'Connect Wallet'}
-                </button>
-              );
-            }}
-          </ConnectButton.Custom>
+          {isAuthenticated ? (
+            <Link
+              href="/builder/tools"
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-all btn-gradient"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <button
+              onClick={() => setShowAuth(true)}
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-all btn-gradient"
+            >
+              Get Started
+            </button>
+          )}
         </div>
       </header>
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
 
       {/* Testnet banner */}
       <div className="fixed top-16 left-0 right-0 z-40 text-center text-xs py-1.5 px-4 bg-amber/10 border-b border-amber/20 text-amber">
@@ -61,7 +68,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed animate-slide-up" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
-            Grepple diagnoses your MCP tools for schema quality, discoverability, and callability &mdash; then lists them in a public registry where AI agents can find and invoke them.
+            Grepple diagnoses your MCP tools for schema quality, discoverability, and reliability &mdash; then lists them in a public registry where AI agents can find and invoke them.
           </p>
 
           {/* CTAs */}
@@ -172,7 +179,7 @@ export default function LandingPage() {
               {
                 step: '02',
                 title: 'Diagnose',
-                desc: 'Get a quality score across schema health, discoverability, and callability. See exactly what to fix with AI-generated suggestions.',
+                desc: 'Get a quality score across schema health, discoverability, and success rate. See exactly what to fix with AI-generated suggestions.',
               },
               {
                 step: '03',

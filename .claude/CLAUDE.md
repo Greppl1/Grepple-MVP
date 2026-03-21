@@ -359,7 +359,10 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - 后端新增 `POST /api/rewards/webhook`：接收 Jerry 的 `test_task_completed` 事件或 `RewardResult`
 - camelCase / snake_case 双格式兼容（`taskId`/`task_id` 等）
 - 前端 Builder 提交页直连 Jerry 的 `POST /api/v1/diagnose`
-- 环境变量：`SCORING_ENGINE_URL`（默认 localhost:8001）、`REWARD_SYSTEM_URL`（默认 localhost:8002）
+- 环境变量：`SCORING_ENGINE_URL`（已配 Railway 地址）、`REWARD_SYSTEM_URL`（同）
+- Jerry 部署地址：`https://spirited-success-production-2b55.up.railway.app`
+- 报告页新增 `/api/v1/report/{id}/scores` 端点对接（0-100 分数 + grade）
+- 后端 `.env` 已配好所有 URL（Scoring + Supabase Edge Function）
 
 ### 待办任务
 
@@ -500,10 +503,43 @@ ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud
 
 **接入方式：** 配置 `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` 环境变量即可，前端自动切换到真实数据。无 key 时自动 fallback 到 mock。
 
+**Step 17: Jerry 评分引擎对接** ✅
+- [x] Jerry 部署到 Railway：`https://spirited-success-production-2b55.up.railway.app`
+- [x] 前端 `.env.local` 配好 `NEXT_PUBLIC_SCORING_ENGINE_URL`
+- [x] Builder 提交页 → `POST /api/v1/diagnose` → 拿到 `reportId` → 跳转报告页 ✅ 已测试
+- [x] 报告页 → `GET /api/v1/report/{reportId}/scores` → 展示真实 0-100 分数 + grade
+- [x] 报告页 → `GET /api/v1/report/{reportId}` → 从 `diagnosis.issues` 提取改进建议
+- [x] 评分引擎不可达时 fallback 到确定性 mock 分数
+- [x] 后端 `.env` 配好 `SCORING_ENGINE_URL` + `REGISTRY_API_URL`（Supabase Edge Function）
+- [x] `vaultService.fetchCallRecord` URL 格式改为 Supabase `?id=` 格式
+- [x] 修复 redemption 测试适配新 URL 格式（40 tests passing）
+
+**Step 18: 邮箱注册 + 自动钱包** ✅
+- [x] `lib/wallet.ts` — viem `generatePrivateKey` + `privateKeyToAccount` 自动生成 BSC Testnet 钱包
+- [x] `providers/AuthProvider.tsx` — Supabase Auth 邮箱注册/登录 + 自动钱包绑定
+- [x] `components/AuthModal.tsx` — 邮箱注册/登录弹窗（signup/signin 切换）
+- [x] `components/UserButton.tsx` — 替代 ConnectButton（显示邮箱 + 钱包 Identicon + 菜单）
+- [x] Layout 集成 `AuthProvider`（包裹 ToastProvider 外层）
+- [x] Sidebar `ConnectButton` → `UserButton`（含 compact 模式）
+- [x] Landing header `Connect Wallet` → `Get Started`（邮箱注册入口）
+- [x] Agent Register 页面改为 `useAuth()` 驱动（不再依赖 wagmi `useAccount`）
+- [x] 钱包私钥存 localStorage（testnet only），地址存 Supabase user_metadata
+- [x] RainbowKit/wagmi 保留作为底层 provider（高级用户可选）
+- [x] 前端 build 通过（12 pages, 0 errors）
+
+**认证流程：**
+1. 用户点 "Get Started" → AuthModal 弹出 → 输入邮箱 + 密码
+2. Supabase Auth 创建账号 → `onAuthStateChange` 触发
+3. `AuthProvider.handleUserSession` → `createWallet()` 生成随机钱包
+4. 钱包存 `localStorage(grepple_wallet_{userId})` + 地址写入 `user_metadata.wallet_address`
+5. 后续页面通过 `useAuth()` 获取 `{ user, wallet, isAuthenticated }`
+
+**环境变量：** `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`（同 Supabase 数据源）
+
 **Step 12: 对接联调**
-- [x] 前端 ↔ Fiona Registry Supabase 对接（adapter + hook 已完成，等有效 anon key）
-- [ ] 前端 ↔ Jerry 评分 API 联调（等 Jerry 部署公网 URL）
-- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents）
+- [x] 前端 ↔ Fiona Registry Supabase 对接 ✅（2,114 工具实时展示）
+- [x] 前端 ↔ Jerry 评分 API 联调 ✅（diagnose + scores + report 全通）
+- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents — 等后端部署公网）
 - [ ] 端到端流程测试：Builder 提交 → 诊断 → Launch → Registry 展示 → Agent 测试 → Token 发放
 
 ---

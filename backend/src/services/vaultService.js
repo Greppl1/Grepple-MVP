@@ -86,7 +86,8 @@ async function getBuilderBalance(wallet) {
  */
 async function fetchCallRecord(callRecordHash) {
   const fetchFn = getFetchFn();
-  const url = `${config.registryApiUrl}/api/registry/call-record/${callRecordHash}`;
+  // Supabase Edge Function uses ?id= query param
+  const url = `${config.registryApiUrl}/call-record?id=${callRecordHash}`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000); // 10s timeout

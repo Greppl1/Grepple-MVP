@@ -93,7 +93,6 @@ function computeScores(bench: SupabaseBenchmark | null) {
     return {
       schemaHealth: 0,
       discoverability: 0,
-      callability: 0,
       successRate: 0,
       composite: 0,
     };
@@ -127,24 +126,19 @@ function computeScores(bench: SupabaseBenchmark | null) {
     } catch { /* use default */ }
   }
 
-  // Callability: invoke_rate is already 0-100
-  const callability = Math.min(100, bench.invoke_rate ?? 0);
-
   // Success rate: 100 - error_rate
   const successRate = Math.max(0, 100 - (bench.error_rate ?? 0));
 
   // Composite: weighted average
   const composite = Math.round(
-    schemaHealth * 0.25 +
-    discoverability * 0.25 +
-    callability * 0.3 +
-    successRate * 0.2
+    schemaHealth * 0.35 +
+    discoverability * 0.35 +
+    successRate * 0.3
   );
 
   return {
     schemaHealth: Math.round(schemaHealth),
     discoverability: Math.round(discoverability),
-    callability: Math.round(callability),
     successRate: Math.round(successRate),
     composite,
   };
@@ -168,7 +162,6 @@ export function mapToFrontendTool(
     metrics: {
       schemaHealth: scores.schemaHealth,
       discoverability: scores.discoverability,
-      callability: scores.callability,
       successRate: scores.successRate,
     },
     trend: [], // no historical data yet

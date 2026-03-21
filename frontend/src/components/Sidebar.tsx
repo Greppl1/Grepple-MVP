@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import UserButton from './UserButton';
 import {
   IconRegistry,
   IconBuilder,
@@ -193,44 +193,9 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Wallet */}
+      {/* User / Auth */}
       <div className="p-3 border-t border-border">
-        {collapsed ? (
-          <ConnectButton.Custom>
-            {({ account, chain, openConnectModal, openAccountModal, mounted }) => {
-              const connected = mounted && account && chain;
-              return (
-                <button
-                  onClick={connected ? openAccountModal : openConnectModal}
-                  className="w-10 h-10 rounded-full bg-elevated border border-border hover:border-border-hi flex items-center justify-center transition-all mx-auto"
-                  aria-label={connected ? 'Account' : 'Connect wallet'}
-                >
-                  {connected ? (
-                    <span className="text-xs font-mono text-text">
-                      {account.displayName.slice(0, 2)}
-                    </span>
-                  ) : (
-                    <span className="w-2 h-2 rounded-full bg-text-dim" />
-                  )}
-                </button>
-              );
-            }}
-          </ConnectButton.Custom>
-        ) : (
-          <ConnectButton.Custom>
-            {({ account, chain, openConnectModal, openAccountModal, mounted }) => {
-              const connected = mounted && account && chain;
-              return (
-                <button
-                  onClick={connected ? openAccountModal : openConnectModal}
-                  className="w-full py-2.5 px-3 rounded-lg text-sm font-semibold transition-all btn-gradient"
-                >
-                  {connected ? account.displayName : 'Connect Wallet'}
-                </button>
-              );
-            }}
-          </ConnectButton.Custom>
-        )}
+        <UserButton compact={collapsed} />
       </div>
     </aside>
   );

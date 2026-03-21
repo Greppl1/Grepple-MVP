@@ -110,7 +110,6 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
           </h2>
           <MetricRow label="Schema Health" value={tool.metrics.schemaHealth} />
           <MetricRow label="Discoverability" value={tool.metrics.discoverability} />
-          <MetricRow label="Callability" value={tool.metrics.callability} />
           <MetricRow label="Success Rate" value={tool.metrics.successRate} />
         </div>
 

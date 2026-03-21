@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
 import Link from 'next/link';
+import { useAuth } from '@/providers/AuthProvider';
+import AuthModal from '@/components/AuthModal';
 import { useToast } from '@/components/Toast';
 import { IconCheck, IconInfo } from '@/components/Icons';
 import Identicon from '@/components/Identicon';
+import { truncateAddress } from '@/lib/wallet';
 
 function StepIndicator({ step, currentStep, label }: { step: number; currentStep: number; label: string }) {
   const isCompleted = currentStep > step;
@@ -27,10 +28,13 @@ function StepIndicator({ step, currentStep, label }: { step: number; currentStep
 }
 
 export default function AgentRegisterPage() {
-  const { address, isConnected } = useAccount();
+  const { isAuthenticated, user, wallet } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const { toast } = useToast();
+
+  const address = wallet?.address || '';
 
   const agentIdHash = address
     ? `0x${Array.from({ length: 64 }, (_, i) =>
@@ -42,7 +46,7 @@ export default function AgentRegisterPage() {
     ? `${agentIdHash.slice(0, 10)}...${agentIdHash.slice(-8)}`
     : '';
 
-  const currentStep = !isConnected ? 1 : !isRegistered ? 2 : 3;
+  const currentStep = !isAuthenticated ? 1 : !isRegistered ? 2 : 3;
 
   const handleRegister = async () => {
     setIsRegistering(true);
@@ -59,46 +63,47 @@ export default function AgentRegisterPage() {
         Register as Test Agent
       </h1>
       <p className="text-text-secondary mb-6 text-base leading-relaxed">
-        Connect your wallet and register to start earning GREP tokens by testing MCP tools.
+        Sign up with your email to start earning GREP tokens by testing MCP tools.
+        A testnet wallet is auto-created for you.
       </p>
 
-      {/* Wallet guidance */}
+      {/* Info box */}
       <div className="bg-purple-dim border border-border-hi rounded-xl px-5 py-4 mb-10 flex items-start gap-3">
         <IconInfo size={18} className="text-lavender shrink-0 mt-0.5" />
         <div>
           <p className="text-sm text-text leading-relaxed">
-            You&apos;ll need a wallet connected to BSC Testnet (Chain ID 97). No real
-            funds needed &mdash; testnet BNB is free.
+            When you create an account, we auto-generate a BSC Testnet wallet for you.
+            No extensions needed &mdash; everything runs in your browser.
           </p>
-          <a
-            href="https://www.bnbchain.org/en/testnet-faucet"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm font-medium text-lavender hover:text-blue-bright transition-colors mt-1.5"
-          >
-            Get test BNB &rarr;
-          </a>
         </div>
       </div>
 
       {/* Steps */}
       <div className="bg-surface border border-border rounded-xl p-6 sm:p-8 space-y-8">
-        {/* Step 1: Connect Wallet */}
+        {/* Step 1: Create Account */}
         <div className="space-y-4">
-          <StepIndicator step={1} currentStep={currentStep} label="Connect Wallet" />
+          <StepIndicator step={1} currentStep={currentStep} label="Create Account" />
           <div className="ml-[52px]">
-            {isConnected ? (
+            {isAuthenticated ? (
               <div className="flex items-center gap-3 bg-green-dim border border-green/20 rounded-lg px-4 py-3">
-                <Identicon address={address || ''} size={28} />
+                {address && <Identicon address={address} size={28} />}
                 <div>
-                  <span className="text-green text-sm font-medium">Connected</span>
-                  <span className="font-mono text-sm text-text ml-2">
-                    {address?.slice(0, 6)}...{address?.slice(-4)}
-                  </span>
+                  <span className="text-green text-sm font-medium">Signed in</span>
+                  <span className="text-text text-sm ml-2">{user?.email}</span>
+                  {address && (
+                    <p className="text-text-dim text-xs font-mono mt-0.5">
+                      Wallet: {truncateAddress(address)}
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
-              <ConnectButton />
+              <button
+                onClick={() => setShowAuth(true)}
+                className="btn-gradient px-6 py-3 rounded-lg text-sm font-semibold"
+              >
+                Sign Up with Email
+              </button>
             )}
           </div>
         </div>
@@ -114,7 +119,7 @@ export default function AgentRegisterPage() {
             </p>
             <div className="bg-elevated border border-border rounded-lg px-4 py-3">
               <code className="font-mono text-sm text-lavender">
-                {isConnected ? truncatedHash : 'Connect wallet to generate...'}
+                {isAuthenticated ? truncatedHash : 'Sign up to generate...'}
               </code>
             </div>
           </div>
@@ -145,7 +150,7 @@ export default function AgentRegisterPage() {
             ) : (
               <button
                 onClick={handleRegister}
-                disabled={!isConnected || isRegistering}
+                disabled={!isAuthenticated || isRegistering}
                 className="btn-gradient px-6 py-3 rounded-lg text-sm font-semibold transition-all"
               >
                 {isRegistering ? (
@@ -162,6 +167,8 @@ export default function AgentRegisterPage() {
           </div>
         </div>
       </div>
+
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 }

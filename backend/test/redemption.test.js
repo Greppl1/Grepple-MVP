@@ -49,7 +49,9 @@ function createMockVaultContract({ redemptionEnabled = true, revertOnRequest = f
 
 function createMockFetchFn(registryResponses) {
   return jest.fn(async (url) => {
-    const hashKey = url.split('/').pop();
+    // Support both ?id=hash and /hash URL formats
+    const urlObj = new URL(url, 'http://localhost');
+    const hashKey = urlObj.searchParams.get('id') || url.split('/').pop();
     const data = registryResponses[hashKey];
     if (!data) {
       return { ok: false, status: 404 };
