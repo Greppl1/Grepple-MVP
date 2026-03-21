@@ -1,0 +1,8 @@
+.env
+node_modules/
+.DS_Store
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/**/dry-run/
