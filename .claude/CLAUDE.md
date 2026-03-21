@@ -208,43 +208,83 @@ Zian 通过链上读取或监听事件获取数据：
 - [x] 链上升级 Proxy 到 V3.2，62 个测试全通过 — 2026-03-21
 - [x] API 层：Express + TypeScript + SQLite，483 repos / 2114 tools 导入 — 2026-03-21
 - [x] 更新 Issue #4 (进度)、#2 (Zian 对接)、#6 (Jerry 对接) — 2026-03-21
+- [x] 数据库迁移：SQLite → PostgreSQL (Supabase) — 2026-03-21
+- [x] 导入 185 tools x 3 models benchmark 数据（672 行 benchmark_results）— 2026-03-21
+- [x] 实现 POST /score + GET /call-record Edge Functions — 2026-03-21
+- [x] 部署 Edge Functions 到 Supabase（公网可访问）— 2026-03-21
+- [x] 创建 DB views（registry_stats, cluster_summary, tools_with_repo 等）— 2026-03-21
+- [x] 175 个工具 + 522 条 benchmark 写入链上合约（0 errors）— 2026-03-21
+- [x] 合约源码验证（Sourcify, exact match）— 2026-03-21
+- [x] 更新所有 GitHub Issues (#2, #4, #6, #7, #9) 通知队友 — 2026-03-21
 
 ---
 
 ## 八、待办任务
 
 ### 紧急（Hackathon Demo 必须）
-- [ ] 跑 cross-model benchmark（2114 工具 x 3 模型），产出评分数据
-- [ ] benchmark 数据灌入链下 DB（diagnostic_reports 表需加 model_id 字段）
-- [ ] benchmark 数据写入链上合约（batchRecordBenchmarkRuns）
-- [ ] 实现 `POST /api/registry/score`（接收 DiagnosticReport → 写 DB + 链上）
-- [ ] 部署 API 到 Railway/Render（SQLite 需持久文件系统，不适合 Vercel serverless）
-- [ ] 前端对接：grepple.vercel.app/registry 替换 mock 数据为真实 API
+- [x] 跑 cross-model benchmark，产出评分数据（185 tools x 3 models）
+- [x] benchmark 数据灌入链下 DB（benchmark_results 表，672 行）
+- [x] benchmark 数据写入链上合约（175 tools, 522 benchmark runs, 0 errors）
+- [x] 实现 `POST /score` Edge Function（接收 DiagnosticReport → 写 DB）
+- [x] 部署 API 到 Supabase（PostgREST + 2 Edge Functions，公网可访问）
+- [ ] **[Zian]** 前端对接：grepple.vercel.app/registry 替换 mock 数据为 Supabase 查询
 
-### Phase 1: 智能合约（补充）
-- [ ] 在 BSCScan 上验证合约源码
+### Phase 1: 智能合约
+- [x] 在 Sourcify 上验证合约源码（exact match）
 - [x] 通知 Zian 新合约地址 + ABI + 角色授权方式（Issue #2 已回复）
 - [x] 通知 Jerry WRITER_ROLE 授权流程（Issue #6 已回复）
 
 ### Phase 2: 后端 API
 - [x] 初始化后端项目（`api/` 目录，Node.js + TypeScript）
 - [x] 实现 Registry 查询 API（工具搜索、cluster/section 筛选、fuzzy 查询）
-- [ ] 实现数据写入脚本（benchmark 数据 → DB + 链上）
-- [ ] 编写 API 测试
+- [x] 实现数据写入脚本（write-onchain.ts → 链上批量写入）
+- [x] 迁移到 Supabase 全托管（PostgREST + Edge Functions，不再需要 Express 服务器）
 
 ### Phase 3: 链下数据层
-- [x] SQLite 数据库设计（repos, tools, diagnostic_reports 三表）
+- [x] 数据库设计（repos, tools, diagnostic_reports, benchmark_results 四表 + 5 个 views）
+- [x] 迁移到 PostgreSQL (Supabase)
 - [x] 导入 tools_with_schema_v3.json（483 repos, 2114 tools）
-- [ ] Jerry 的 static analysis 数据导入（schema health + discoverability）
+- [x] 导入 cross_model_benchmark.json（185 tools x 3 models = 555 行）
 
-### Phase 4: 前端
-- [ ] 前端目前由其他人维护（grepple.vercel.app），需对接我的 API
-- [ ] 排名列表页（按 cluster 筛选、排序）
-- [ ] 工具详情页（benchmark 历史、多模型对比）
+### 等待队友
+- [ ] **[Zian]** 前端用 `@supabase/supabase-js` 替换 mock 数据（见 Issue #9）
+- [ ] **[Zian]** 配置 `REGISTRY_API_URL` 到 Supabase Edge Functions（见 Issue #2）
+- [ ] **[Jerry]** 评分引擎对接 `POST /functions/v1/score`（见 Issue #6）
+- [ ] **[Jerry]** 部署评分引擎到线上，配置 webhook
 
 ---
 
-## 九、独立验证方案
+## 九、Supabase 配置
+
+### 项目信息
+- **Project Ref:** `xrbbvkfvwlupfflhzvwu`
+- **URL:** `https://xrbbvkfvwlupfflhzvwu.supabase.co`
+- **DB 连接（Session Pooler）:** `postgresql://postgres.xrbbvkfvwlupfflhzvwu:<password>@aws-1-eu-west-1.pooler.supabase.com:5432/postgres`
+
+### PostgREST 端点（自动 REST API）
+| View/Table | 用途 |
+|------------|------|
+| `tools_with_repo` | 工具列表（join repos） |
+| `benchmark_results` | Benchmark 评分数据 |
+| `registry_stats` | 全局统计 |
+| `cluster_summary` | Cluster 聚合 |
+| `section_summary` | Section 聚合 |
+
+### Edge Functions
+| 函数 | 用途 |
+|------|------|
+| `POST /functions/v1/score` | 接收 Jerry 的 DiagnosticReport |
+| `GET /functions/v1/call-record?id=xxx` | Zian 赎回验证 |
+
+### 部署命令
+```bash
+SUPABASE_ACCESS_TOKEN=<token> supabase functions deploy score --no-verify-jwt
+SUPABASE_ACCESS_TOKEN=<token> supabase functions deploy call-record --no-verify-jwt
+```
+
+---
+
+## 十、独立验证方案
 
 ### 合约验证
 ```bash
@@ -252,23 +292,28 @@ cd contracts && forge test -vv
 # 62 tests passed, 0 failed (V3.2 with call records)
 ```
 
-### 数据写入验证
+### 链上数据验证
 ```bash
 source contracts/.env
 PROXY=0xA4DD665e9F1F57080C01fD83d48d1485Fae09c01
 
-# 查询总工具数
+# 查询总工具数（应为 175）
 cast call $PROXY "totalTools()(uint256)" --rpc-url $BSC_TESTNET_RPC
 
 # 检查 ERC-165 支持
 cast call $PROXY "supportsInterface(bytes4)(bool)" 0x01ffc9a7 --rpc-url $BSC_TESTNET_RPC
 ```
 
+### 合约源码验证
+- **Sourcify:** exact match ✅
+- **链接:** https://sourcify.dev/#/lookup/0x408189DE06f7bdb785eDdD7C536306B82fb808fF
+
 ### 集成验证检查点
-- [ ] Jerry 后端成功调用 registerTool + recordBenchmarkRun
+- [x] 175 个工具已注册链上
+- [x] 522 条 benchmark 数据已写入链上
+- [ ] Jerry 后端成功调用 POST /functions/v1/score
 - [ ] Zian 成功读取 getTool + getLatestResult
-- [ ] Events 能被 Zian 的监听服务捕获
-- [ ] supportsInterface 返回 true（IToolRegistry + ERC-165）
+- [ ] 前端成功从 Supabase 拉取真实数据
 
 ---
 
@@ -288,14 +333,23 @@ Grepple-MVP/
 │   ├── lib/                    # forge-std + openzeppelin
 │   ├── .env                    # 私钥和 RPC（已 gitignore）
 │   └── foundry.toml            # Foundry 配置
-├── api/                        # 后端 API（Express + TypeScript + SQLite）
+├── api/                        # 后端 API（Express + TypeScript + PostgreSQL/Supabase）
 │   ├── src/
 │   │   ├── server.ts           # Express 路由
-│   │   └── db.ts               # SQLite 初始化 + JSON 导入
+│   │   ├── db.ts               # PostgreSQL 初始化 + JSON 导入
+│   │   └── import-benchmark.ts # Benchmark 数据导入脚本
 │   ├── data/
-│   │   └── tools_with_schema_v3.json  # 2114 工具数据
+│   │   ├── tools_with_schema_v3.json       # 2114 工具数据
+│   │   └── cross_model_benchmark.json      # 185 tools x 3 models benchmark
+│   ├── .env                    # DATABASE_URL (Supabase PostgreSQL)
 │   ├── package.json
 │   └── tsconfig.json
+├── supabase/                   # Supabase Edge Functions
+│   ├── functions/
+│   │   ├── _shared/cors.ts     # 共享 CORS 配置
+│   │   ├── score/index.ts      # POST /score（接收评分报告）
+│   │   └── call-record/index.ts # GET /call-record（链上验证）
+│   └── config.toml
 ├── .claude/CLAUDE.md           # 本文件
 └── .gitignore
 ```

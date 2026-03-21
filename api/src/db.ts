@@ -41,7 +41,7 @@ export async function initDb(): Promise<void> {
 
     CREATE TABLE IF NOT EXISTS diagnostic_reports (
       id SERIAL PRIMARY KEY,
-      tool_id INTEGER NOT NULL REFERENCES tools(id),
+      tool_id INTEGER REFERENCES tools(id),
       report_id TEXT UNIQUE,
       model_id TEXT,
       failure_mode TEXT,

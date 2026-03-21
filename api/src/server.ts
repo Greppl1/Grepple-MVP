@@ -1,6 +1,18 @@
 import express from "express";
 import cors from "cors";
+import { ethers } from "ethers";
 import { getPool, initDb, importToolsJson, importBenchmarkJson } from "./db";
+
+// --- On-chain Registry config ---
+const REGISTRY_PROXY = "0xA4DD665e9F1F57080C01fD83d48d1485Fae09c01";
+const BSC_TESTNET_RPC = "https://data-seed-prebsc-1-s1.binance.org:8545";
+const REGISTRY_ABI = [
+  "function getCallRecord(bytes32 _callRecordHash) external view returns (tuple(bytes32 toolId, address agentWallet, bool success, uint64 timestamp, bool exists))",
+  "function verifyCallRecord(bytes32 _callRecordHash) external view returns (bool)",
+  "function computeCallRecordHash(string callRecordId) external pure returns (bytes32)",
+];
+const provider = new ethers.JsonRpcProvider(BSC_TESTNET_RPC);
+const registryContract = new ethers.Contract(REGISTRY_PROXY, REGISTRY_ABI, provider);
 
 const app = express();
 app.use(cors());
@@ -226,13 +238,104 @@ app.get("/api/registry/benchmark/:toolName", async (req, res) => {
   });
 });
 
-// --- Placeholders ---
-app.post("/api/registry/score", (_req, res) => {
-  res.status(501).json({ error: "Not yet implemented." });
+// --- Receive DiagnosticReport from Jerry's scoring engine ---
+app.post("/api/registry/score", async (req, res) => {
+  const pool = getPool();
+  const report = req.body;
+
+  // Validate required fields
+  if (!report.report_id || !report.tool_name || !report.metrics) {
+    return res.status(400).json({ error: "Missing required fields: report_id, tool_name, metrics" });
+  }
+
+  const m = report.metrics;
+  const callability = m.callability || {};
+  const schema = m.schema || {};
+  const diagnosis = report.diagnosis || {};
+
+  // Calculate rates from raw counts
+  const testsRun = callability.tests_run || 1;
+  const invokeRate = Math.round(((callability.invoke_count || 0) / testsRun) * 100);
+  const mentionRate = Math.round(((callability.mention_count || 0) / testsRun) * 100);
+  const silentRate = Math.round(((callability.silent_count || 0) / testsRun) * 100);
+  const errorRate = Math.round(((callability.error_count || 0) / testsRun) * 100);
+
+  // Find tool_id by name (nullable — report still stored even if tool not in tools table)
+  const toolRes = await pool.query("SELECT id FROM tools WHERE tool_name = $1 LIMIT 1", [report.tool_name]);
+  const toolId = toolRes.rows.length > 0 ? toolRes.rows[0].id : null;
+
+  // Check for duplicate report_id
+  const existing = await pool.query("SELECT id FROM diagnostic_reports WHERE report_id = $1", [report.report_id]);
+  if (existing.rows.length > 0) {
+    return res.status(409).json({ error: "Report already exists", report_id: report.report_id });
+  }
+
+  await pool.query(
+    `INSERT INTO diagnostic_reports (
+      tool_id, report_id, model_id, failure_mode,
+      invoke_rate, mention_rate, silent_rate, error_rate,
+      required_field_count, total_field_count, nesting_depth, has_defaults,
+      full_report
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+    [
+      toolId,
+      report.report_id,
+      report.model_id || null,
+      diagnosis.failure_mode || null,
+      invokeRate,
+      mentionRate,
+      silentRate,
+      errorRate,
+      schema.required_fields ?? null,
+      schema.total_fields ?? null,
+      schema.nesting_depth ?? null,
+      schema.has_defaults ? 1 : 0,
+      JSON.stringify(report),
+    ]
+  );
+
+  res.status(201).json({
+    status: "stored",
+    report_id: report.report_id,
+    tool_name: report.tool_name,
+    tool_id: toolId,
+    failure_mode: diagnosis.failure_mode || null,
+    rates: { invokeRate, mentionRate, silentRate, errorRate },
+  });
 });
 
-app.get("/api/registry/call-record/:id", (_req, res) => {
-  res.status(501).json({ error: "Not yet implemented." });
+// --- Call record verification (Zian's redemption validation) ---
+app.get("/api/registry/call-record/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Determine if id is already a bytes32 hash or a string call_record_id
+    let callRecordHash: string;
+    if (id.startsWith("0x") && id.length === 66) {
+      callRecordHash = id;
+    } else {
+      callRecordHash = await registryContract.computeCallRecordHash(id);
+    }
+
+    // Check on-chain
+    const exists = await registryContract.verifyCallRecord(callRecordHash);
+    if (!exists) {
+      return res.status(404).json({ error: "Call record not found", call_record_hash: callRecordHash });
+    }
+
+    const record = await registryContract.getCallRecord(callRecordHash);
+
+    res.json({
+      call_record_id: id,
+      call_record_hash: callRecordHash,
+      tool_id: record.toolId,
+      agent_wallet: record.agentWallet,
+      call_success: record.success,
+      call_timestamp: new Date(Number(record.timestamp) * 1000).toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to query call record", detail: err.message });
+  }
 });
 
 // --- Start server ---
