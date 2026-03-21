@@ -73,16 +73,15 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6">
-            <span className="animate-slide-up inline-block">Find the right tool.</span>
+            <span className="animate-slide-up inline-block">Build tools that work.</span>
             <br />
             <span className="animate-slide-up inline-block gradient-text" style={{ animationDelay: '0.15s' }}>
-              Try it instantly.
+              Get paid when they do.
             </span>
           </h1>
 
           <p className="text-lg text-text-secondary max-w-xl mx-auto leading-relaxed mb-10 animate-fade-in" style={{ animationDelay: '0.35s' }}>
-            Search 2,000+ AI tools, test them with one click,
-            and get the integration code to add them to your project.
+            Submit your AI tool for a free quality diagnosis. Pass the test, get listed in the registry, and earn tokens every time an agent uses it.
           </p>
 
           {/* Intent search */}
@@ -93,7 +92,7 @@ export default function LandingPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder='What do you need? e.g. "swap tokens"'
+                placeholder='Search tools — e.g. "swap tokens", "query database"'
                 className="w-full bg-surface/80 backdrop-blur-sm border border-border rounded-xl pl-12 pr-32 py-4 text-text placeholder:text-text-dim text-base focus:border-blue focus:outline-none focus:ring-0 transition-colors"
               />
               <button
@@ -108,15 +107,15 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in" style={{ animationDelay: '0.6s' }}>
             <Link
               href="/builder/submit"
-              className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+              className="btn-gradient btn-glow px-7 py-3.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
             >
-              Submit Your Tool <IconArrowRight size={14} />
+              Diagnose My Tool — Free <IconArrowRight size={14} />
             </Link>
             <Link
               href="/registry"
-              className="btn-ghost px-6 py-3 rounded-xl text-sm font-semibold"
+              className="btn-secondary px-7 py-3.5 rounded-xl text-sm font-semibold"
             >
-              Browse All Tools
+              Browse Registry
             </Link>
           </div>
         </div>
