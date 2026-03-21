@@ -30,7 +30,7 @@ async def rewrite_tool(
         description=description,
         inputSchema=schema,
         rationale=(
-            "Rewrite improves tool discoverability and callability using the current diagnosis: "
+            "Rewrite improves tool discoverability and schema clarity using the current diagnosis: "
             f"{diagnosis.failure_mode} ({diagnosis.root_cause or 'no root cause provided'})."
         ),
     )

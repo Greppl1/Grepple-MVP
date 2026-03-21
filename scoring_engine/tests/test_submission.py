@@ -7,7 +7,7 @@ from scoring_engine.tests.test_engine import StubLLMClient, build_tool
 
 
 def test_submit_improved_tool(tmp_path: object) -> None:
-    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient(["invoked", "invoked", "invoked"]))
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
     original_response = asyncio.run(
         app.request("POST", "/api/v1/diagnose", json=build_tool().model_dump(by_alias=True))
     )
@@ -41,7 +41,7 @@ def test_submit_improved_tool(tmp_path: object) -> None:
 
 
 def test_submit_returns_new_report_id(tmp_path: object) -> None:
-    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient(["invoked", "invoked", "invoked"]))
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
     original_response = asyncio.run(
         app.request("POST", "/api/v1/diagnose", json=build_tool().model_dump(by_alias=True))
     )

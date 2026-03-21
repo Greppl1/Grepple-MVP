@@ -11,10 +11,8 @@ FailureMode = Literal[
     "healthy",
     "schema_failure",
     "description_failure",
-    "compatibility_failure",
     "mixed",
 ]
-PromptOutcome = Literal["invoked", "mentioned", "silent", "error", "skipped"]
 IssueSeverity = Literal["critical", "high", "medium", "low"]
 
 
@@ -57,29 +55,6 @@ class DescriptionMetrics(BaseModel):
     issues: list[Issue] = Field(default_factory=list)
 
 
-class PromptTestResult(BaseModel):
-    model_config = ConfigDict(frozen=True, populate_by_name=True)
-
-    tier: str
-    prompt_type: Literal["direct", "ambiguous", "competitive"]
-    prompt: str
-    outcome: PromptOutcome
-    reasoning: str | None = None
-
-
-class CallabilityMetrics(BaseModel):
-    model_config = ConfigDict(frozen=True, populate_by_name=True)
-
-    tests_run: int = Field(alias="testsRun")
-    invoke_count: int = Field(alias="invokeCount")
-    mention_count: int = Field(alias="mentionCount")
-    silent_count: int = Field(alias="silentCount")
-    error_count: int = Field(alias="errorCount")
-    skipped: bool = False
-    test_details: list[PromptTestResult] = Field(alias="testDetails", default_factory=list)
-    issues: list[Issue] = Field(default_factory=list)
-
-
 class RewriteSuggestion(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -101,7 +76,6 @@ class Metrics(BaseModel):
 
     schema_health: SchemaMetrics = Field(alias="schema")
     description: DescriptionMetrics
-    callability: CallabilityMetrics
 
 
 class DiagnosticReport(BaseModel):

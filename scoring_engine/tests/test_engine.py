@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from scoring_engine.analyzers.callability import evaluate_callability
 from scoring_engine.analyzers.discoverability import analyze_discoverability
 from scoring_engine.analyzers.rewriter import rewrite_tool
 from scoring_engine.analyzers.schema_health import analyze_schema_health
@@ -15,24 +14,6 @@ from scoring_engine.models.tool_input import ToolInput
 
 
 class StubLLMClient(NullLLMClient):
-    def __init__(self, outcomes: list[str] | None = None) -> None:
-        self._outcomes = outcomes or ["invoked", "mentioned", "silent"]
-
-    async def evaluate_tool(
-        self,
-        prompt_type: str,
-        prompt: str,
-        tool: ToolInput,
-    ) -> dict[str, object]:
-        index = {"direct": 0, "ambiguous": 1, "competitive": 2}[prompt_type]
-        outcome = self._outcomes[index]
-        if outcome == "error":
-            raise RuntimeError("mock llm error")
-        return {
-            "outcome": outcome,
-            "reasoning": f"{prompt_type}:{tool.name}",
-        }
-
     async def rewrite_tool(
         self,
         tool: ToolInput,
@@ -147,39 +128,6 @@ def test_discoverability_flags_jargon_and_missing_context() -> None:
     assert "mcp" in result.jargon_terms
     assert {"action_verb", "use_case_pattern", "example"}.issubset(result.missing_elements)
 
-
-def test_callability_counts_outcomes() -> None:
-    result = asyncio.run(evaluate_callability(build_tool(), StubLLMClient(["invoked", "mentioned", "silent"])))
-    assert result.tests_run == 3
-    assert result.invoke_count == 1
-    assert result.mention_count == 1
-    assert result.silent_count == 1
-    assert result.error_count == 0
-    assert [item.outcome for item in result.test_details] == ["invoked", "mentioned", "silent"]
-
-
-def test_callability_captures_errors() -> None:
-    result = asyncio.run(evaluate_callability(build_tool(), StubLLMClient(["error", "mentioned", "invoked"])))
-    assert result.tests_run == 3
-    assert result.invoke_count == 1
-    assert result.mention_count == 1
-    assert result.silent_count == 0
-    assert result.error_count == 1
-    assert any(item.outcome == "error" for item in result.test_details)
-    assert any(issue.code == "INVOCATION_ERROR" for issue in result.issues)
-
-
-def test_callability_skip_marks_report_as_skipped() -> None:
-    result = asyncio.run(evaluate_callability(build_tool(runLlmTest=False), StubLLMClient()))
-    assert result.skipped is True
-    assert result.tests_run == 3
-    assert result.invoke_count == 0
-    assert result.mention_count == 0
-    assert result.silent_count == 0
-    assert result.error_count == 0
-    assert all(item.outcome == "skipped" for item in result.test_details)
-
-
 def test_rewriter_uses_llm_when_available() -> None:
     diagnosis = Diagnosis(failureMode="healthy", rootCause="Tool invoked cleanly.", issues=[])
     rewrite = asyncio.run(rewrite_tool(build_tool(), StubLLMClient(), diagnosis))
@@ -197,14 +145,12 @@ def test_rewriter_falls_back_when_llm_payload_is_invalid() -> None:
 
 def test_engine_sets_schema_failure_diagnosis(tmp_path: Path) -> None:
     store = ReportStore(tmp_path / "reports.db")
-    engine = ScoringEngine(store=store, llm_client=StubLLMClient(["mentioned", "mentioned", "mentioned"]))
+    engine = ScoringEngine(store=store, llm_client=StubLLMClient())
     tool = build_tool(
         inputSchema={"type": "object", "properties": {"data": {"type": "string"}}, "required": ["data"]},
     )
     report = asyncio.run(engine.diagnose(tool))
     assert report.diagnosis.failure_mode == "schema_failure"
-    assert report.metrics.callability.invoke_count == 0
-    assert report.metrics.callability.mention_count == 3
     assert any(issue.code == "MISSING_PARAM_DESCRIPTION" for issue in report.diagnosis.issues)
 
 
@@ -270,31 +216,30 @@ def test_engine_batch_diagnose_returns_metrics_only_reports(tmp_path: Path) -> N
         )
     )
     assert {report.tool_name for report in reports} == {"swap_tokens_alpha", "swap_tokens_beta"}
-    assert all(report.metrics.callability.tests_run == 3 for report in reports)
     assert all(not hasattr(report, "overall_score") for report in reports)
 
 
-def test_engine_marks_skipped_llm_with_healthy_diagnosis_when_metrics_are_clear(tmp_path: Path) -> None:
+def test_engine_marks_healthy_diagnosis_when_metrics_are_clear(tmp_path: Path) -> None:
     store = ReportStore(tmp_path / "reports.db")
     engine = ScoringEngine(store=store, llm_client=StubLLMClient())
     report = asyncio.run(engine.diagnose(build_tool(runLlmTest=False)))
-    assert report.metrics.callability.skipped is True
     assert report.diagnosis.failure_mode == "healthy"
     assert report.diagnosis.root_cause is not None
 
 
-def test_engine_prioritizes_raw_callability_counts_for_healthy_diagnosis(tmp_path: Path) -> None:
+def test_engine_sets_mixed_diagnosis_when_schema_and_description_both_fail(tmp_path: Path) -> None:
     store = ReportStore(tmp_path / "reports.db")
-    engine = ScoringEngine(store=store, llm_client=StubLLMClient(["invoked", "invoked", "invoked"]))
+    engine = ScoringEngine(store=store, llm_client=StubLLMClient())
     report = asyncio.run(
         engine.diagnose(
             build_tool(
+                name="tool_v2",
+                description="MCP transport payload orchestration for generalized execution synergy.",
                 inputSchema={"type": "object", "properties": {"data": {"type": "string"}}, "required": ["data"]},
             )
         )
     )
-    assert report.metrics.callability.invoke_count == 3
-    assert report.diagnosis.failure_mode == "healthy"
+    assert report.diagnosis.failure_mode == "mixed"
 
 
 def test_fallback_fastapi_returns_500_for_unexpected_errors() -> None:

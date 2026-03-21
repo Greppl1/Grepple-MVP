@@ -7,7 +7,6 @@ as a reference implementation for frontend or report-layer consumers.
 Each dimension score reflects how well the tool serves agent usability:
 - Schema Health: Can the agent correctly construct parameters?
 - Discoverability: Can the agent find and understand the tool?
-- Callability: Can the agent successfully invoke the tool?
 """
 
 from __future__ import annotations
@@ -15,7 +14,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from scoring_engine.models.report import (
-    CallabilityMetrics,
     DescriptionMetrics,
     DiagnosticReport,
     SchemaMetrics,
@@ -36,7 +34,6 @@ class ToolScores:
 
     schema_health: DimensionScore
     discoverability: DimensionScore
-    callability: DimensionScore
     overall: int  # weighted average 0-100
     grade: str  # A/B/C/D/F
 
@@ -184,83 +181,22 @@ def compute_discoverability(m: DescriptionMetrics) -> DimensionScore:
     )
 
 
-def compute_callability(m: CallabilityMetrics) -> DimensionScore:
-    """Callability: Can the agent successfully invoke the tool?
-
-    Components (total 100):
-      - invocation_rate (50): invoke_count / tests_run
-      - error_free (25): errors are severe failures
-      - visibility (15): not being silent means at least discoverable
-      - friction (10): mention > invoke gap = schema friction
-
-    If skipped (no LLM test), returns -1 total to signal "not tested".
-    """
-    if m.skipped or m.tests_run == 0:
-        return DimensionScore(total=-1, breakdown={"skipped": -1})
-
-    # invocation rate: most critical metric
-    invoke_rate = m.invoke_count / m.tests_run
-    invoke_pts = invoke_rate * 50
-
-    # error free: each error costs proportionally
-    error_rate = m.error_count / m.tests_run
-    error_pts = (1 - error_rate) * 25
-
-    # visibility: not silent = agent at least noticed the tool
-    silent_rate = m.silent_count / m.tests_run
-    visibility_pts = (1 - silent_rate) * 15
-
-    # friction: gap between mention and invoke indicates schema issues
-    if m.mention_count > 0 and m.invoke_count < m.mention_count:
-        friction_rate = (m.mention_count - m.invoke_count) / m.mention_count
-        friction_pts = (1 - friction_rate) * 10
-    elif m.invoke_count > 0:
-        friction_pts = 10.0  # no friction
-    else:
-        friction_pts = 0.0  # never even mentioned
-
-    total = invoke_pts + error_pts + visibility_pts + friction_pts
-
-    return DimensionScore(
-        total=_clamp(round(total)),
-        breakdown={
-            "invocation_rate": round(invoke_pts, 1),
-            "error_free": round(error_pts, 1),
-            "visibility": round(visibility_pts, 1),
-            "friction": round(friction_pts, 1),
-        },
-    )
-
-
 def compute_scores(report: DiagnosticReport) -> ToolScores:
     """Compute all scores from a DiagnosticReport.
 
     Overall is a weighted average:
-      - Schema Health: 30%  (foundational but fixable)
-      - Discoverability: 30% (agent needs to find it)
-      - Callability: 40%  (most important — does it actually work?)
-
-    If callability was skipped, overall is based on schema + discoverability only.
+      - Schema Health: 50%
+      - Discoverability: 50%
     """
     schema = compute_schema_health(report.metrics.schema_health)
     discovery = compute_discoverability(report.metrics.description)
-    callability = compute_callability(report.metrics.callability)
-
-    if callability.total < 0:
-        # Callability not tested — weight schema and discoverability equally
-        raw_overall = schema.total * 0.5 + discovery.total * 0.5
-    else:
-        raw_overall = (
-            schema.total * 0.3 + discovery.total * 0.3 + callability.total * 0.4
-        )
-
+    raw_overall = schema.total * 0.5 + discovery.total * 0.5
     overall = _clamp(round(raw_overall))
     grade = _to_grade(overall)
 
     return ToolScores(
         schema_health=schema,
         discoverability=discovery,
-        callability=callability,
         overall=overall,
         grade=grade,
     )
@@ -268,9 +204,6 @@ def compute_scores(report: DiagnosticReport) -> ToolScores:
 
 def scores_to_dict(scores: ToolScores) -> dict[str, object]:
     """Serialize ToolScores to a JSON-friendly dict for frontend consumption."""
-    callability_total = (
-        scores.callability.total if scores.callability.total >= 0 else None
-    )
     return {
         "schemaHealth": {
             "score": scores.schema_health.total,
@@ -279,13 +212,6 @@ def scores_to_dict(scores: ToolScores) -> dict[str, object]:
         "discoverability": {
             "score": scores.discoverability.total,
             "breakdown": scores.discoverability.breakdown,
-        },
-        "callability": {
-            "score": callability_total,
-            "skipped": callability_total is None,
-            "breakdown": scores.callability.breakdown
-            if callability_total is not None
-            else {},
         },
         "overall": scores.overall,
         "grade": scores.grade,

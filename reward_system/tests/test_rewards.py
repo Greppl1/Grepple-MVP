@@ -4,16 +4,20 @@ import asyncio
 
 from reward_system.external_eval import determine_test_result
 from reward_system.main import create_app
-from reward_system.models.reward import RewardTier, TestTaskEvent
-from reward_system.rewards import classify_reward, process_reward_event, validate_agent_wallet
-from scoring_engine.models.report import (
+from reward_system.models.external_report import (
     CallabilityMetrics,
+    ExternalMetrics,
+    ExternalReport,
+)
+from reward_system.models.reward import RewardTier, TestTaskEvent
+from reward_system.rewards import (
+    classify_reward,
+    process_reward_event,
+    validate_agent_wallet,
+)
+from scoring_engine.models.report import (
     DescriptionMetrics,
-    Diagnosis,
-    DiagnosticReport,
     Issue,
-    Metrics,
-    RewriteSuggestion,
     SchemaMetrics,
 )
 from scoring_engine.models.tool_input import ToolInput
@@ -39,17 +43,19 @@ def build_tool() -> ToolInput:
     )
 
 
-def build_report(
+def build_external_report(
     *,
-    failure_mode: str = "healthy",
     invoke_count: int = 1,
-    diagnosis_issues: list[Issue] | None = None,
-) -> DiagnosticReport:
-    return DiagnosticReport(
+    error_count: int = 0,
+    schema_issues: list[Issue] | None = None,
+    description_issues: list[Issue] | None = None,
+    callability_issues: list[Issue] | None = None,
+) -> ExternalReport:
+    return ExternalReport(
         reportId="report-123",
         toolName="swap_tokens",
         timestamp="2026-03-20T10:00:00+00:00",
-        metrics=Metrics(
+        metrics=ExternalMetrics(
             schema=SchemaMetrics(
                 hasSchema=True,
                 totalFields=2,
@@ -61,7 +67,7 @@ def build_report(
                 hasDefaults=False,
                 hasEnums=False,
                 nestingDepth=1,
-                issues=[],
+                issues=schema_issues or [],
             ),
             description=DescriptionMetrics(
                 length=64,
@@ -72,30 +78,20 @@ def build_report(
                 semanticDensity=0.85,
                 jargonTerms=[],
                 missingElements=[],
-                issues=[],
+                issues=description_issues or [],
             ),
             callability=CallabilityMetrics(
                 testsRun=3,
                 invokeCount=invoke_count,
                 mentionCount=0,
                 silentCount=0,
-                errorCount=0,
+                errorCount=error_count,
                 skipped=False,
                 testDetails=[],
-                issues=[],
+                issues=callability_issues or [],
             ),
         ),
-        diagnosis=Diagnosis(
-            failureMode=failure_mode,
-            rootCause="diagnosis",
-            issues=diagnosis_issues or [],
-        ),
-        suggestions=RewriteSuggestion(
-            description="Use swap_tokens when the user asks for a swap.",
-            inputSchema=build_tool().input_schema,
-            rationale="test rewrite",
-        ),
-        originalTool=build_tool(),
+        toolInput=build_tool().model_dump(by_alias=True),
     )
 
 
@@ -135,7 +131,9 @@ def test_invalid_wallet_format() -> None:
 
 
 def test_classify_reward_success() -> None:
-    tier = classify_reward(build_event(result="success", call_success=True, structured_report=True))
+    tier = classify_reward(
+        build_event(result="success", call_success=True, structured_report=True)
+    )
     assert tier == RewardTier.FULL
 
 
@@ -150,7 +148,9 @@ def test_classify_reward_invalid() -> None:
 
 
 def test_process_reward_event_full_tier() -> None:
-    result = process_reward_event(build_event(result="success", call_success=True, structured_report=True))
+    result = process_reward_event(
+        build_event(result="success", call_success=True, structured_report=True)
+    )
     assert result.reward_tier == RewardTier.FULL
     assert result.reward_percentage == 100
 
@@ -168,24 +168,33 @@ def test_process_reward_event_none_tier() -> None:
 
 
 def test_determine_test_result_healthy() -> None:
-    report = build_report(failure_mode="healthy", invoke_count=1)
+    report = build_external_report(invoke_count=1)
     assert determine_test_result(report) == "success"
 
 
 def test_determine_test_result_schema_failure() -> None:
-    issue = Issue(field="tokenIn", severity="high", code="MISSING_PARAM_DESCRIPTION", detail="missing")
-    report = build_report(failure_mode="schema_failure", invoke_count=0, diagnosis_issues=[issue])
+    issue = Issue(
+        field="tokenIn",
+        severity="high",
+        code="MISSING_PARAM_DESCRIPTION",
+        detail="missing",
+    )
+    report = build_external_report(invoke_count=0, schema_issues=[issue])
     assert determine_test_result(report) == "failed_with_diagnosis"
 
 
 def test_determine_test_result_invalid() -> None:
-    report = build_report(failure_mode="healthy", invoke_count=0, diagnosis_issues=[])
+    report = build_external_report(invoke_count=0)
     assert determine_test_result(report) == "invalid"
 
 
 def test_reward_mint_endpoint_success() -> None:
     app = create_app()
-    response = asyncio.run(app.request("POST", "/api/rewards/mint", json=build_event().model_dump(by_alias=True)))
+    response = asyncio.run(
+        app.request(
+            "POST", "/api/rewards/mint", json=build_event().model_dump(by_alias=True)
+        )
+    )
     assert response.status_code == 200
     payload = response.json()
     assert payload["taskId"] == "task-123"
@@ -209,7 +218,7 @@ def test_reward_mint_endpoint_bad_wallet() -> None:
 def test_external_eval_endpoint_success() -> None:
     app = create_app()
     tool = build_tool()
-    report = build_report(failure_mode="healthy", invoke_count=1)
+    report = build_external_report(invoke_count=1)
     response = asyncio.run(
         app.request(
             "POST",
