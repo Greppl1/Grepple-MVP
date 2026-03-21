@@ -11,15 +11,16 @@ import { useToast } from '@/components/Toast';
 import { IconSearch, IconSparkles, IconCheck, IconX, IconArrowRight, IconExternalLink } from '@/components/Icons';
 import { Skeleton } from '@/components/Skeleton';
 import ScoreRing from '@/components/ScoreRing';
+import { loadModelConfig, isModelConfigured, getProviderLabel, type ModelConfig } from '@/lib/model-config';
 
 /* ── helpers ─────────────────────────────────────────── */
 
 const scoreColor = (v: number) => v >= 85 ? 'text-green' : v >= 60 ? 'text-text' : 'text-amber';
 const barColor = (v: number) => v >= 85 ? 'bg-green' : v >= 60 ? 'bg-blue' : 'bg-amber';
 
-const EXECUTION_STEPS = [
+const getExecutionSteps = (model?: string) => [
   { label: 'Analyzing tool schema...', duration: 1200 },
-  { label: 'Generating test parameters...', duration: 800 },
+  { label: model ? `Connecting to ${model}...` : 'Connecting to agent...', duration: 800 },
   { label: 'Agent invoking tool...', duration: 2100 },
   { label: 'Validating response structure...', duration: 500 },
 ];
@@ -120,24 +121,38 @@ function ExecutionPanel({
   step,
   done,
   stepTimings,
+  modelConfig,
 }: {
   tool: Tool;
   step: number;
   done: boolean;
   stepTimings: number[];
+  modelConfig: ModelConfig | null;
 }) {
+  const steps = getExecutionSteps(modelConfig?.model);
+
   return (
     <div className="bg-elevated rounded-xl p-6 mt-3 border border-border animate-slide-up">
-      <div className="flex items-center gap-2 mb-4">
-        <IconSparkles size={18} className="text-blue-bright" />
-        <h3 className="text-sm font-semibold tracking-wide uppercase text-text-secondary">
-          Agent Execution
-        </h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <IconSparkles size={18} className="text-blue-bright" />
+          <h3 className="text-sm font-semibold tracking-wide uppercase text-text-secondary">
+            Agent Execution
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          {modelConfig && (
+            <span className="text-xs bg-elevated-2 text-text-secondary px-2.5 py-1 rounded-full">
+              {modelConfig.model}
+            </span>
+          )}
+          <span className="badge-coming-soon">Demo</span>
+        </div>
       </div>
 
       {/* Steps */}
       <div className="space-y-3 mb-6">
-        {EXECUTION_STEPS.map((s, i) => {
+        {steps.map((s, i) => {
           const completed = step > i;
           const active = step === i && !done;
           const pending = step <= i && !completed;
@@ -229,6 +244,16 @@ function ExecutionPanel({
               <IconArrowRight size={14} />
             </Link>
           </div>
+
+          {!modelConfig && (
+            <p className="text-xs text-text-dim mt-3">
+              Results shown are based on existing benchmark data.{' '}
+              <Link href="/settings" className="text-blue hover:underline">
+                Connect your API key
+              </Link>{' '}
+              to run live agent tests.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -261,6 +286,7 @@ function ToolCard({
   executionDone,
   stepTimings,
   onTest,
+  modelConfig,
 }: {
   tool: Tool;
   isExecuting: boolean;
@@ -268,6 +294,7 @@ function ToolCard({
   executionDone: boolean;
   stepTimings: number[];
   onTest: () => void;
+  modelConfig: ModelConfig | null;
 }) {
   return (
     <div>
@@ -305,32 +332,45 @@ function ToolCard({
           >
             View Details
           </Link>
-          <button
-            onClick={onTest}
-            disabled={isExecuting && !executionDone}
-            className={`text-sm px-4 py-2 inline-flex items-center gap-1.5 rounded-lg font-medium transition-all ${
-              isExecuting && !executionDone
-                ? 'bg-elevated text-text-dim cursor-not-allowed'
-                : 'btn-gradient'
-            }`}
-          >
-            {isExecuting && !executionDone ? (
-              <>
-                <div className="w-3.5 h-3.5 rounded-full border-2 border-blue border-t-transparent animate-spin" />
-                Testing...
-              </>
-            ) : isExecuting && executionDone ? (
-              <>
-                <IconCheck size={14} />
-                Tested
-              </>
-            ) : (
-              <>
-                Test with Agent
-                <IconArrowRight size={14} />
-              </>
-            )}
-          </button>
+          {isExecuting ? (
+            <button
+              onClick={onTest}
+              disabled={!executionDone}
+              className={`text-sm px-4 py-2 inline-flex items-center gap-1.5 rounded-lg font-medium transition-all ${
+                !executionDone
+                  ? 'bg-elevated text-text-dim cursor-not-allowed'
+                  : 'btn-gradient'
+              }`}
+            >
+              {!executionDone ? (
+                <>
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-blue border-t-transparent animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <IconCheck size={14} />
+                  Tested
+                </>
+              )}
+            </button>
+          ) : modelConfig ? (
+            <button
+              onClick={onTest}
+              className="btn-gradient text-sm px-4 py-2 inline-flex items-center gap-1.5 rounded-lg font-medium"
+            >
+              Test with {getProviderLabel(modelConfig.provider).split(' ')[0]}
+              <IconArrowRight size={14} />
+            </button>
+          ) : (
+            <Link
+              href="/settings"
+              className="btn-secondary text-sm px-4 py-2 inline-flex items-center gap-1.5 rounded-lg font-medium"
+            >
+              Configure Model to Test
+              <IconArrowRight size={14} />
+            </Link>
+          )}
         </div>
       </div>
 
@@ -341,6 +381,7 @@ function ToolCard({
           step={executionStep}
           done={executionDone}
           stepTimings={stepTimings}
+          modelConfig={modelConfig}
         />
       )}
     </div>
@@ -388,6 +429,7 @@ function IntentPageInner() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [modelConfig, setModelConfig] = useState<ModelConfig | null>(null);
 
   // Execution state
   const [executingToolId, setExecutingToolId] = useState<string | null>(null);
@@ -395,6 +437,11 @@ function IntentPageInner() {
   const [executionDone, setExecutionDone] = useState(false);
   const [stepTimings, setStepTimings] = useState<number[]>([]);
   const executionRef = useRef<boolean>(false);
+
+  // Load model config on mount
+  useEffect(() => {
+    setModelConfig(loadModelConfig());
+  }, []);
 
   // Run search on mount if query present
   useEffect(() => {
@@ -421,7 +468,7 @@ function IntentPageInner() {
         toast('No tools found for that query. Try different keywords.', 'info');
       }
     } catch {
-      toast('Search failed. Showing demo results.', 'error');
+      toast('Search failed. Showing demo results instead.', 'error');
       const fallback = MOCK_TOOLS.slice(0, 5);
       setTools(fallback);
     } finally {
@@ -445,14 +492,15 @@ function IntentPageInner() {
     setExecutionDone(false);
     setStepTimings([]);
 
+    const steps = getExecutionSteps(modelConfig?.model);
     let step = 0;
     const timings: number[] = [];
 
     const runStep = () => {
-      if (step < EXECUTION_STEPS.length) {
+      if (step < steps.length) {
         setExecutionStep(step + 1);
         const jitter = (Math.random() - 0.5) * 400;
-        const duration = Math.max(300, EXECUTION_STEPS[step].duration + jitter);
+        const duration = Math.max(300, steps[step].duration + jitter);
         timings.push(Math.round(duration));
         setStepTimings([...timings]);
         step++;
@@ -464,7 +512,7 @@ function IntentPageInner() {
     };
 
     setTimeout(runStep, 500);
-  }, []);
+  }, [modelConfig]);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 page-enter">
@@ -532,6 +580,7 @@ function IntentPageInner() {
                 executionDone={executingToolId === tool.id ? executionDone : false}
                 stepTimings={executingToolId === tool.id ? stepTimings : []}
                 onTest={() => handleTestTool(tool)}
+                modelConfig={modelConfig}
               />
             ))}
           </div>

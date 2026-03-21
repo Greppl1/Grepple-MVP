@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import UserButton from '@/components/UserButton';
 import { useAuth } from '@/providers/AuthProvider';
+import { useSidebar } from '@/providers/SidebarProvider';
 import {
   IconRegistry,
   IconBuilder,
@@ -16,22 +17,31 @@ import {
   IconMenu,
   IconX,
   IconSparkles,
+  IconWallet,
+  IconSettings,
 } from '@/components/Icons';
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
-  authRequired?: boolean;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const DISCOVER_ITEMS: NavItem[] = [
   { href: '/registry', label: 'Registry', icon: IconRegistry },
   { href: '/intent', label: 'Try Tools', icon: IconSparkles },
+];
+
+const BUILD_ITEMS: NavItem[] = [
   { href: '/builder/submit', label: 'Submit Tool', icon: IconPlus },
-  { href: '/builder/tools', label: 'My Tools', icon: IconBuilder, authRequired: true },
-  { href: '/agent/profile', label: 'Dashboard', icon: IconBarChart, authRequired: true },
-  { href: '/agent/redeem', label: 'Rewards', icon: IconRewards, authRequired: true },
+  { href: '/builder/tools', label: 'My Tools', icon: IconBuilder },
+  { href: '/builder/budget', label: 'Budget', icon: IconWallet },
+];
+
+const AGENT_ITEMS: NavItem[] = [
+  { href: '/agent/profile', label: 'Dashboard', icon: IconBarChart },
+  { href: '/agent/redeem', label: 'Rewards', icon: IconRewards },
+  { href: '/settings', label: 'Settings', icon: IconSettings },
 ];
 
 function Logo({ collapsed }: { collapsed: boolean }) {
@@ -53,16 +63,14 @@ function Logo({ collapsed }: { collapsed: boolean }) {
 export default function Sidebar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggle } = useSidebar();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isLandingPage = pathname === '/';
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden';
@@ -77,9 +85,6 @@ export default function Sidebar() {
   if (isLandingPage) {
     return null;
   }
-
-  const publicItems = NAV_ITEMS.filter((item) => !item.authRequired);
-  const authItems = NAV_ITEMS.filter((item) => item.authRequired);
 
   const renderNavItem = (item: NavItem) => {
     const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -105,6 +110,15 @@ export default function Sidebar() {
     );
   };
 
+  const renderSection = (label: string, items: NavItem[]) => (
+    <div>
+      {!collapsed && <p className="nav-section-label">{label}</p>}
+      <div className="space-y-0.5">
+        {items.map(renderNavItem)}
+      </div>
+    </div>
+  );
+
   const sidebarContent = (
     <aside
       className={`fixed top-0 left-0 h-full bg-surface border-r border-border flex flex-col z-50 transition-all duration-300 ${
@@ -116,15 +130,13 @@ export default function Sidebar() {
         <Link href="/" onClick={() => setMobileOpen(false)}>
           <Logo collapsed={collapsed} />
         </Link>
-        {/* Desktop collapse toggle */}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggle}
           className="text-text-dim hover:text-text transition-colors hidden lg:flex items-center justify-center"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <IconChevronRight size={16} /> : <IconChevronLeft size={16} />}
         </button>
-        {/* Mobile close */}
         <button
           onClick={() => setMobileOpen(false)}
           className="text-text-dim hover:text-text transition-colors lg:hidden"
@@ -135,19 +147,16 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 overflow-y-auto" role="navigation" aria-label="Main navigation">
-        {/* Public items */}
-        <div className="space-y-1">
-          {publicItems.map(renderNavItem)}
-        </div>
+      <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-4" role="navigation" aria-label="Main navigation">
+        {renderSection('Discover', DISCOVER_ITEMS)}
 
-        {/* Authenticated items */}
-        {isAuthenticated && authItems.length > 0 && (
+        <div className="mx-3 border-t border-border" />
+        {renderSection('Build', BUILD_ITEMS)}
+
+        {isAuthenticated && (
           <>
-            <div className="mx-3 my-3 border-t border-border" />
-            <div className="space-y-1">
-              {authItems.map(renderNavItem)}
-            </div>
+            <div className="mx-3 border-t border-border" />
+            {renderSection('Agent', AGENT_ITEMS)}
           </>
         )}
       </nav>
@@ -173,7 +182,6 @@ export default function Sidebar() {
         <Link href="/">
           <Logo collapsed={false} />
         </Link>
-        {/* Spacer to keep logo centered */}
         <div className="w-[22px]" />
       </div>
 
