@@ -1,32 +1,38 @@
 @import "tailwindcss";
 
+/* ============================================================
+   THEME — Design tokens
+   ============================================================ */
 @theme inline {
-  --color-bg: #0D0B2E;
-  --color-bg-nav: rgba(13, 11, 46, 0.92);
-  --color-surface: #151333;
-  --color-elevated: #1D1A45;
-  --color-elevated-2: #252252;
-  --color-purple: #7B6BA8;
-  --color-purple-dim: rgba(123, 107, 168, 0.1);
-  --color-lavender: #9B8EC8;
+  --color-bg: #07071C;
+  --color-bg-nav: rgba(7, 7, 28, 0.92);
+  --color-surface: #0F0F2D;
+  --color-elevated: #181840;
+  --color-elevated-2: #222255;
+  --color-purple: #8B7BC8;
+  --color-purple-dim: rgba(139, 123, 200, 0.1);
+  --color-lavender: #A99ADA;
   --color-blue: #4A6CF7;
-  --color-blue-bright: #5B7FFF;
+  --color-blue-bright: #6B8AFF;
   --color-blue-dim: rgba(74, 108, 247, 0.12);
-  --color-green: #18DC7E;
-  --color-green-dim: rgba(24, 220, 126, 0.1);
+  --color-green: #22E88A;
+  --color-green-dim: rgba(34, 232, 138, 0.1);
   --color-amber: #F5A623;
   --color-amber-dim: rgba(245, 166, 35, 0.15);
   --color-red: #FF4757;
   --color-red-dim: rgba(255, 71, 87, 0.15);
-  --color-text: #FFFFFF;
-  --color-text-secondary: #8B85AA;
-  --color-text-dim: #6B6590;
-  --color-border: #2D2855;
-  --color-border-hi: #3D3575;
+  --color-text: #EEEEFF;
+  --color-text-secondary: #9D97BE;
+  --color-text-dim: #7B75A0;
+  --color-border: #2A2660;
+  --color-border-hi: #3D3880;
   --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 }
 
+/* ============================================================
+   BASE
+   ============================================================ */
 body {
   background: var(--color-bg);
   color: var(--color-text);
@@ -34,7 +40,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
@@ -44,14 +52,20 @@ body {
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Accent text */
+/* ============================================================
+   ACCENT TEXT
+   ============================================================ */
 .accent-text {
   color: var(--color-blue-bright);
 }
 
-/* Gradient button */
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+/* Gradient button — primary CTA */
 .btn-gradient {
-  background: linear-gradient(135deg, #7B6BA8, #4A6CF7);
+  background: linear-gradient(135deg, #8B7BC8, #4A6CF7);
   color: white;
   box-shadow: 0 4px 20px rgba(74, 108, 247, 0.25);
   transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
@@ -67,8 +81,8 @@ body {
   background: var(--color-elevated);
   color: var(--color-text-dim);
   box-shadow: none;
-  transform: none;
   cursor: not-allowed;
+  transform: none;
   opacity: 1;
 }
 
@@ -85,31 +99,104 @@ body {
   background: var(--color-elevated-2);
 }
 
+/* Ghost button — minimal emphasis */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text);
+}
+
+/* Icon button — square, no label */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: all 0.15s ease;
+}
+.btn-icon:hover {
+  background: var(--color-elevated);
+  color: var(--color-text);
+}
+
+/* Danger button — destructive actions */
+.btn-danger {
+  background: color-mix(in srgb, var(--color-red) 15%, transparent);
+  color: var(--color-red);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--color-red) 30%, transparent);
+  transition: all 0.15s ease;
+}
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--color-red) 25%, transparent);
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+
 /* Card with glow on hover */
 .card-glow {
-  transition: all 0.25s ease;
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
 }
 .card-glow:hover {
   border-color: var(--color-border-hi);
-  box-shadow: 0 0 40px rgba(74, 108, 247, 0.15), 0 0 80px rgba(123, 107, 168, 0.06);
+  box-shadow: 0 0 0 1px var(--color-border-hi), 0 8px 32px -8px rgba(74, 108, 247, 0.15);
 }
+
+/* Stat card highlight variant */
+.stat-highlight {
+  background: linear-gradient(135deg, rgba(74, 108, 247, 0.08) 0%, rgba(139, 123, 200, 0.06) 100%);
+  border-color: var(--color-border-hi);
+}
+
+/* ============================================================
+   HERO & LANDING
+   ============================================================ */
 
 /* Hero gradient background */
 .hero-gradient {
-  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(74, 108, 247, 0.14) 0%, transparent 70%),
-              radial-gradient(ellipse 40% 40% at 70% 10%, rgba(123, 107, 168, 0.1) 0%, transparent 60%);
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, color-mix(in srgb, var(--color-blue) 20%, transparent), transparent),
+    radial-gradient(ellipse 40% 40% at 80% 20%, color-mix(in srgb, var(--color-purple) 15%, transparent), transparent);
 }
 
-/* Testnet banner */
+/* Logo: "grep" white, "ple" purple */
+.logo-grep { color: #EEEEFF; }
+.logo-ple { color: #8B7BC8; }
+
+/* ============================================================
+   TESTNET BANNER — subtle, de-emphasized
+   ============================================================ */
 .testnet-banner {
-  background: linear-gradient(90deg, rgba(245, 166, 35, 0.08) 0%, rgba(74, 108, 247, 0.08) 100%);
-  border: 1px solid rgba(245, 166, 35, 0.2);
-  color: var(--color-amber);
-  font-size: 0.75rem;
-  padding: 0.375rem 1rem;
+  background: color-mix(in srgb, var(--color-amber) 8%, transparent);
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.75rem;
+  border: none;
   border-radius: 0.5rem;
   text-align: center;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
+
+/* ============================================================
+   TABLE
+   ============================================================ */
 
 /* Table row hover */
 .row-hover {
@@ -117,10 +204,94 @@ body {
   cursor: pointer;
 }
 .row-hover:hover {
-  background: rgba(29, 26, 69, 0.6);
+  background: rgba(24, 24, 64, 0.6);
 }
 
-/* Animations */
+/* ============================================================
+   METRIC BAR — horizontal score bar for lists
+   ============================================================ */
+.metric-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-elevated-2);
+  overflow: hidden;
+}
+.metric-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* ============================================================
+   SCORE BADGE — compact inline score display
+   ============================================================ */
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--color-text-dim);
+}
+.empty-state svg {
+  opacity: 0.4;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================
+   FORM — focus rings & validation states
+   ============================================================ */
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+/* Input focus ring improvement */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-blue) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-blue) 20%, transparent);
+}
+
+/* Inline validation states */
+.input-error {
+  border-color: var(--color-red) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-red) 15%, transparent);
+}
+.input-success {
+  border-color: var(--color-green) !important;
+}
+.field-error {
+  color: var(--color-red);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+.field-hint {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* ============================================================
+   ANIMATIONS — keyframes
+   ============================================================ */
 @keyframes slide-in {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
@@ -149,7 +320,14 @@ body {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
+/* ============================================================
+   ANIMATIONS — utility classes
+   ============================================================ */
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
@@ -169,6 +347,11 @@ body {
   animation: slide-left 0.25s ease-out;
 }
 
+/* Page transition */
+.page-enter {
+  animation: page-fade-in 0.25s ease forwards;
+}
+
 /* Staggered children animation */
 .stagger-children > * {
   opacity: 0;
@@ -185,19 +368,9 @@ body {
 .stagger-children > *:nth-child(9) { animation-delay: 480ms; }
 .stagger-children > *:nth-child(10) { animation-delay: 540ms; }
 
-/* Focus ring */
-*:focus-visible {
-  outline: 2px solid var(--color-blue);
-  outline-offset: 2px;
-}
-
-/* Stat card highlight variant */
-.stat-highlight {
-  background: linear-gradient(135deg, rgba(74, 108, 247, 0.08) 0%, rgba(123, 107, 168, 0.06) 100%);
-  border-color: var(--color-border-hi);
-}
-
-/* Mobile sidebar overlay */
+/* ============================================================
+   MOBILE — sidebar overlay
+   ============================================================ */
 @media (max-width: 1023px) {
   .sidebar-overlay {
     position: fixed;
@@ -209,11 +382,9 @@ body {
   }
 }
 
-/* Logo: "grep" white, "ple" purple */
-.logo-grep { color: #FFFFFF; }
-.logo-ple { color: #7B6BA8; }
-
-/* Command palette overlay */
+/* ============================================================
+   COMMAND PALETTE
+   ============================================================ */
 .cmd-backdrop {
   position: fixed;
   inset: 0;
@@ -232,7 +403,9 @@ body {
   animation: scale-in 0.15s ease-out;
 }
 
-/* Identicon */
+/* ============================================================
+   IDENTICON
+   ============================================================ */
 .identicon-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

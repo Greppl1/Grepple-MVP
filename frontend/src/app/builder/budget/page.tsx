@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
+import { useAuth } from '@/providers/AuthProvider';
 import { IconExternalLink } from '@/components/Icons';
+import { API_BASE } from '@/lib/contracts';
 
 interface Transaction {
   id: string;
@@ -14,88 +16,94 @@ interface Transaction {
   status: 'Confirmed' | 'Pending';
 }
 
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: '1', date: '2026-03-20 10:30', type: 'Deposit', amount: '+50.00 USDC', txHash: '0xabc123def456789012345678901234567890abcd', status: 'Confirmed' },
-  { id: '2', date: '2026-03-20 10:45', type: 'Consumed', amount: '-0.25 USDC', txHash: '0xdef456abc789012345678901234567890abcdef1', status: 'Confirmed' },
-  { id: '3', date: '2026-03-20 11:02', type: 'Consumed', amount: '-0.50 USDC', txHash: '0x789abc012def345678901234567890abcdef1234', status: 'Confirmed' },
-  { id: '4', date: '2026-03-19 14:20', type: 'Deposit', amount: '+25.00 USDC', txHash: '0x012345678901234567890abcdef1234567890abc', status: 'Confirmed' },
-  { id: '5', date: '2026-03-19 15:10', type: 'Consumed', amount: '-0.25 USDC', txHash: '0x345678901234567890abcdef1234567890abcde', status: 'Confirmed' },
-];
-
 export default function BudgetPage() {
   const [depositAmount, setDepositAmount] = useState('');
   const [depositing, setDepositing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [transactions] = useState<Transaction[]>([]);
   const { toast } = useToast();
+  const { wallet, isAuthenticated } = useAuth();
 
-  const currentBalance = 50.0;
-  const totalDeposited = 75.0;
-  const totalConsumed = 25.0;
+  const currentBalance = 0;
+  const totalDeposited = 0;
+  const totalUsed = 0;
 
   const handleDeposit = () => {
     if (!depositAmount || parseFloat(depositAmount) <= 0) return;
     setConfirmOpen(true);
   };
 
-  const confirmDeposit = () => {
+  const confirmDeposit = async () => {
     setConfirmOpen(false);
     setDepositing(true);
-    setTimeout(() => {
-      setDepositing(false);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/vault/deposit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          builder_wallet: wallet?.address,
+          usdc_amount: parseFloat(depositAmount),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Deposit failed');
+      }
+
       toast(`Deposited ${depositAmount} USDC to Grepple Vault`, 'success');
       setDepositAmount('');
-    }, 2000);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Deposit failed';
+      toast(message, 'error');
+    } finally {
+      setDepositing(false);
+    }
   };
 
   const truncateHash = (hash: string) =>
     `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl animate-fade-in">
-      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-2">Budget Management</h1>
-      <p className="text-text-secondary mb-8">
-        Manage your USDC balance for MCP Tool diagnosis and testing.
-      </p>
+    <div className="p-6 lg:p-8 max-w-3xl mx-auto page-enter">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-text mb-1">Budget & Billing</h1>
+        <p className="text-text-secondary text-sm">
+          Manage your testing budget on BSC Testnet.
+        </p>
+      </div>
 
-      {/* Balance Card */}
-      <div className="bg-surface border border-border rounded-xl p-6 mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="text-center sm:text-left">
-            <p className="text-text-dim text-xs uppercase tracking-wider mb-2">
-              Current Balance
-            </p>
-            <p className="text-3xl sm:text-4xl font-bold font-mono text-white">
-              {currentBalance.toFixed(2)}
-            </p>
-            <p className="text-text-secondary text-sm mt-1">USDC</p>
-          </div>
-          <div className="text-center sm:text-left sm:border-l sm:border-border sm:pl-6">
-            <p className="text-text-dim text-xs uppercase tracking-wider mb-2">
-              Total Deposited
-            </p>
-            <p className="text-2xl font-bold font-mono text-green">
-              {totalDeposited.toFixed(2)}
-            </p>
-            <p className="text-text-secondary text-sm mt-1">USDC</p>
-          </div>
-          <div className="text-center sm:text-left sm:border-l sm:border-border sm:pl-6">
-            <p className="text-text-dim text-xs uppercase tracking-wider mb-2">
-              Total Consumed
-            </p>
-            <p className="text-2xl font-bold font-mono text-amber">
-              {totalConsumed.toFixed(2)}
-            </p>
-            <p className="text-text-secondary text-sm mt-1">USDC</p>
-          </div>
+      {/* Balance Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="bg-surface rounded-xl p-5 border border-border">
+          <p className="text-sm text-text-secondary mb-1">Current Balance</p>
+          <p className="text-2xl font-bold text-white font-mono">
+            {currentBalance.toFixed(2)} <span className="text-sm font-normal text-text-dim">USDC</span>
+          </p>
+        </div>
+        <div className="bg-surface rounded-xl p-5 border border-border">
+          <p className="text-sm text-text-secondary mb-1">Total Deposited</p>
+          <p className="text-2xl font-bold text-green font-mono">
+            {totalDeposited.toFixed(2)} <span className="text-sm font-normal text-text-dim">USDC</span>
+          </p>
+        </div>
+        <div className="bg-surface rounded-xl p-5 border border-border">
+          <p className="text-sm text-text-secondary mb-1">Total Used</p>
+          <p className="text-2xl font-bold text-amber font-mono">
+            {totalUsed.toFixed(2)} <span className="text-sm font-normal text-text-dim">USDC</span>
+          </p>
         </div>
       </div>
 
-      {/* Deposit Form */}
+      {/* Deposit Section */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-8">
-        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">
-          Deposit USDC
-        </h2>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <h2 className="text-base font-semibold text-text mb-1">Add Funds</h2>
+        <p className="text-text-dim text-sm mb-4">
+          On testnet, deposits use mock USDC. No real funds required.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative">
             <input
               type="number"
@@ -113,28 +121,23 @@ export default function BudgetPage() {
           <button
             onClick={handleDeposit}
             disabled={!depositAmount || parseFloat(depositAmount) <= 0 || depositing}
-            className={`btn-gradient px-6 py-3 rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
+            className={`btn-gradient px-6 py-3 rounded-xl text-sm font-semibold transition-all min-w-[120px] ${
               !depositAmount || parseFloat(depositAmount) <= 0 || depositing
-                ? 'opacity-40 cursor-not-allowed'
+                ? 'bg-elevated text-dim cursor-not-allowed'
                 : ''
             }`}
           >
             {depositing ? 'Depositing...' : 'Deposit'}
           </button>
         </div>
-        <p className="text-text-dim text-xs mt-3">
-          Deposits are sent to the Grepple Vault contract on BSC Testnet.
-        </p>
       </div>
 
       {/* Transaction History */}
       <div className="bg-surface border border-border rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
-            Transaction History
-          </h2>
+          <h2 className="text-base font-semibold text-text">Transaction History</h2>
         </div>
-        {MOCK_TRANSACTIONS.length > 0 ? (
+        {transactions.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -149,15 +152,12 @@ export default function BudgetPage() {
                     Amount
                   </th>
                   <th className="text-left px-6 py-3 text-text-dim font-medium text-xs uppercase tracking-wider hidden sm:table-cell">
-                    Tx Hash
-                  </th>
-                  <th className="text-left px-6 py-3 text-text-dim font-medium text-xs uppercase tracking-wider hidden md:table-cell">
                     Status
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {MOCK_TRANSACTIONS.map((tx) => (
+                {transactions.map((tx) => (
                   <tr key={tx.id} className="border-b border-border/50 row-hover transition-colors">
                     <td className="px-6 py-4 font-mono text-text-secondary text-xs whitespace-nowrap">
                       {tx.date}
@@ -181,17 +181,6 @@ export default function BudgetPage() {
                       {tx.amount}
                     </td>
                     <td className="px-6 py-4 hidden sm:table-cell">
-                      <a
-                        href={`https://testnet.bscscan.com/tx/${tx.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-mono text-xs text-blue-bright hover:text-white transition-colors"
-                      >
-                        {truncateHash(tx.txHash)}
-                        <IconExternalLink size={10} />
-                      </a>
-                    </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
                       <span
                         className={`text-xs font-medium ${
                           tx.status === 'Confirmed' ? 'text-green' : 'text-amber'
@@ -206,8 +195,8 @@ export default function BudgetPage() {
             </table>
           </div>
         ) : (
-          <div className="py-12 text-center">
-            <p className="text-text-dim text-sm">No transactions yet. Make your first deposit above.</p>
+          <div className="py-10 text-center">
+            <p className="text-text-dim text-sm">No transactions yet.</p>
           </div>
         )}
       </div>

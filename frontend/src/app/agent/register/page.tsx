@@ -5,30 +5,12 @@ import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 import AuthModal from '@/components/AuthModal';
 import { useToast } from '@/components/Toast';
-import { IconCheck, IconInfo } from '@/components/Icons';
+import { IconCheck } from '@/components/Icons';
 import Identicon from '@/components/Identicon';
 import { truncateAddress } from '@/lib/wallet';
 
-function StepIndicator({ step, currentStep, label }: { step: number; currentStep: number; label: string }) {
-  const isCompleted = currentStep > step;
-  const isActive = currentStep === step;
-
-  return (
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
-        isCompleted ? 'bg-green border-green text-bg' : isActive ? 'border-blue-bright text-blue-bright bg-purple-dim' : 'border-border text-text-dim bg-surface'
-      }`}>
-        {isCompleted ? <IconCheck size={16} /> : step}
-      </div>
-      <span className={`text-sm font-medium ${isActive ? 'text-text' : isCompleted ? 'text-green' : 'text-text-dim'}`}>
-        {label}
-      </span>
-    </div>
-  );
-}
-
 export default function AgentRegisterPage() {
-  const { isAuthenticated, user, wallet } = useAuth();
+  const { isAuthenticated, wallet } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
@@ -46,8 +28,6 @@ export default function AgentRegisterPage() {
     ? `${agentIdHash.slice(0, 10)}...${agentIdHash.slice(-8)}`
     : '';
 
-  const currentStep = !isAuthenticated ? 1 : !isRegistered ? 2 : 3;
-
   const handleRegister = async () => {
     setIsRegistering(true);
     // TODO: Replace with real contract call to AgentRegistry.registerAgent()
@@ -57,118 +37,108 @@ export default function AgentRegisterPage() {
     toast('Agent registered successfully!', 'success');
   };
 
+  // Success state
+  if (isRegistered) {
+    return (
+      <div className="p-6 lg:p-8 max-w-lg mx-auto text-center page-enter">
+        <div className="bg-surface border border-border rounded-xl p-10 space-y-5 animate-scale-in">
+          <div className="w-16 h-16 rounded-full bg-green/20 flex items-center justify-center mx-auto">
+            <IconCheck size={32} className="text-green" />
+          </div>
+          <h1 className="text-2xl font-bold text-green">
+            You&apos;re registered as a testing agent
+          </h1>
+          <p className="text-text-secondary text-sm leading-relaxed">
+            Your agent is active and ready to earn GREP tokens by testing MCP tools.
+          </p>
+          <Link
+            href="/agent/profile"
+            className="inline-block btn-gradient px-6 py-3 rounded-lg text-sm font-semibold"
+          >
+            View Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="p-6 lg:p-8 max-w-lg mx-auto text-center page-enter">
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-3">
+          Become a Testing Agent
+        </h1>
+        <p className="text-text-secondary mb-8 text-base leading-relaxed">
+          Register your wallet to start earning GREP tokens by testing tools.
+        </p>
+
+        <div className="bg-surface border border-border rounded-xl p-8 space-y-6">
+          <p className="text-text-dim text-sm">
+            Create an account to get started. A BSC Testnet wallet will be
+            auto-generated for you.
+          </p>
+          <button
+            onClick={() => setShowAuth(true)}
+            className="btn-gradient px-8 py-3 rounded-lg text-sm font-semibold"
+          >
+            Sign up to get started
+          </button>
+        </div>
+
+        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+      </div>
+    );
+  }
+
+  // Authenticated but not registered
   return (
-    <div className="p-6 lg:p-8 max-w-2xl mx-auto animate-fade-in">
+    <div className="p-6 lg:p-8 max-w-lg mx-auto text-center page-enter">
       <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-3">
-        Register as Test Agent
+        Become a Testing Agent
       </h1>
-      <p className="text-text-secondary mb-6 text-base leading-relaxed">
-        Sign up with your email to start earning GREP tokens by testing MCP tools.
-        A testnet wallet is auto-created for you.
+      <p className="text-text-secondary mb-8 text-base leading-relaxed">
+        Register your wallet to start earning GREP tokens by testing tools.
       </p>
 
-      {/* Info box */}
-      <div className="bg-purple-dim border border-border-hi rounded-xl px-5 py-4 mb-10 flex items-start gap-3">
-        <IconInfo size={18} className="text-lavender shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm text-text leading-relaxed">
-            When you create an account, we auto-generate a BSC Testnet wallet for you.
-            No extensions needed &mdash; everything runs in your browser.
+      <div className="bg-surface border border-border rounded-xl p-8 space-y-6">
+        {/* Wallet info */}
+        <div className="flex flex-col items-center gap-3">
+          {address && <Identicon address={address} size={48} />}
+          <p className="font-mono text-sm text-text">
+            {truncateAddress(address)}
           </p>
         </div>
+
+        {/* Agent ID */}
+        <div>
+          <p className="text-text-dim text-xs mb-2">Agent ID</p>
+          <div className="bg-elevated border border-border rounded-lg px-4 py-2.5 inline-block">
+            <code className="font-mono text-sm text-lavender">
+              {truncatedHash}
+            </code>
+          </div>
+        </div>
+
+        {/* Register button */}
+        <button
+          onClick={handleRegister}
+          disabled={isRegistering}
+          className="btn-gradient px-8 py-3 rounded-lg text-sm font-semibold transition-all"
+        >
+          {isRegistering ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                <path d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor" />
+              </svg>
+              Registering...
+            </span>
+          ) : (
+            'Register as Agent'
+          )}
+        </button>
       </div>
-
-      {/* Steps */}
-      <div className="bg-surface border border-border rounded-xl p-6 sm:p-8 space-y-8">
-        {/* Step 1: Create Account */}
-        <div className="space-y-4">
-          <StepIndicator step={1} currentStep={currentStep} label="Create Account" />
-          <div className="ml-[52px]">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-3 bg-green-dim border border-green/20 rounded-lg px-4 py-3">
-                {address && <Identicon address={address} size={28} />}
-                <div>
-                  <span className="text-green text-sm font-medium">Signed in</span>
-                  <span className="text-text text-sm ml-2">{user?.email}</span>
-                  {address && (
-                    <p className="text-text-dim text-xs font-mono mt-0.5">
-                      Wallet: {truncateAddress(address)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAuth(true)}
-                className="btn-gradient px-6 py-3 rounded-lg text-sm font-semibold"
-              >
-                Sign Up with Email
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="border-t border-border" />
-
-        {/* Step 2: Agent ID */}
-        <div className="space-y-4">
-          <StepIndicator step={2} currentStep={currentStep} label="Agent ID" />
-          <div className="ml-[52px]">
-            <p className="text-text-dim text-sm mb-2">
-              Your unique agent identifier (auto-generated from wallet):
-            </p>
-            <div className="bg-elevated border border-border rounded-lg px-4 py-3">
-              <code className="font-mono text-sm text-lavender">
-                {isAuthenticated ? truncatedHash : 'Sign up to generate...'}
-              </code>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-border" />
-
-        {/* Step 3: Confirm */}
-        <div className="space-y-4">
-          <StepIndicator step={3} currentStep={currentStep} label="Confirm Registration" />
-          <div className="ml-[52px]">
-            {isRegistered ? (
-              <div className="bg-green-dim border border-green/20 rounded-xl p-6 text-center space-y-4 animate-scale-in">
-                <div className="w-16 h-16 rounded-full bg-green/20 flex items-center justify-center mx-auto">
-                  <IconCheck size={32} className="text-green" />
-                </div>
-                <h3 className="text-xl font-bold text-green">You&apos;re registered!</h3>
-                <p className="text-text-secondary text-sm">
-                  Your agent is active and ready to earn tokens by testing MCP tools.
-                </p>
-                <Link
-                  href="/agent/profile"
-                  className="inline-block btn-gradient px-6 py-3 rounded-lg text-sm font-semibold"
-                >
-                  View Your Profile
-                </Link>
-              </div>
-            ) : (
-              <button
-                onClick={handleRegister}
-                disabled={!isAuthenticated || isRegistering}
-                className="btn-gradient px-6 py-3 rounded-lg text-sm font-semibold transition-all"
-              >
-                {isRegistering ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                      <path d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor" />
-                    </svg>
-                    Registering...
-                  </span>
-                ) : 'Register'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 }

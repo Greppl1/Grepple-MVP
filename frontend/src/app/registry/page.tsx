@@ -2,97 +2,67 @@
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useRegistry } from '@/hooks/useRegistry';
-import { scoreColor, scoreBg } from '@/lib/mock-data';
-import Sparkline from '@/components/Sparkline';
-import ScoreRing from '@/components/ScoreRing';
-import { SkeletonTable } from '@/components/Skeleton';
-import { IconSearch, IconTable, IconGrid } from '@/components/Icons';
+import { Skeleton, SkeletonCard } from '@/components/Skeleton';
+import { IconSearch } from '@/components/Icons';
 
-type SortKey = 'composite' | 'schemaHealth' | 'discoverability' | 'successRate' | 'name';
-type SortDir = 'asc' | 'desc';
-type ViewMode = 'table' | 'grid';
+const ITEMS_PER_PAGE = 30;
 
-const ITEMS_PER_PAGE = 50;
+const scoreColor = (v: number) =>
+  v >= 85 ? 'text-green' : v >= 60 ? 'text-text' : 'text-amber';
 
-function ChevronDown({ className }: { className?: string }) {
+const barColor = (v: number) =>
+  v >= 85 ? 'bg-green' : v >= 60 ? 'bg-blue' : 'bg-amber';
+
+type SortOption = 'score-desc' | 'score-asc' | 'name-asc' | 'newest';
+
+function MetricInline({ label, value }: { label: string; value: number }) {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={className}>
-      <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ChevronUp({ className }: { className?: string }) {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={className}>
-      <path d="M2 6.5L5 3.5L8 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function SortArrow({ direction }: { direction: SortDir }) {
-  return (
-    <span className="ml-1 inline-flex items-center text-purple">
-      {direction === 'desc' ? <ChevronDown /> : <ChevronUp />}
-    </span>
-  );
-}
-
-function CategoryBadge({ category }: { category: string }) {
-  const colorMap: Record<string, string> = {
-    Search: 'text-blue bg-blue/10 border-blue/20',
-    DeFi: 'text-green bg-green/10 border-green/20',
-    DevTools: 'text-purple bg-purple/10 border-purple/20',
-    Database: 'text-amber bg-amber/10 border-amber/20',
-    AI: 'text-lavender bg-lavender/10 border-lavender/20',
-    Data: 'text-blue-bright bg-blue-bright/10 border-blue-bright/20',
-    Communication: 'text-amber bg-amber/10 border-amber/20',
-    Cloud: 'text-blue bg-blue/10 border-blue/20',
-    Productivity: 'text-green bg-green/10 border-green/20',
-    Other: 'text-text-secondary bg-elevated border-border',
-  };
-  const classes = colorMap[category] ?? 'text-text-secondary bg-elevated border-border';
-  return (
-    <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${classes}`}>
-      {category}
-    </span>
-  );
-}
-
-function MetricBar({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-text-dim w-24 shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-elevated overflow-hidden">
+    <div className="flex items-center gap-1.5 min-w-0">
+      <span className="text-xs text-text-dim shrink-0">{label}</span>
+      <div className="w-16 h-1.5 rounded-full bg-elevated overflow-hidden shrink-0">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${scoreBg(value)}`}
-          style={{ width: `${value}%`, opacity: 0.7 }}
+          className={`h-full rounded-full ${barColor(value)}`}
+          style={{ width: `${value}%`, opacity: 0.8 }}
         />
       </div>
-      <span className={`text-xs font-mono font-semibold w-7 text-right ${scoreColor(value)}`}>
+      <span className={`text-xs font-mono font-semibold ${scoreColor(value)}`}>
         {value}
       </span>
     </div>
   );
 }
 
-function tableScoreColor(v: number): string {
-  if (v >= 85) return 'text-green';
-  if (v >= 60) return 'text-white';
-  return 'text-amber';
+function SkeletonGrid() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="bg-surface border border-border rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-6 w-10" />
+          </div>
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <div className="flex gap-4 pt-2">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function RegistryContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const initialQuery = searchParams.get('q') ?? '';
   const [search, setSearch] = useState(initialQuery);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [view, setView] = useState<ViewMode>('table');
-  const [sortKey, setSortKey] = useState<SortKey>('composite');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [sort, setSort] = useState<SortOption>('score-desc');
   const [page, setPage] = useState(1);
 
   const { tools, categories, loading, isLive } = useRegistry();
@@ -100,16 +70,7 @@ function RegistryContent() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, activeCategory]);
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir(sortDir === 'desc' ? 'asc' : 'desc');
-    } else {
-      setSortKey(key);
-      setSortDir('desc');
-    }
-  };
+  }, [search, activeCategory, sort]);
 
   const filtered = useMemo(() => {
     let result = tools;
@@ -123,129 +84,78 @@ function RegistryContent() {
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q) ||
-          t.category.toLowerCase().includes(q)
+          t.description.toLowerCase().includes(q)
       );
     }
 
     const sorted = [...result].sort((a, b) => {
-      let aVal: number | string;
-      let bVal: number | string;
-
-      if (sortKey === 'name') {
-        aVal = a.name;
-        bVal = b.name;
-      } else if (sortKey === 'composite') {
-        aVal = a.composite;
-        bVal = b.composite;
-      } else {
-        aVal = a.metrics[sortKey];
-        bVal = b.metrics[sortKey];
+      switch (sort) {
+        case 'score-desc':
+          return b.composite - a.composite;
+        case 'score-asc':
+          return a.composite - b.composite;
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'newest':
+          return 0; // preserve original order (already sorted by most recent from API)
+        default:
+          return 0;
       }
-
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      return sortDir === 'asc'
-        ? (aVal as number) - (bVal as number)
-        : (bVal as number) - (aVal as number);
     });
 
     return sorted;
-  }, [tools, search, activeCategory, sortKey, sortDir]);
+  }, [tools, search, activeCategory, sort]);
 
-  // Pagination
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paged = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-  const sortableHeader = (label: string, key: SortKey) => (
-    <th
-      className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider cursor-pointer hover:text-white transition-colors select-none"
-      onClick={() => handleSort(key)}
-    >
-      <span className="inline-flex items-center">
-        {label}
-        {sortKey === key && <SortArrow direction={sortDir} />}
-      </span>
-    </th>
-  );
 
   if (loading) {
     return (
       <div className="p-6 lg:p-8 min-h-screen">
-        <div className="flex items-center justify-between mb-8">
-          <div className="h-9 w-32 bg-elevated rounded animate-pulse" />
-          <div className="h-10 w-64 bg-elevated rounded-lg animate-pulse" />
+        <div className="mb-6">
+          <Skeleton className="h-10 w-full max-w-md mb-4" />
+          <div className="flex gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-20 rounded-full shrink-0" />
+            ))}
+          </div>
         </div>
-        <SkeletonTable rows={10} />
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-9 w-44" />
+        </div>
+        <SkeletonGrid />
       </div>
     );
   }
 
   return (
-    <div className="p-6 lg:p-8 min-h-screen animate-fade-in">
-      {/* Data source indicator */}
-      {isLive ? (
-        <div className="testnet-banner mb-6 flex items-center justify-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
-          Live data &mdash; {tools.length.toLocaleString()} tools from Supabase
-        </div>
-      ) : (
-        <div className="testnet-banner mb-6">
-          Demo mode &mdash; showing sample data
-        </div>
-      )}
-
-      {/* Top bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright">Registry</h1>
-
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-initial">
-            <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
-            <input
-              type="text"
-              placeholder="Search tools..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 pl-9 pr-4 py-2 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-blue transition-colors"
-            />
-          </div>
-
-          <div className="flex items-center bg-surface border border-border rounded-lg p-1 gap-0.5 shrink-0">
-            <button
-              onClick={() => setView('table')}
-              className={`p-1.5 rounded transition-colors ${
-                view === 'table' ? 'bg-elevated text-white' : 'text-text-dim hover:text-text'
-              }`}
-              aria-label="Table view"
-            >
-              <IconTable size={16} />
-            </button>
-            <button
-              onClick={() => setView('grid')}
-              className={`p-1.5 rounded transition-colors ${
-                view === 'grid' ? 'bg-elevated text-white' : 'text-text-dim hover:text-text'
-              }`}
-              aria-label="Grid view"
-            >
-              <IconGrid size={16} />
-            </button>
-          </div>
+    <div className="p-6 lg:p-8 min-h-screen page-enter">
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative w-full md:w-1/2">
+          <IconSearch size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
+          <input
+            type="text"
+            placeholder="Search tools by name or description..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-blue transition-colors"
+          />
         </div>
       </div>
 
-      {/* Category pills - horizontal scroll only, no wrap */}
-      <div className="relative mb-6">
+      {/* Category pills */}
+      <div className="mb-6 -mx-6 px-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all border whitespace-nowrap shrink-0 ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
                 activeCategory === cat
-                  ? 'bg-purple/20 text-white border-purple/40'
-                  : 'bg-surface text-text-secondary border-border hover:text-white hover:border-border-hi'
+                  ? 'bg-blue text-white'
+                  : 'bg-elevated text-text-secondary hover:text-text'
               }`}
             >
               {cat}
@@ -254,218 +164,125 @@ function RegistryContent() {
         </div>
       </div>
 
-      {/* Content */}
-      <div>
-        {view === 'table' ? (
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-elevated/30">
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider w-12">#</th>
-                    {sortableHeader('Tool Name', 'name')}
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden lg:table-cell">Category</th>
-                    {sortableHeader('Score', 'composite')}
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden xl:table-cell">7d Trend</th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">Last Tested</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paged.map((tool, idx) => (
-                    <tr
-                      key={tool.id}
-                      onClick={() => router.push(`/registry/${tool.id}`)}
-                      className="border-b border-border/50 row-hover transition-colors"
-                    >
-                      <td className="px-3 py-3 text-sm font-mono text-text-dim">
-                        {(page - 1) * ITEMS_PER_PAGE + idx + 1}
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="group">
-                          <span className="text-sm font-semibold text-white group-hover:text-blue-bright transition-colors">
-                            {tool.name}
-                          </span>
-                          <span className="block text-xs text-text-dim font-mono mt-0.5 lg:hidden">
-                            <CategoryBadge category={tool.category} />
-                          </span>
-                          <span className="block text-xs text-text-dim mt-0.5 truncate max-w-xs">
-                            {tool.description.length > 60
-                              ? tool.description.slice(0, 60) + '...'
-                              : tool.description}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 hidden lg:table-cell">
-                        <CategoryBadge category={tool.category} />
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-mono text-sm font-bold ${tableScoreColor(tool.composite)}`}>
-                            {tool.composite}
-                          </span>
-                          <div className="w-16 h-2 rounded-full bg-elevated overflow-hidden hidden sm:block">
-                            <div
-                              className={`h-full rounded-full ${scoreBg(tool.composite)}`}
-                              style={{ width: `${tool.composite}%`, opacity: 0.7 }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 hidden xl:table-cell">
-                        {tool.trend.length > 1 ? (
-                          <Sparkline
-                            data={tool.trend}
-                            color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623'}
-                            width={80}
-                            height={28}
-                          />
-                        ) : (
-                          <span className="text-text-dim text-xs">--</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-3 text-xs text-text-dim whitespace-nowrap hidden md:table-cell">
-                        {tool.lastTested}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {filtered.length === 0 && (
-              <div className="py-16 text-center">
-                <p className="text-text-dim text-sm mb-2">No tools found matching your criteria.</p>
-                <button
-                  onClick={() => { setSearch(''); setActiveCategory('All'); }}
-                  className="text-blue-bright text-sm hover:text-white transition-colors"
-                >
-                  Clear filters
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {paged.map((tool, idx) => (
-              <Link
-                key={tool.id}
-                href={`/registry/${tool.id}`}
-                className="h-full flex flex-col bg-surface border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-hi card-glow"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-elevated text-xs font-mono font-bold text-text-dim">
-                        {(page - 1) * ITEMS_PER_PAGE + idx + 1}
-                      </span>
-                      <h3 className="text-sm font-bold text-white truncate">{tool.name}</h3>
-                    </div>
-                    <p className="text-xs text-text-dim font-mono mb-2">{tool.builder}</p>
-                    <CategoryBadge category={tool.category} />
-                  </div>
-                  <div className="shrink-0 ml-3">
-                    <ScoreRing score={tool.composite} size={56} />
-                  </div>
-                </div>
-
-                <div className="flex-1 flex flex-col gap-2 mb-4">
-                  <MetricBar label="Schema Health" value={tool.metrics.schemaHealth} />
-                  <MetricBar label="Discoverability" value={tool.metrics.discoverability} />
-                  <MetricBar label="Success Rate" value={tool.metrics.successRate} />
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-border/50 mt-auto">
-                  {tool.trend.length > 1 ? (
-                    <Sparkline
-                      data={tool.trend}
-                      color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623'}
-                      width={72}
-                      height={24}
-                    />
-                  ) : (
-                    <span className="text-xs text-text-dim">No trend data</span>
-                  )}
-                  <span className="text-xs text-text-dim">{tool.lastTested}</span>
-                </div>
-              </Link>
-            ))}
-
-            {filtered.length === 0 && (
-              <div className="col-span-full py-16 text-center">
-                <p className="text-text-dim text-sm mb-2">No tools found matching your criteria.</p>
-                <button
-                  onClick={() => { setSearch(''); setActiveCategory('All'); }}
-                  className="text-blue-bright text-sm hover:text-white transition-colors"
-                >
-                  Clear filters
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-            <p className="text-xs text-text-dim">
-              Showing {(page - 1) * ITEMS_PER_PAGE + 1}&ndash;{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length.toLocaleString()} tools
-            </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all border border-border hover:border-border-hi disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary hover:text-white"
-              >
-                Prev
-              </button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let p: number;
-                if (totalPages <= 5) {
-                  p = i + 1;
-                } else if (page <= 3) {
-                  p = i + 1;
-                } else if (page >= totalPages - 2) {
-                  p = totalPages - 4 + i;
-                } else {
-                  p = page - 2 + i;
-                }
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
-                      page === p
-                        ? 'bg-blue text-white'
-                        : 'text-text-dim hover:text-white hover:bg-elevated'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all border border-border hover:border-border-hi disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary hover:text-white"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+      {/* Results header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-text-secondary font-medium">
+            {filtered.length.toLocaleString()} tools
+          </span>
+          {isLive ? (
+            <span className="inline-flex items-center gap-1 text-xs text-green">
+              <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
+              Live
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs text-text-dim">
+              <span className="w-1.5 h-1.5 rounded-full bg-text-dim" />
+              Demo
+            </span>
+          )}
+        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortOption)}
+          className="bg-surface border border-border rounded-lg px-3 py-1.5 text-sm text-text focus:outline-none focus:border-blue transition-colors cursor-pointer"
+        >
+          <option value="score-desc">Score: High &rarr; Low</option>
+          <option value="score-asc">Score: Low &rarr; High</option>
+          <option value="name-asc">Name: A &rarr; Z</option>
+          <option value="newest">Newest</option>
+        </select>
       </div>
+
+      {/* Tool cards */}
+      {paged.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {paged.map((tool) => (
+            <Link
+              key={tool.id}
+              href={`/registry/${tool.id}`}
+              className="bg-surface rounded-xl p-4 card-glow border border-border transition-all duration-200 hover:-translate-y-0.5 hover:border-border-hi block"
+            >
+              {/* Top row: category + score */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs rounded-full bg-elevated-2 text-text-secondary px-2 py-0.5">
+                  {tool.category}
+                </span>
+                <span className={`text-lg font-mono font-bold ${scoreColor(tool.composite)}`}>
+                  {tool.composite}
+                </span>
+              </div>
+
+              {/* Tool name */}
+              <h3 className="text-base font-semibold text-white mb-1 truncate">
+                {tool.name}
+              </h3>
+
+              {/* Description */}
+              <p className="text-sm text-text-secondary mb-3 line-clamp-2 leading-relaxed">
+                {tool.description}
+              </p>
+
+              {/* Metric bars */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                <MetricInline label="Schema" value={tool.metrics.schemaHealth} />
+                <MetricInline label="Discover" value={tool.metrics.discoverability} />
+                <MetricInline label="Success" value={tool.metrics.successRate} />
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state py-20 text-center">
+          <p className="text-text-dim text-sm mb-3">No tools match your search</p>
+          <button
+            onClick={() => {
+              setSearch('');
+              setActiveCategory('All');
+            }}
+            className="text-blue text-sm font-medium hover:text-white transition-colors"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-border">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:border-border-hi text-text-secondary hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-text-secondary">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:border-border-hi text-text-secondary hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function RegistryPage() {
   return (
-    <Suspense fallback={
-      <div className="p-6 lg:p-8 min-h-screen">
-        <div className="h-9 w-32 bg-elevated rounded animate-pulse mb-8" />
-        <SkeletonTable rows={10} />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="p-6 lg:p-8 min-h-screen">
+          <Skeleton className="h-10 w-full max-w-md mb-4" />
+          <SkeletonGrid />
+        </div>
+      }
+    >
       <RegistryContent />
     </Suspense>
   );
