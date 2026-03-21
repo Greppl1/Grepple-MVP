@@ -3,7 +3,7 @@ const router = express.Router();
 const agentService = require('../services/agentService');
 const createRateLimiter = require('../middleware/rateLimiter');
 
-const registerRateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
+const registerRateLimiter = createRateLimiter({ maxRequests: 5, windowMs: 60_000 });
 
 /**
  * POST /api/agents/register

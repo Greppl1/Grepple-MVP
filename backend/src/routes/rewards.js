@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const mintService = require('../services/mintService');
 const agentAuth = require('../middleware/agentAuth');
+const webhookAuth = require('../middleware/webhookAuth');
 const createRateLimiter = require('../middleware/rateLimiter');
 
 const mintRateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
+const webhookRateLimiter = createRateLimiter({ maxRequests: 20, windowMs: 60_000 });
 
 /**
  * POST /api/rewards/mint
@@ -41,9 +43,9 @@ router.post('/mint', agentAuth, mintRateLimiter, async (req, res, next) => {
 /**
  * POST /api/rewards/webhook
  * Receives Jerry's test_task_completed event or RewardResult directly.
- * No auth required (server-to-server, will add API key later).
+ * Protected by API key (WEBHOOK_API_KEY env var).
  */
-router.post('/webhook', mintRateLimiter, async (req, res, next) => {
+router.post('/webhook', webhookAuth, webhookRateLimiter, async (req, res, next) => {
   try {
     const body = req.body;
 

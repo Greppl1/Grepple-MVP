@@ -21,6 +21,7 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
+const MAX_TOASTS = 5;
 let nextId = 0;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -28,7 +29,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const toast = useCallback((message: string, type: ToastType = 'info') => {
     const id = nextId++;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => {
+      const next = [...prev, { id, message, type }];
+      // Limit queue size
+      return next.slice(-MAX_TOASTS);
+    });
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
@@ -54,7 +59,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext value={{ toast }}>
       {children}
       {/* Toast Container */}
-      <div className="fixed top-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none">
+      <div
+        className="fixed top-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"
+        role="status"
+        aria-live="polite"
+        aria-label="Notifications"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -65,6 +75,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               onClick={() => dismiss(t.id)}
               className="text-text-dim hover:text-text transition-colors shrink-0"
+              aria-label="Dismiss notification"
             >
               <IconX size={14} />
             </button>

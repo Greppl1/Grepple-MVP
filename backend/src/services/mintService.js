@@ -1,6 +1,8 @@
 const { ethers } = require('ethers');
 const contractService = require('./contractService');
 const config = require('../config');
+const txQueue = require('./txQueue');
+const logger = require('./logger');
 
 // In-memory idempotency map: task_id -> mint result
 const mintedTasks = new Map();
@@ -62,15 +64,30 @@ function calculateAmount(tier, baseReward) {
 }
 
 /**
+ * Validate wallet address format
+ */
+function validateAddress(address) {
+  try {
+    return ethers.getAddress(address);
+  } catch {
+    throw new Error(`Invalid wallet address: ${address}`);
+  }
+}
+
+/**
  * Mint reward tokens for a completed test task
  */
 async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
-  // Idempotency check
+  // Validate address
+  const checksummedWallet = validateAddress(agent_wallet);
+
+  // Idempotency check (in-memory)
   if (mintedTasks.has(task_id)) {
+    logger.info('mint_idempotent', { task_id });
     return mintedTasks.get(task_id);
   }
 
-  // Determine tier (can be passed directly as string or determined from event)
+  // Determine tier
   let rewardTier;
   if (typeof tier === 'string') {
     rewardTier = RewardTier[tier.toUpperCase()];
@@ -85,7 +102,7 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
 
   // Check if agent is registered
   const registryContract = contractService.getRegistryContract();
-  const isRegistered = await registryContract.isRegisteredAgent(agent_wallet);
+  const isRegistered = await registryContract.isRegisteredAgent(checksummedWallet);
   if (!isRegistered) {
     throw new Error('Agent not registered');
   }
@@ -105,20 +122,37 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
   }
 
   const amount = calculateAmount(rewardTier);
-
   const taskHash = ethers.keccak256(ethers.toUtf8Bytes(task_id));
   const callRecordHash = ethers.keccak256(ethers.toUtf8Bytes(call_record_id || ''));
 
   const tokenContract = contractService.getTokenContract();
 
-  const tx = await tokenContract.mint(
-    agent_wallet,
-    amount,
-    taskHash,
-    callRecordHash,
-    rewardTier
+  // Check if task was already minted on-chain (in case our in-memory map was lost)
+  try {
+    const alreadyMinted = await tokenContract.isTaskMinted(taskHash);
+    if (alreadyMinted) {
+      logger.warn('task_already_minted_onchain', { task_id });
+      const result = {
+        task_id,
+        mint_status: 'minted',
+        mint_id: null, // can't recover mintId easily
+        tx_hash: null,
+        amount: amount.toString(),
+        tier: Object.keys(RewardTier).find((k) => RewardTier[k] === rewardTier),
+      };
+      mintedTasks.set(task_id, result);
+      return result;
+    }
+  } catch {
+    // isTaskMinted may not exist on older deployed contracts — proceed
+  }
+
+  logger.tx('mint_start', { agent: checksummedWallet, task_id, tier: rewardTier, amount: amount.toString() });
+
+  // Enqueue the transaction to prevent nonce conflicts
+  const receipt = await txQueue.enqueue(() =>
+    tokenContract.mint(checksummedWallet, amount, taskHash, callRecordHash, rewardTier)
   );
-  const receipt = await tx.wait();
 
   // Parse the mint ID from the event
   let mintId = null;
@@ -133,13 +167,28 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
           mintId = Number(parsed.args.mintId);
           break;
         }
-      } catch (e) {
+      } catch {
         // Not our event, skip
       }
     }
   }
 
+  if (mintId === null) {
+    logger.warn('mint_id_not_parsed', { task_id, tx_hash: receipt.hash });
+  }
+
   const tierName = Object.keys(RewardTier).find((k) => RewardTier[k] === rewardTier);
+
+  // Update agent stats on-chain (best effort — don't fail the mint if this fails)
+  try {
+    const registryContract = contractService.getRegistryContract();
+    await txQueue.enqueue(() =>
+      registryContract.updateAgentStats(checksummedWallet, amount, 1)
+    );
+    logger.info('agent_stats_updated', { agent: checksummedWallet, earned: amount.toString() });
+  } catch (err) {
+    logger.warn('agent_stats_update_failed', { agent: checksummedWallet, error: err.message });
+  }
 
   const result = {
     task_id,
@@ -151,6 +200,7 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
   };
 
   mintedTasks.set(task_id, result);
+  logger.tx('mint_complete', { task_id, mint_id: mintId, tx_hash: receipt.hash });
   return result;
 }
 

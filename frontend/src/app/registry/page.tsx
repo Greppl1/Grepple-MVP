@@ -1,21 +1,41 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { TOOLS, CATEGORIES, scoreColor, scoreBg } from '@/lib/mock-data';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useRegistry } from '@/hooks/useRegistry';
+import { scoreColor, scoreBg } from '@/lib/mock-data';
 import Sparkline from '@/components/Sparkline';
 import ScoreRing from '@/components/ScoreRing';
+import { SkeletonTable } from '@/components/Skeleton';
 import { IconSearch, IconTable, IconGrid } from '@/components/Icons';
 
-type SortKey = 'composite' | 'schemaHealth' | 'discoverability' | 'callability' | 'successRate' | 'name';
+type SortKey = 'composite' | 'schemaHealth' | 'discoverability' | 'successRate' | 'name';
 type SortDir = 'asc' | 'desc';
 type ViewMode = 'table' | 'grid';
 
+const ITEMS_PER_PAGE = 50;
+
+function ChevronDown({ className }: { className?: string }) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={className}>
+      <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronUp({ className }: { className?: string }) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={className}>
+      <path d="M2 6.5L5 3.5L8 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function SortArrow({ direction }: { direction: SortDir }) {
   return (
-    <span className="ml-1 inline-block text-purple text-[10px]">
-      {direction === 'desc' ? '\u25BC' : '\u25B2'}
+    <span className="ml-1 inline-flex items-center text-purple">
+      {direction === 'desc' ? <ChevronDown /> : <ChevronUp />}
     </span>
   );
 }
@@ -29,6 +49,9 @@ function CategoryBadge({ category }: { category: string }) {
     AI: 'text-lavender bg-lavender/10 border-lavender/20',
     Data: 'text-blue-bright bg-blue-bright/10 border-blue-bright/20',
     Communication: 'text-amber bg-amber/10 border-amber/20',
+    Cloud: 'text-blue bg-blue/10 border-blue/20',
+    Productivity: 'text-green bg-green/10 border-green/20',
+    Other: 'text-text-secondary bg-elevated border-border',
   };
   const classes = colorMap[category] ?? 'text-text-secondary bg-elevated border-border';
   return (
@@ -42,7 +65,7 @@ function MetricBar({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-text-dim w-24 shrink-0 truncate">{label}</span>
-      <div className="flex-1 h-1.5 rounded-full bg-elevated overflow-hidden">
+      <div className="flex-1 h-2 rounded-full bg-elevated overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${scoreBg(value)}`}
           style={{ width: `${value}%`, opacity: 0.7 }}
@@ -55,14 +78,29 @@ function MetricBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+function tableScoreColor(v: number): string {
+  if (v >= 85) return 'text-green';
+  if (v >= 60) return 'text-white';
+  return 'text-amber';
+}
+
 function RegistryContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialQuery = searchParams.get('q') ?? '';
   const [search, setSearch] = useState(initialQuery);
   const [activeCategory, setActiveCategory] = useState('All');
   const [view, setView] = useState<ViewMode>('table');
   const [sortKey, setSortKey] = useState<SortKey>('composite');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [page, setPage] = useState(1);
+
+  const { tools, categories, loading, isLive } = useRegistry();
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, activeCategory]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -74,7 +112,7 @@ function RegistryContent() {
   };
 
   const filtered = useMemo(() => {
-    let result = TOOLS;
+    let result = tools;
 
     if (activeCategory !== 'All') {
       result = result.filter((t) => t.category === activeCategory);
@@ -114,7 +152,11 @@ function RegistryContent() {
     });
 
     return sorted;
-  }, [search, activeCategory, sortKey, sortDir]);
+  }, [tools, search, activeCategory, sortKey, sortDir]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paged = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const sortableHeader = (label: string, key: SortKey) => (
     <th
@@ -128,14 +170,37 @@ function RegistryContent() {
     </th>
   );
 
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8 min-h-screen">
+        <div className="flex items-center justify-between mb-8">
+          <div className="h-9 w-32 bg-elevated rounded animate-pulse" />
+          <div className="h-10 w-64 bg-elevated rounded-lg animate-pulse" />
+        </div>
+        <SkeletonTable rows={10} />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-8 min-h-screen animate-fade-in">
+      {/* Data source indicator */}
+      {isLive ? (
+        <div className="testnet-banner mb-6 flex items-center justify-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
+          Live data &mdash; {tools.length.toLocaleString()} tools from Supabase
+        </div>
+      ) : (
+        <div className="testnet-banner mb-6">
+          Demo mode &mdash; showing sample data
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Registry</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright">Registry</h1>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Search */}
           <div className="relative flex-1 sm:flex-initial">
             <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
             <input
@@ -147,7 +212,6 @@ function RegistryContent() {
             />
           </div>
 
-          {/* View toggle */}
           <div className="flex items-center bg-surface border border-border rounded-lg p-1 gap-0.5 shrink-0">
             <button
               onClick={() => setView('table')}
@@ -171,60 +235,53 @@ function RegistryContent() {
         </div>
       </div>
 
-      {/* Category pills */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all border ${
-              activeCategory === cat
-                ? 'bg-purple/20 text-white border-purple/40'
-                : 'bg-surface text-text-secondary border-border hover:text-white hover:border-border-hi'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Category pills - horizontal scroll only, no wrap */}
+      <div className="relative mb-6">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all border whitespace-nowrap shrink-0 ${
+                activeCategory === cat
+                  ? 'bg-purple/20 text-white border-purple/40'
+                  : 'bg-surface text-text-secondary border-border hover:text-white hover:border-border-hi'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Content area */}
-      <div className="transition-opacity duration-300">
+      {/* Content */}
+      <div>
         {view === 'table' ? (
-          /* TABLE VIEW */
           <div className="bg-surface border border-border rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-elevated/30">
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider w-12">
-                      #
-                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider w-12">#</th>
                     {sortableHeader('Tool Name', 'name')}
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden lg:table-cell">
-                      Category
-                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden lg:table-cell">Category</th>
                     {sortableHeader('Score', 'composite')}
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden xl:table-cell">
-                      7d Trend
-                    </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">
-                      Last Tested
-                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden xl:table-cell">7d Trend</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">Last Tested</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((tool, idx) => (
+                  {paged.map((tool, idx) => (
                     <tr
                       key={tool.id}
-                      className="border-b border-border/50 hover:bg-elevated/50 transition-colors"
+                      onClick={() => router.push(`/registry/${tool.id}`)}
+                      className="border-b border-border/50 row-hover transition-colors"
                     >
-                      <td className="px-3 py-3 text-sm font-mono text-text-dim">{idx + 1}</td>
+                      <td className="px-3 py-3 text-sm font-mono text-text-dim">
+                        {(page - 1) * ITEMS_PER_PAGE + idx + 1}
+                      </td>
                       <td className="px-3 py-3">
-                        <Link
-                          href={`/registry/${tool.id}`}
-                          className="block group"
-                        >
+                        <div className="group">
                           <span className="text-sm font-semibold text-white group-hover:text-blue-bright transition-colors">
                             {tool.name}
                           </span>
@@ -232,18 +289,18 @@ function RegistryContent() {
                             <CategoryBadge category={tool.category} />
                           </span>
                           <span className="block text-xs text-text-dim mt-0.5 truncate max-w-xs">
-                            {tool.description}
+                            {tool.description.length > 60
+                              ? tool.description.slice(0, 60) + '...'
+                              : tool.description}
                           </span>
-                        </Link>
+                        </div>
                       </td>
                       <td className="px-3 py-3 hidden lg:table-cell">
                         <CategoryBadge category={tool.category} />
                       </td>
                       <td className="px-3 py-3">
-                        <Link href={`/registry/${tool.id}`} className="flex items-center gap-2">
-                          <span
-                            className={`font-mono text-sm font-bold ${scoreColor(tool.composite)}`}
-                          >
+                        <div className="flex items-center gap-2">
+                          <span className={`font-mono text-sm font-bold ${tableScoreColor(tool.composite)}`}>
                             {tool.composite}
                           </span>
                           <div className="w-16 h-2 rounded-full bg-elevated overflow-hidden hidden sm:block">
@@ -252,15 +309,19 @@ function RegistryContent() {
                               style={{ width: `${tool.composite}%`, opacity: 0.7 }}
                             />
                           </div>
-                        </Link>
+                        </div>
                       </td>
                       <td className="px-3 py-3 hidden xl:table-cell">
-                        <Sparkline
-                          data={tool.trend}
-                          color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#F5A623' : '#FF4757'}
-                          width={80}
-                          height={28}
-                        />
+                        {tool.trend.length > 1 ? (
+                          <Sparkline
+                            data={tool.trend}
+                            color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623'}
+                            width={80}
+                            height={28}
+                          />
+                        ) : (
+                          <span className="text-text-dim text-xs">--</span>
+                        )}
                       </td>
                       <td className="px-3 py-3 text-xs text-text-dim whitespace-nowrap hidden md:table-cell">
                         {tool.lastTested}
@@ -284,20 +345,18 @@ function RegistryContent() {
             )}
           </div>
         ) : (
-          /* GRID / CARD VIEW */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((tool, idx) => (
+            {paged.map((tool, idx) => (
               <Link
                 key={tool.id}
                 href={`/registry/${tool.id}`}
                 className="h-full flex flex-col bg-surface border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-hi card-glow"
               >
-                {/* Card header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-elevated text-xs font-mono font-bold text-text-dim">
-                        {idx + 1}
+                        {(page - 1) * ITEMS_PER_PAGE + idx + 1}
                       </span>
                       <h3 className="text-sm font-bold text-white truncate">{tool.name}</h3>
                     </div>
@@ -309,22 +368,23 @@ function RegistryContent() {
                   </div>
                 </div>
 
-                {/* Metrics */}
                 <div className="flex-1 flex flex-col gap-2 mb-4">
                   <MetricBar label="Schema Health" value={tool.metrics.schemaHealth} />
                   <MetricBar label="Discoverability" value={tool.metrics.discoverability} />
-                  <MetricBar label="Callability" value={tool.metrics.callability} />
                   <MetricBar label="Success Rate" value={tool.metrics.successRate} />
                 </div>
 
-                {/* Footer */}
                 <div className="flex items-center justify-between pt-3 border-t border-border/50 mt-auto">
-                  <Sparkline
-                    data={tool.trend}
-                    color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#F5A623' : '#FF4757'}
-                    width={72}
-                    height={24}
-                  />
+                  {tool.trend.length > 1 ? (
+                    <Sparkline
+                      data={tool.trend}
+                      color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#4A6CF7' : '#F5A623'}
+                      width={72}
+                      height={24}
+                    />
+                  ) : (
+                    <span className="text-xs text-text-dim">No trend data</span>
+                  )}
                   <span className="text-xs text-text-dim">{tool.lastTested}</span>
                 </div>
               </Link>
@@ -343,6 +403,56 @@ function RegistryContent() {
             )}
           </div>
         )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+            <p className="text-xs text-text-dim">
+              Showing {(page - 1) * ITEMS_PER_PAGE + 1}&ndash;{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length.toLocaleString()} tools
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all border border-border hover:border-border-hi disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary hover:text-white"
+              >
+                Prev
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let p: number;
+                if (totalPages <= 5) {
+                  p = i + 1;
+                } else if (page <= 3) {
+                  p = i + 1;
+                } else if (page >= totalPages - 2) {
+                  p = totalPages - 4 + i;
+                } else {
+                  p = page - 2 + i;
+                }
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
+                      page === p
+                        ? 'bg-blue text-white'
+                        : 'text-text-dim hover:text-white hover:bg-elevated'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all border border-border hover:border-border-hi disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary hover:text-white"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -350,7 +460,12 @@ function RegistryContent() {
 
 export default function RegistryPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-text-dim">Loading registry...</div>}>
+    <Suspense fallback={
+      <div className="p-6 lg:p-8 min-h-screen">
+        <div className="h-9 w-32 bg-elevated rounded animate-pulse mb-8" />
+        <SkeletonTable rows={10} />
+      </div>
+    }>
       <RegistryContent />
     </Suspense>
   );

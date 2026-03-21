@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Web3Provider from "@/providers/Web3Provider";
+import { AuthProvider } from "@/providers/AuthProvider";
 import Sidebar from "@/components/Sidebar";
 import { ToastProvider } from "@/components/Toast";
 import LayoutShell from "@/components/LayoutShell";
@@ -32,12 +33,14 @@ export default function RootLayout({
     <html lang="en" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full`}>
       <body className="min-h-full bg-bg text-text font-sans antialiased">
         <Web3Provider>
-          <ToastProvider>
-            <Sidebar />
-            <LayoutShell>
-              {children}
-            </LayoutShell>
-          </ToastProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <Sidebar />
+              <LayoutShell>
+                {children}
+              </LayoutShell>
+            </ToastProvider>
+          </AuthProvider>
         </Web3Provider>
       </body>
     </html>

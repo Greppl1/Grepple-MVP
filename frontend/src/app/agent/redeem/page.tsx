@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import SubNav, { AGENT_NAV } from '@/components/SubNav';
-import { IconLock, IconUnlock } from '@/components/Icons';
+import { IconLock, IconUnlock, IconInfo } from '@/components/Icons';
 
 const MOCK_BALANCE = 12.5;
 const REDEMPTION_ENABLED = false;
@@ -69,18 +68,16 @@ export default function AgentRedeemPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
-      <SubNav items={AGENT_NAV} />
-
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-8">Redeem Tokens</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-8">Redeem Tokens</h1>
 
       {/* Balance Display */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-text-dim text-sm mb-1">Your AAOT Balance</p>
+            <p className="text-text-dim text-sm mb-1">Your GREP Balance</p>
             <p className="text-3xl sm:text-4xl font-bold text-text font-mono">
               {MOCK_BALANCE}
-              <span className="text-base font-normal text-text-secondary ml-2">AAOT</span>
+              <span className="text-base font-normal text-text-secondary ml-2">GREP</span>
             </p>
           </div>
           <div className="text-right">
@@ -100,14 +97,15 @@ export default function AgentRedeemPage() {
           <span className="text-green text-sm font-medium">Redemption is open!</span>
         </div>
       ) : (
-        <div className="bg-amber-dim border border-amber/20 rounded-xl px-5 py-4 mb-6 flex items-center gap-3">
-          <IconLock size={18} className="text-amber shrink-0" />
+        <div className="bg-amber-dim border border-amber/20 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
+          <IconLock size={18} className="text-amber shrink-0 mt-0.5" />
           <div>
-            <span className="text-amber text-sm font-medium block">
-              Vault redemption is currently disabled.
+            <span className="text-amber text-sm font-semibold block mb-1">
+              Vault redemption is not yet active.
             </span>
-            <span className="text-amber/70 text-xs">
-              Tokens accumulate now &mdash; value unlocks later.
+            <span className="text-amber/70 text-sm leading-relaxed">
+              Your testnet tokens are accumulating as on-chain contribution records.
+              When the vault opens, you&apos;ll be able to redeem them for USDC.
             </span>
           </div>
         </div>
@@ -132,7 +130,7 @@ export default function AgentRedeemPage() {
               className="w-full bg-elevated border border-border rounded-lg px-4 py-3 text-text font-mono text-sm placeholder:text-text-dim focus:outline-none focus:border-border-hi disabled:cursor-not-allowed"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-dim text-sm">
-              AAOT
+              GREP
             </span>
           </div>
         </div>
@@ -164,7 +162,7 @@ export default function AgentRedeemPage() {
                     <TierBadge tier={mint.tier} />
                   </div>
                   <span className="font-mono text-sm text-text">
-                    {mint.amount.toFixed(1)} <span className="text-text-dim">AAOT</span>
+                    {mint.amount.toFixed(1)} <span className="text-text-dim">GREP</span>
                   </span>
                 </div>
               </label>
@@ -183,7 +181,7 @@ export default function AgentRedeemPage() {
         {/* Redeem Button */}
         <button
           disabled={!REDEMPTION_ENABLED || selectedMints.length === 0}
-          className={`w-full btn-gradient py-3.5 rounded-lg text-sm font-semibold transition-all ${
+          className={`w-full btn-gradient py-3 px-6 rounded-lg text-sm font-semibold transition-all ${
             !REDEMPTION_ENABLED || selectedMints.length === 0 ? 'opacity-40 cursor-not-allowed' : ''
           }`}
         >
@@ -198,7 +196,7 @@ export default function AgentRedeemPage() {
           <StepItem
             number={1}
             title="Tokens Verified"
-            description="Your AAOT token balance and ownership of selected mint records are verified on-chain."
+            description="Your GREP token balance and ownership of selected mint records are verified on-chain."
           />
           <StepItem
             number={2}

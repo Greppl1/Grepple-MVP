@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import SubNav, { BUILDER_NAV } from '@/components/SubNav';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
 import { IconExternalLink } from '@/components/Icons';
@@ -43,7 +42,7 @@ export default function BudgetPage() {
     setDepositing(true);
     setTimeout(() => {
       setDepositing(false);
-      toast(`Deposited ${depositAmount} USDC to Vault`, 'success');
+      toast(`Deposited ${depositAmount} USDC to Grepple Vault`, 'success');
       setDepositAmount('');
     }, 2000);
   };
@@ -53,11 +52,9 @@ export default function BudgetPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl animate-fade-in">
-      <SubNav items={BUILDER_NAV} />
-
-      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">Budget Management</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright mb-2">Budget Management</h1>
       <p className="text-text-secondary mb-8">
-        Manage your USDC balance for tool diagnosis and testing.
+        Manage your USDC balance for MCP Tool diagnosis and testing.
       </p>
 
       {/* Balance Card */}
@@ -116,7 +113,7 @@ export default function BudgetPage() {
           <button
             onClick={handleDeposit}
             disabled={!depositAmount || parseFloat(depositAmount) <= 0 || depositing}
-            className={`btn-gradient px-8 py-3 rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
+            className={`btn-gradient px-6 py-3 rounded-xl text-sm font-semibold transition-all min-w-[140px] ${
               !depositAmount || parseFloat(depositAmount) <= 0 || depositing
                 ? 'opacity-40 cursor-not-allowed'
                 : ''
@@ -126,7 +123,7 @@ export default function BudgetPage() {
           </button>
         </div>
         <p className="text-text-dim text-xs mt-3">
-          Deposits are sent to the AAO Vault contract on BSC Testnet.
+          Deposits are sent to the Grepple Vault contract on BSC Testnet.
         </p>
       </div>
 
@@ -161,7 +158,7 @@ export default function BudgetPage() {
               </thead>
               <tbody>
                 {MOCK_TRANSACTIONS.map((tx) => (
-                  <tr key={tx.id} className="border-b border-border/50 hover:bg-elevated/50 transition-colors">
+                  <tr key={tx.id} className="border-b border-border/50 row-hover transition-colors">
                     <td className="px-6 py-4 font-mono text-text-secondary text-xs whitespace-nowrap">
                       {tx.date}
                     </td>
@@ -219,7 +216,7 @@ export default function BudgetPage() {
       <ConfirmDialog
         open={confirmOpen}
         title="Confirm Deposit"
-        description={`You are about to deposit ${depositAmount} USDC to the AAO Vault on BSC Testnet. This will require a wallet transaction.`}
+        description={`You are about to deposit ${depositAmount} USDC to the Grepple Vault on BSC Testnet. This will require a wallet transaction.`}
         confirmLabel="Confirm Deposit"
         onConfirm={confirmDeposit}
         onCancel={() => setConfirmOpen(false)}
