@@ -344,7 +344,7 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 |----|--------|------|
 | 合约（Mocha/Chai） | 53 | ✅ all passing（含 Pausable + taskHash 唯一性 + ReentrancyGuard） |
 | 后端 API（Jest） | 40 | ✅ all passing（含 txQueue + webhookAuth + 地址校验） |
-| 前端（Next.js build） | 12 pages | ✅ compiles, 0 errors |
+| 前端（Next.js build） | 13 pages | ✅ compiles, 0 errors |
 | **总计** | **93+** | **✅** |
 
 ### 队友对接 Issues
@@ -389,11 +389,11 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] 响应式适配（移动端隐藏次要列、grid-cols 自适应）
 
 **Step 10: 用户意图入口** ✅
-- [x] 首页 Hero + 自然语言输入框（提交后跳转 Registry 搜索）
-- [x] 角色选择卡片（Builder / Agent 两入口）
+- [x] 首页 Hero + 自然语言意图搜索框（提交后跳转 `/intent?q=...`）
 - [x] How it Works 三步介绍 + CTA
-- [ ] 工具推荐结果页（AI 匹配）— 待 Fiona Registry API 就绪后对接
-- [ ] 执行结果展示
+- [x] 工具推荐结果页 `/intent`（Supabase ilike 搜索匹配 tool_name + tool_description，按 composite 排序，最多 10 结果）
+- [x] 执行结果展示（Agent 4 步执行动画 + 真实分数展示 + 文字诊断 verdict + Quick Setup 代码片段）
+- [x] 意图建议 pills（swap tokens / search documents / query database 等快捷搜索）
 
 **Step 11: Agent & 钱包页面** ✅
 - [x] Agent 注册页（3 步引导 + Toast + SVG icon）
@@ -458,6 +458,33 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] **Scrollbar-none 工具类**：添加 `.scrollbar-none` 隐藏滚动条
 - [x] **Testnet Banner 统一**：Landing 和内页使用一致的 banner 策略
 - [x] **前端 build 通过**：12 pages, 0 errors
+
+**Step 20: UI/UX 极致重构 + 意图流程 + 集成指南 (2026-03-21)** ✅
+- [x] **设计系统重写**：新色板 WCAG AA 对比度达标（bg #07071C、surface #0F0F2D、text-secondary #9D97BE）
+- [x] **新按钮变体**：btn-ghost、btn-icon、btn-danger + btn-gradient disabled 修复
+- [x] **新 CSS 工具类**：metric-bar、score-badge、empty-state、page-enter、input-error/success、field-error/hint
+- [x] **Testnet banner 弱化**：小字 uppercase 替代醒目 amber banner
+- [x] **Sidebar 重构**：角色感知导航（未登录只显示 Registry/Try Tools/Submit，登录后显示 My Tools/Dashboard/Rewards）
+- [x] **移除嵌套子菜单**：Builder/Agent 展开折叠改为扁平导航
+- [x] **移除 CommandPalette**：⌘K 搜索对 13 页 MVP 过早优化
+- [x] **移动端底部导航**：BottomNav 组件（Registry/Try/Submit/Dashboard），thumb zone 友好
+- [x] **Landing 重写**：清晰 value prop "The quality layer for AI tools" + 意图搜索输入框 + 3 步 How it Works
+- [x] **移除角色选择卡片**：不再强制用户自我认同 Builder/Agent
+- [x] **Registry 卡片布局**：从表格改为 3 列卡片 grid，移除列表 ScoreRing（改为数字 + 颜色编码）
+- [x] **Registry 排序下拉**：替代可点击表头，更直观
+- [x] **Submit 单页表单**：3 步 wizard → 单页滚动表单 + blur 时 inline validation
+- [x] **Agent 注册 1 步**：3 步引导 → 单按钮注册
+- [x] **Agent Profile 集成 Redeem**：Profile 页底部加 "Redeem Tokens" 卡片，Redeem 页简化为信息页
+- [x] **Report 页面改进**：Grade badge (A-F 颜色编码)、metric-bar 替代旧样式
+- [x] **Builder Tools 空状态**：引导性空状态 + Submit CTA
+- [x] **Budget 简化**：数字展示替代 ScoreRing、诚实空状态
+- [x] **Tool Detail 集成指南**："How to Use This Tool" 三步（Install、MCP Config、Input Schema）+ CodeBlock 可复制
+- [x] **Intent 页面 `/intent`**：自然语言搜索 → Supabase 匹配 → Agent 执行动画 → 分数 + 诊断 + Quick Setup
+- [x] **分数计算修复**：924/990 工具无 benchmark 时从 tool metadata 估算分数（schema 质量 + 描述质量）
+- [x] **Tool 接口扩展**：新增 githubUrl、repoName、sourceFile、inputSchema 字段
+- [x] **前端 build 通过**：13 pages, 0 errors
+- [x] **Vercel 部署**：https://grepple.vercel.app
+- [x] **PR #21**：https://github.com/Greppl1/Grepple-MVP/pull/21
 
 **Step 14: 后端 + 合约安全加固** ✅
 - [x] AAOTestToken：添加 `mintedTaskHashes` 映射防重复 mint + `Pausable` 紧急暂停
@@ -581,6 +608,7 @@ ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud
 - [x] 后端 Railway 部署 ✅（`https://zian-backend-production.up.railway.app`，Issue #15）
 - [x] successRate 公式修复 ✅（Issue #12 Fiona 反馈：`invoke_rate/(invoke_rate+error_rate)` 替代 `100-error_rate`）
 - [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents — 等 Railway 部署验证）
+- [x] 意图 → 匹配 → 执行结果完整闭环 ✅（Landing 搜索 → /intent 匹配 → Agent 执行 → 分数 + 集成指南）
 - [ ] 端到端流程测试：Builder 提交 → 诊断 → Launch → Registry 展示 → Agent 测试 → Token 发放
 
 ---
@@ -831,29 +859,33 @@ frontend/                   # React/Next.js 前端
   src/
     app/                    # Next.js App Router 页面
       layout.tsx            # 全局 Layout（导航、钱包连接）
-      page.tsx              # 首页 / 用户意图入口
+      page.tsx              # 首页（Hero + 意图搜索 + How it Works）
+      intent/page.tsx       # 意图匹配 → 工具推荐 → Agent 执行结果
       builder/
-        submit/page.tsx     # 提交 MCP Tool
-        report/[id]/page.tsx # 诊断报告详情
+        submit/page.tsx     # 提交 MCP Tool（单页表单 + inline validation）
+        report/[id]/page.tsx # 诊断报告详情（Grade badge + 分数 + 建议）
         budget/page.tsx     # Budget 管理（充值、余额）
         tools/page.tsx      # 已发布工具列表
       registry/
-        page.tsx            # Registry 排名列表
-        [id]/page.tsx       # 工具详情页
+        page.tsx            # Registry 卡片列表（搜索 + 筛选 + 排序）
+        [id]/page.tsx       # 工具详情页（分数 + How to Use 集成指南）
       agent/
-        register/page.tsx   # Agent 注册
-        profile/page.tsx    # Agent Profile + 奖励历史
-        redeem/page.tsx     # 兑换页面
+        register/page.tsx   # Agent 1-click 注册
+        profile/page.tsx    # Agent Dashboard（stats + rewards + redeem）
+        redeem/page.tsx     # 兑换信息页（Coming Soon）
     components/             # 可复用组件
       Icons.tsx             # SVG icon 组件库（25+ icons）
       Toast.tsx             # Toast 通知系统 + provider
       ConfirmDialog.tsx     # 确认弹窗
       Skeleton.tsx          # 加载占位组件
-      SubNav.tsx            # 子导航（Builder/Agent 页面内 tab）
-      LayoutShell.tsx       # 响应式布局外壳
-      Sidebar.tsx           # 侧边栏（移动端 hamburger）
+      LayoutShell.tsx       # 响应式布局外壳 + BottomNav 集成
+      Sidebar.tsx           # 角色感知侧边栏（移动端 hamburger）
+      BottomNav.tsx         # 移动端底部导航（Registry/Try/Submit/Dashboard）
       ScoreRing.tsx         # 环形评分组件
       Sparkline.tsx         # 趋势折线图
+      Identicon.tsx         # 钱包地址确定性头像
+      AuthModal.tsx         # 邮箱注册/登录弹窗
+      UserButton.tsx        # 认证状态按钮 + 菜单
     hooks/                  # 自定义 hooks（合约交互、API 调用）
     lib/                    # 工具函数、合约 ABI、常量
     providers/              # Web3 Provider、主题等
