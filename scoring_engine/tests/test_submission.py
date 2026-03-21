@@ -65,6 +65,34 @@ def test_submit_returns_new_report_id(tmp_path: object) -> None:
     assert payload["reDiagnosis"]["reportId"] != original_report_id
 
 
+def test_submit_escapes_html_fields_before_rediagnosis(tmp_path: object) -> None:
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
+    original_response = asyncio.run(
+        app.request("POST", "/api/v1/diagnose", json=build_tool().model_dump(by_alias=True))
+    )
+    original_report_id = original_response.json()["reportId"]
+
+    response = asyncio.run(
+        app.request(
+            "POST",
+            "/api/v1/tools/submit",
+            json={
+                "tool": build_tool(
+                    name="<svg/onload=alert(1)>",
+                    description="<script>bad()</script>",
+                ).model_dump(by_alias=True),
+                "originalReportId": original_report_id,
+                "changesApplied": ["Sanitize unsafe fields"],
+            },
+        )
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["toolName"] == "&lt;svg/onload=alert(1)&gt;"
+    assert payload["reDiagnosis"]["originalTool"]["description"] == "&lt;script&gt;bad()&lt;/script&gt;"
+
+
 def test_tools_list_returns_empty(tmp_path: object) -> None:
     app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
     response = asyncio.run(app.request("POST", "/api/v1/tools/list"))

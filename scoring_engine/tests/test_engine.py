@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from pathlib import Path
 
 from scoring_engine.analyzers.discoverability import analyze_discoverability
@@ -287,3 +288,106 @@ def test_api_endpoints_handle_diagnose_batch_and_fetch(tmp_path: Path) -> None:
     fetch_response = asyncio.run(app.request("GET", f"/api/v1/report/{report_id}"))
     assert fetch_response.status_code == 200
     assert fetch_response.json()["reportId"] == report_id
+
+
+def test_app_disables_docs_in_production(tmp_path: Path) -> None:
+    previous_env = os.environ.get("ENV")
+    os.environ["ENV"] = "production"
+    try:
+        app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
+    finally:
+        if previous_env is None:
+            os.environ.pop("ENV", None)
+        else:
+            os.environ["ENV"] = previous_env
+
+    assert getattr(app, "docs_url", "/docs") is None
+    assert getattr(app, "redoc_url", "/redoc") is None
+    assert getattr(app, "openapi_url", "/openapi.json") is None
+
+
+def test_app_registers_cors_middleware(tmp_path: Path) -> None:
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
+    cors_middleware = getattr(app, "_middleware", [])
+    assert any(
+        entry["middleware_class"].__name__ == "CORSMiddleware"
+        for entry in cors_middleware
+    )
+
+
+def test_security_headers_are_present_on_responses(tmp_path: Path) -> None:
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
+    response = asyncio.run(app.request("POST", "/api/v1/tools/list"))
+    assert response.status_code == 200
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["Strict-Transport-Security"] == "max-age=31536000"
+
+
+def test_diagnose_endpoint_rate_limits_per_ip(tmp_path: Path) -> None:
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
+    payload = build_tool().model_dump(by_alias=True)
+
+    for _ in range(5):
+        response = asyncio.run(
+            app.request(
+                "POST",
+                "/api/v1/diagnose",
+                json=payload,
+                client_host="198.51.100.10",
+            )
+        )
+        assert response.status_code == 200
+
+    limited = asyncio.run(
+        app.request(
+            "POST",
+            "/api/v1/diagnose",
+            json=payload,
+            client_host="198.51.100.10",
+        )
+    )
+    assert limited.status_code == 429
+    assert limited.headers["Retry-After"]
+
+
+def test_batch_endpoint_uses_global_rate_limit_only(tmp_path: Path) -> None:
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
+    payload = {
+        "tools": [
+            build_tool(name=f"swap_tokens_{index}").model_dump(by_alias=True)
+            for index in range(6)
+        ]
+    }
+
+    for _ in range(6):
+        response = asyncio.run(
+            app.request(
+                "POST",
+                "/api/v1/diagnose/batch",
+                json=payload,
+                client_host="198.51.100.11",
+            )
+        )
+        assert response.status_code == 200
+
+
+def test_diagnose_escapes_html_fields_before_processing(tmp_path: Path) -> None:
+    app = create_app(db_path=tmp_path / "reports.db", llm_client=StubLLMClient())
+    response = asyncio.run(
+        app.request(
+            "POST",
+            "/api/v1/diagnose",
+            json=build_tool(
+                name="<script>alert(1)</script>",
+                description="<b>Swap</b> <img src=x onerror=alert(1)>",
+            ).model_dump(by_alias=True),
+        )
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["toolName"] == "&lt;script&gt;alert(1)&lt;/script&gt;"
+    assert (
+        payload["originalTool"]["description"]
+        == "&lt;b&gt;Swap&lt;/b&gt; &lt;img src=x onerror=alert(1)&gt;"
+    )

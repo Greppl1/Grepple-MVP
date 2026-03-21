@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 
 from reward_system.external_eval import determine_test_result
 from reward_system.main import create_app
@@ -200,6 +201,111 @@ def test_reward_mint_endpoint_success() -> None:
     assert payload["taskId"] == "task-123"
     assert payload["rewardTier"] == "full"
     assert payload["rewardPercentage"] == 100
+
+
+def test_reward_mint_endpoint_requires_bearer_token_when_configured() -> None:
+    previous_key = os.environ.get("WEBHOOK_API_KEY")
+    os.environ["WEBHOOK_API_KEY"] = "test-secret"
+    try:
+        app = create_app()
+        response = asyncio.run(
+            app.request(
+                "POST",
+                "/api/rewards/mint",
+                json=build_event().model_dump(by_alias=True),
+            )
+        )
+    finally:
+        if previous_key is None:
+            os.environ.pop("WEBHOOK_API_KEY", None)
+        else:
+            os.environ["WEBHOOK_API_KEY"] = previous_key
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Unauthorized"
+
+
+def test_reward_mint_endpoint_accepts_valid_bearer_token() -> None:
+    previous_key = os.environ.get("WEBHOOK_API_KEY")
+    os.environ["WEBHOOK_API_KEY"] = "test-secret"
+    try:
+        app = create_app()
+        response = asyncio.run(
+            app.request(
+                "POST",
+                "/api/rewards/mint",
+                json=build_event().model_dump(by_alias=True),
+                headers={"Authorization": "Bearer test-secret"},
+            )
+        )
+    finally:
+        if previous_key is None:
+            os.environ.pop("WEBHOOK_API_KEY", None)
+        else:
+            os.environ["WEBHOOK_API_KEY"] = previous_key
+
+    assert response.status_code == 200
+
+
+def test_reward_mint_endpoint_is_idempotent_by_task_id() -> None:
+    app = create_app()
+    first = asyncio.run(
+        app.request(
+            "POST",
+            "/api/rewards/mint",
+            json=build_event().model_dump(by_alias=True),
+        )
+    )
+    second = asyncio.run(
+        app.request(
+            "POST",
+            "/api/rewards/mint",
+            json=build_event(result="invalid").model_dump(by_alias=True),
+        )
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+
+
+def test_reward_app_disables_docs_and_sets_security_headers() -> None:
+    previous_env = os.environ.get("ENV")
+    os.environ["ENV"] = "production"
+    try:
+        app = create_app()
+    finally:
+        if previous_env is None:
+            os.environ.pop("ENV", None)
+        else:
+            os.environ["ENV"] = previous_env
+
+    response = asyncio.run(
+        app.request(
+            "POST",
+            "/api/v1/external-eval",
+            json={
+                "agentWallet": "0x52908400098527886E0F7030069857D2E4169EE7",
+                "tool": build_tool().model_dump(by_alias=True),
+                "report": build_external_report().model_dump(by_alias=True),
+            },
+        )
+    )
+    assert getattr(app, "docs_url", "/docs") is None
+    assert getattr(app, "redoc_url", "/redoc") is None
+    assert getattr(app, "openapi_url", "/openapi.json") is None
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["Strict-Transport-Security"] == "max-age=31536000"
+
+
+def test_reward_app_registers_cors_middleware() -> None:
+    app = create_app()
+    cors_middleware = getattr(app, "_middleware", [])
+    assert any(
+        entry["middleware_class"].__name__ == "CORSMiddleware"
+        for entry in cors_middleware
+    )
 
 
 def test_reward_mint_endpoint_bad_wallet() -> None:
