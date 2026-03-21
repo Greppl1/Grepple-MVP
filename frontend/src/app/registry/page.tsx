@@ -1,75 +1,22 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { TOOLS, CATEGORIES, scoreColor, scoreBg } from '@/lib/mock-data';
 import Sparkline from '@/components/Sparkline';
 import ScoreRing from '@/components/ScoreRing';
+import { IconSearch, IconTable, IconGrid } from '@/components/Icons';
 
 type SortKey = 'composite' | 'schemaHealth' | 'discoverability' | 'callability' | 'successRate' | 'name';
 type SortDir = 'asc' | 'desc';
 type ViewMode = 'table' | 'grid';
-
-const STATS = [
-  { label: 'Total Tools', value: '1,247', delta: '+38 this week' },
-  { label: 'Avg Success Rate', value: '84.2%', delta: '+2.1% vs last week' },
-  { label: 'Calls / Week', value: '52.4K', delta: '+12% growth' },
-  { label: 'Active Builders', value: '328', delta: '+15 new' },
-];
-
-function TableIcon({ active }: { active: boolean }) {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="none"
-      className={active ? 'text-white' : 'text-text-dim'}
-    >
-      <rect x="1" y="1" width="16" height="3" rx="0.5" fill="currentColor" />
-      <rect x="1" y="7" width="16" height="3" rx="0.5" fill="currentColor" />
-      <rect x="1" y="13" width="16" height="3" rx="0.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function GridIcon({ active }: { active: boolean }) {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="none"
-      className={active ? 'text-white' : 'text-text-dim'}
-    >
-      <rect x="1" y="1" width="7" height="7" rx="1" fill="currentColor" />
-      <rect x="10" y="1" width="7" height="7" rx="1" fill="currentColor" />
-      <rect x="1" y="10" width="7" height="7" rx="1" fill="currentColor" />
-      <rect x="10" y="10" width="7" height="7" rx="1" fill="currentColor" />
-    </svg>
-  );
-}
 
 function SortArrow({ direction }: { direction: SortDir }) {
   return (
     <span className="ml-1 inline-block text-purple text-[10px]">
       {direction === 'desc' ? '\u25BC' : '\u25B2'}
     </span>
-  );
-}
-
-function ScoreCell({ value }: { value: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className={`font-mono text-sm font-semibold ${scoreColor(value)}`}>
-        {value}
-      </span>
-      <div className="w-12 h-1.5 rounded-full bg-elevated overflow-hidden">
-        <div
-          className={`h-full rounded-full ${scoreBg(value)}`}
-          style={{ width: `${value}%`, opacity: 0.7 }}
-        />
-      </div>
-    </div>
   );
 }
 
@@ -108,8 +55,10 @@ function MetricBar({ label, value }: { label: string; value: number }) {
   );
 }
 
-export default function RegistryPage() {
-  const [search, setSearch] = useState('');
+function RegistryContent() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q') ?? '';
+  const [search, setSearch] = useState(initialQuery);
   const [activeCategory, setActiveCategory] = useState('All');
   const [view, setView] = useState<ViewMode>('table');
   const [sortKey, setSortKey] = useState<SortKey>('composite');
@@ -133,7 +82,12 @@ export default function RegistryPage() {
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      result = result.filter((t) => t.name.toLowerCase().includes(q));
+      result = result.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q) ||
+          t.category.toLowerCase().includes(q)
+      );
     }
 
     const sorted = [...result].sort((a, b) => {
@@ -175,52 +129,43 @@ export default function RegistryPage() {
   );
 
   return (
-    <div className="p-8 min-h-screen">
+    <div className="p-6 lg:p-8 min-h-screen animate-fade-in">
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold gradient-text">Registry</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Registry</h1>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           {/* Search */}
-          <div className="relative">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+          <div className="relative flex-1 sm:flex-initial">
+            <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
             <input
               type="text"
               placeholder="Search tools..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-64 pl-9 pr-4 py-2 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-border-hi transition-colors"
+              className="w-full sm:w-64 pl-9 pr-4 py-2 bg-surface border border-border rounded-lg text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-blue transition-colors"
             />
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center bg-surface border border-border rounded-lg p-1 gap-0.5">
+          <div className="flex items-center bg-surface border border-border rounded-lg p-1 gap-0.5 shrink-0">
             <button
               onClick={() => setView('table')}
               className={`p-1.5 rounded transition-colors ${
-                view === 'table' ? 'bg-elevated' : 'hover:bg-elevated/50'
+                view === 'table' ? 'bg-elevated text-white' : 'text-text-dim hover:text-text'
               }`}
               aria-label="Table view"
             >
-              <TableIcon active={view === 'table'} />
+              <IconTable size={16} />
             </button>
             <button
               onClick={() => setView('grid')}
               className={`p-1.5 rounded transition-colors ${
-                view === 'grid' ? 'bg-elevated' : 'hover:bg-elevated/50'
+                view === 'grid' ? 'bg-elevated text-white' : 'text-text-dim hover:text-text'
               }`}
               aria-label="Grid view"
             >
-              <GridIcon active={view === 'grid'} />
+              <IconGrid size={16} />
             </button>
           </div>
         </div>
@@ -243,23 +188,7 @@ export default function RegistryPage() {
         ))}
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        {STATS.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-1"
-          >
-            <span className="text-xs text-text-dim font-medium uppercase tracking-wider">
-              {stat.label}
-            </span>
-            <span className="text-2xl font-bold font-mono text-white">{stat.value}</span>
-            <span className="text-xs text-green font-medium">{stat.delta}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Content area with transition */}
+      {/* Content area */}
       <div className="transition-opacity duration-300">
         {view === 'table' ? (
           /* TABLE VIEW */
@@ -272,18 +201,14 @@ export default function RegistryPage() {
                       #
                     </th>
                     {sortableHeader('Tool Name', 'name')}
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden lg:table-cell">
                       Category
                     </th>
-                    {sortableHeader('Composite', 'composite')}
-                    {sortableHeader('Schema', 'schemaHealth')}
-                    {sortableHeader('Discovery', 'discoverability')}
-                    {sortableHeader('Callability', 'callability')}
-                    {sortableHeader('Success', 'successRate')}
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    {sortableHeader('Score', 'composite')}
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden xl:table-cell">
                       7d Trend
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider hidden md:table-cell">
                       Last Tested
                     </th>
                   </tr>
@@ -292,46 +217,44 @@ export default function RegistryPage() {
                   {filtered.map((tool, idx) => (
                     <tr
                       key={tool.id}
-                      className="border-b border-border/50 hover:bg-elevated/50 transition-colors cursor-pointer"
+                      className="border-b border-border/50 hover:bg-elevated/50 transition-colors"
                     >
                       <td className="px-3 py-3 text-sm font-mono text-text-dim">{idx + 1}</td>
                       <td className="px-3 py-3">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-white">{tool.name}</span>
-                          <span className="text-xs text-text-dim font-mono">{tool.builder}</span>
-                        </div>
+                        <Link
+                          href={`/registry/${tool.id}`}
+                          className="block group"
+                        >
+                          <span className="text-sm font-semibold text-white group-hover:text-blue-bright transition-colors">
+                            {tool.name}
+                          </span>
+                          <span className="block text-xs text-text-dim font-mono mt-0.5 lg:hidden">
+                            <CategoryBadge category={tool.category} />
+                          </span>
+                          <span className="block text-xs text-text-dim mt-0.5 truncate max-w-xs">
+                            {tool.description}
+                          </span>
+                        </Link>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-3 hidden lg:table-cell">
                         <CategoryBadge category={tool.category} />
                       </td>
                       <td className="px-3 py-3">
-                        <div className="flex items-center gap-2">
+                        <Link href={`/registry/${tool.id}`} className="flex items-center gap-2">
                           <span
                             className={`font-mono text-sm font-bold ${scoreColor(tool.composite)}`}
                           >
                             {tool.composite}
                           </span>
-                          <div className="w-16 h-2 rounded-full bg-elevated overflow-hidden">
+                          <div className="w-16 h-2 rounded-full bg-elevated overflow-hidden hidden sm:block">
                             <div
                               className={`h-full rounded-full ${scoreBg(tool.composite)}`}
                               style={{ width: `${tool.composite}%`, opacity: 0.7 }}
                             />
                           </div>
-                        </div>
+                        </Link>
                       </td>
-                      <td className="px-3 py-3">
-                        <ScoreCell value={tool.metrics.schemaHealth} />
-                      </td>
-                      <td className="px-3 py-3">
-                        <ScoreCell value={tool.metrics.discoverability} />
-                      </td>
-                      <td className="px-3 py-3">
-                        <ScoreCell value={tool.metrics.callability} />
-                      </td>
-                      <td className="px-3 py-3">
-                        <ScoreCell value={tool.metrics.successRate} />
-                      </td>
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-3 hidden xl:table-cell">
                         <Sparkline
                           data={tool.trend}
                           color={tool.composite >= 85 ? '#18DC7E' : tool.composite >= 60 ? '#F5A623' : '#FF4757'}
@@ -339,7 +262,7 @@ export default function RegistryPage() {
                           height={28}
                         />
                       </td>
-                      <td className="px-3 py-3 text-xs text-text-dim whitespace-nowrap">
+                      <td className="px-3 py-3 text-xs text-text-dim whitespace-nowrap hidden md:table-cell">
                         {tool.lastTested}
                       </td>
                     </tr>
@@ -350,17 +273,24 @@ export default function RegistryPage() {
 
             {filtered.length === 0 && (
               <div className="py-16 text-center">
-                <p className="text-text-dim text-sm">No tools found matching your criteria.</p>
+                <p className="text-text-dim text-sm mb-2">No tools found matching your criteria.</p>
+                <button
+                  onClick={() => { setSearch(''); setActiveCategory('All'); }}
+                  className="text-blue-bright text-sm hover:text-white transition-colors"
+                >
+                  Clear filters
+                </button>
               </div>
             )}
           </div>
         ) : (
           /* GRID / CARD VIEW */
-          <div className="grid grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((tool, idx) => (
-              <div
+              <Link
                 key={tool.id}
-                className="h-full flex flex-col bg-surface border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-hi"
+                href={`/registry/${tool.id}`}
+                className="h-full flex flex-col bg-surface border border-border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-hi card-glow"
               >
                 {/* Card header */}
                 <div className="flex items-start justify-between mb-4">
@@ -397,21 +327,31 @@ export default function RegistryPage() {
                   />
                   <span className="text-xs text-text-dim">{tool.lastTested}</span>
                 </div>
-
-                <button className="mt-3 text-xs font-semibold text-blue hover:text-blue-bright transition-colors text-left">
-                  View Details &rarr;
-                </button>
-              </div>
+              </Link>
             ))}
 
             {filtered.length === 0 && (
-              <div className="col-span-3 py-16 text-center">
-                <p className="text-text-dim text-sm">No tools found matching your criteria.</p>
+              <div className="col-span-full py-16 text-center">
+                <p className="text-text-dim text-sm mb-2">No tools found matching your criteria.</p>
+                <button
+                  onClick={() => { setSearch(''); setActiveCategory('All'); }}
+                  className="text-blue-bright text-sm hover:text-white transition-colors"
+                >
+                  Clear filters
+                </button>
               </div>
             )}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function RegistryPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-text-dim">Loading registry...</div>}>
+      <RegistryContent />
+    </Suspense>
   );
 }

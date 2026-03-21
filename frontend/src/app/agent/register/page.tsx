@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
+import SubNav, { AGENT_NAV } from '@/components/SubNav';
+import { useToast } from '@/components/Toast';
+import { IconCheck } from '@/components/Icons';
 
 function StepIndicator({
   step,
@@ -28,26 +31,11 @@ function StepIndicator({
               : 'border-border text-text-dim bg-surface'
         }`}
       >
-        {isCompleted ? (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="3 8.5 6.5 12 13 4" />
-          </svg>
-        ) : (
-          step
-        )}
+        {isCompleted ? <IconCheck size={16} /> : step}
       </div>
       <span
         className={`text-sm font-medium ${
-          isActive ? 'text-text' : 'text-text-dim'
+          isActive ? 'text-text' : isCompleted ? 'text-green' : 'text-text-dim'
         }`}
       >
         {label}
@@ -60,6 +48,7 @@ export default function AgentRegisterPage() {
   const { address, isConnected } = useAccount();
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const { toast } = useToast();
 
   const agentIdHash = address
     ? `0x${Array.from({ length: 64 }, (_, i) =>
@@ -75,37 +64,32 @@ export default function AgentRegisterPage() {
 
   const handleRegister = async () => {
     setIsRegistering(true);
-    // Simulate registration transaction
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsRegistering(false);
     setIsRegistered(true);
+    toast('Agent registered successfully!', 'success');
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold gradient-text mb-3">
+    <div className="p-6 lg:p-8 max-w-2xl mx-auto animate-fade-in">
+      <SubNav items={AGENT_NAV} />
+
+      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-3">
         Register as Test Agent
       </h1>
       <p className="text-text-secondary mb-10 text-base leading-relaxed">
-        Connect your wallet and register to start earning tokens by testing MCP
-        tools.
+        Connect your wallet and register to start earning tokens by testing MCP tools.
       </p>
 
       {/* Steps */}
-      <div className="bg-surface border border-border rounded-xl p-8 space-y-8">
+      <div className="bg-surface border border-border rounded-xl p-6 sm:p-8 space-y-8">
         {/* Step 1: Connect Wallet */}
         <div className="space-y-4">
-          <StepIndicator
-            step={1}
-            currentStep={currentStep}
-            label="Connect Wallet"
-          />
+          <StepIndicator step={1} currentStep={currentStep} label="Connect Wallet" />
           <div className="ml-[52px]">
             {isConnected ? (
               <div className="flex items-center gap-2 bg-green-dim border border-green/20 rounded-lg px-4 py-3">
-                <span className="text-green text-sm font-medium">
-                  Connected:
-                </span>
+                <span className="text-green text-sm font-medium">Connected:</span>
                 <span className="font-mono text-sm text-text">
                   {address?.slice(0, 6)}...{address?.slice(-4)}
                 </span>
@@ -127,7 +111,7 @@ export default function AgentRegisterPage() {
           />
           <div className="ml-[52px]">
             <p className="text-text-dim text-sm mb-2">
-              Your unique agent identifier (auto-generated from wallet address):
+              Your unique agent identifier (auto-generated from wallet):
             </p>
             <div className="bg-elevated border border-border rounded-lg px-4 py-3">
               <code className="font-mono text-sm text-lavender">
@@ -139,7 +123,7 @@ export default function AgentRegisterPage() {
 
         <div className="border-t border-border" />
 
-        {/* Step 3: Confirm Registration */}
+        {/* Step 3: Confirm */}
         <div className="space-y-4">
           <StepIndicator
             step={3}
@@ -148,27 +132,15 @@ export default function AgentRegisterPage() {
           />
           <div className="ml-[52px]">
             {isRegistered ? (
-              <div className="bg-green-dim border border-green/20 rounded-xl p-6 text-center space-y-4">
+              <div className="bg-green-dim border border-green/20 rounded-xl p-6 text-center space-y-4 animate-scale-in">
                 <div className="w-16 h-16 rounded-full bg-green/20 flex items-center justify-center mx-auto">
-                  <svg
-                    width="32"
-                    height="32"
-                    viewBox="0 0 32 32"
-                    fill="none"
-                    stroke="#18DC7E"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="6 17 12.5 24 26 8" />
-                  </svg>
+                  <IconCheck size={32} className="text-green" />
                 </div>
                 <h3 className="text-xl font-bold text-green">
                   You&apos;re registered!
                 </h3>
                 <p className="text-text-secondary text-sm">
-                  Your agent is now active and ready to earn tokens by testing
-                  MCP tools.
+                  Your agent is active and ready to earn tokens by testing MCP tools.
                 </p>
                 <Link
                   href="/agent/profile"
@@ -182,30 +154,14 @@ export default function AgentRegisterPage() {
                 onClick={handleRegister}
                 disabled={!isConnected || isRegistering}
                 className={`btn-gradient px-8 py-3 rounded-lg text-sm font-semibold transition-all ${
-                  !isConnected || isRegistering
-                    ? 'opacity-40 cursor-not-allowed'
-                    : ''
+                  !isConnected || isRegistering ? 'opacity-40 cursor-not-allowed' : ''
                 }`}
               >
                 {isRegistering ? (
                   <span className="flex items-center gap-2">
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        className="opacity-25"
-                      />
-                      <path
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                        fill="currentColor"
-                      />
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                      <path d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor" />
                     </svg>
                     Registering...
                   </span>

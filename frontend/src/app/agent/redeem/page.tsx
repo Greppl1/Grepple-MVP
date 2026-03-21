@@ -1,55 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import ScoreRing from '@/components/ScoreRing';
+import SubNav, { AGENT_NAV } from '@/components/SubNav';
+import { IconLock, IconUnlock } from '@/components/Icons';
 
 const MOCK_BALANCE = 12.5;
 const REDEMPTION_ENABLED = false;
-const USDC_RATE = 0.1; // 1 AAOT = 0.1 USDC
+const USDC_RATE = 0.1;
 
 const MOCK_AVAILABLE_MINTS = [
-  {
-    mintId: 42,
-    taskId: 'task_20260318_abc123',
-    toolId: 'swap_tokens',
-    tier: 'FULL' as const,
-    amount: 2.0,
-  },
-  {
-    mintId: 38,
-    taskId: 'task_20260317_def456',
-    toolId: 'price_feed',
-    tier: 'FULL' as const,
-    amount: 2.0,
-  },
-  {
-    mintId: 35,
-    taskId: 'task_20260316_ghi789',
-    toolId: 'swap_tokens',
-    tier: 'PARTIAL' as const,
-    amount: 1.0,
-  },
-  {
-    mintId: 31,
-    taskId: 'task_20260316_jkl012',
-    toolId: 'nft_mint',
-    tier: 'FULL' as const,
-    amount: 2.0,
-  },
-  {
-    mintId: 27,
-    taskId: 'task_20260315_mno345',
-    toolId: 'bridge_asset',
-    tier: 'PARTIAL' as const,
-    amount: 1.0,
-  },
-  {
-    mintId: 22,
-    taskId: 'task_20260315_pqr678',
-    toolId: 'price_feed',
-    tier: 'FULL' as const,
-    amount: 2.0,
-  },
+  { mintId: 42, taskId: 'task_20260318_abc123', toolId: 'swap_tokens', tier: 'FULL' as const, amount: 2.0 },
+  { mintId: 38, taskId: 'task_20260317_def456', toolId: 'price_feed', tier: 'FULL' as const, amount: 2.0 },
+  { mintId: 35, taskId: 'task_20260316_ghi789', toolId: 'swap_tokens', tier: 'PARTIAL' as const, amount: 1.0 },
+  { mintId: 31, taskId: 'task_20260316_jkl012', toolId: 'nft_mint', tier: 'FULL' as const, amount: 2.0 },
+  { mintId: 27, taskId: 'task_20260315_mno345', toolId: 'bridge_asset', tier: 'PARTIAL' as const, amount: 1.0 },
+  { mintId: 22, taskId: 'task_20260315_pqr678', toolId: 'price_feed', tier: 'FULL' as const, amount: 2.0 },
 ];
 
 function TierBadge({ tier }: { tier: 'FULL' | 'PARTIAL' }) {
@@ -67,15 +32,7 @@ function TierBadge({ tier }: { tier: 'FULL' | 'PARTIAL' }) {
   );
 }
 
-function StepItem({
-  number,
-  title,
-  description,
-}: {
-  number: number;
-  title: string;
-  description: string;
-}) {
+function StepItem({ number, title, description }: { number: number; title: string; description: string }) {
   return (
     <div className="flex items-start gap-4">
       <div className="w-8 h-8 rounded-full bg-purple-dim border border-border-hi flex items-center justify-center text-sm font-bold text-lavender shrink-0">
@@ -110,80 +67,61 @@ export default function AgentRedeemPage() {
     );
   };
 
-  // Map balance to a 0-100 score for the ring (cap at 100)
-  const balanceScore = Math.min(Math.round((MOCK_BALANCE / 20) * 100), 100);
-
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold gradient-text mb-8">Redeem Tokens</h1>
+    <div className="p-6 lg:p-8 max-w-3xl mx-auto animate-fade-in">
+      <SubNav items={AGENT_NAV} />
+
+      <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-8">Redeem Tokens</h1>
 
       {/* Balance Display */}
-      <div className="bg-surface border border-border rounded-xl p-6 mb-6 flex items-center gap-6">
-        <ScoreRing score={balanceScore} size={80} />
-        <div>
-          <p className="text-text-dim text-sm mb-1">Your AAOT Balance</p>
-          <p className="text-3xl font-bold text-text">
-            {MOCK_BALANCE}
-            <span className="text-base font-normal text-text-secondary ml-2">
-              AAOT
-            </span>
-          </p>
+      <div className="bg-surface border border-border rounded-xl p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-text-dim text-sm mb-1">Your AAOT Balance</p>
+            <p className="text-3xl sm:text-4xl font-bold text-text font-mono">
+              {MOCK_BALANCE}
+              <span className="text-base font-normal text-text-secondary ml-2">AAOT</span>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-text-dim text-xs mb-1">Estimated Value</p>
+            <p className="text-lg font-bold font-mono text-text-secondary">
+              {(MOCK_BALANCE * USDC_RATE).toFixed(2)}
+              <span className="text-xs font-normal text-text-dim ml-1">USDC</span>
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Redemption Status Banner */}
       {REDEMPTION_ENABLED ? (
         <div className="bg-green-dim border border-green/20 rounded-xl px-5 py-4 mb-6 flex items-center gap-3">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="#18DC7E"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="10" cy="10" r="8" />
-            <polyline points="6.5 10 9 12.5 13.5 7.5" />
-          </svg>
-          <span className="text-green text-sm font-medium">
-            Redemption is open!
-          </span>
+          <IconUnlock size={18} className="text-green shrink-0" />
+          <span className="text-green text-sm font-medium">Redemption is open!</span>
         </div>
       ) : (
         <div className="bg-amber-dim border border-amber/20 rounded-xl px-5 py-4 mb-6 flex items-center gap-3">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="#F5A623"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="5" y="9" width="10" height="8" rx="1" />
-            <path d="M7 9V6a3 3 0 016 0v3" />
-          </svg>
-          <span className="text-amber text-sm font-medium">
-            Vault redemption is currently disabled. Tokens accumulate now
-            &mdash; value unlocks later.
-          </span>
+          <IconLock size={18} className="text-amber shrink-0" />
+          <div>
+            <span className="text-amber text-sm font-medium block">
+              Vault redemption is currently disabled.
+            </span>
+            <span className="text-amber/70 text-xs">
+              Tokens accumulate now &mdash; value unlocks later.
+            </span>
+          </div>
         </div>
       )}
 
       {/* Redemption Form */}
       <div
         className={`bg-surface border border-border rounded-xl p-6 mb-6 space-y-6 ${
-          !REDEMPTION_ENABLED ? 'opacity-60' : ''
+          !REDEMPTION_ENABLED ? 'opacity-50 pointer-events-none' : ''
         }`}
       >
         {/* Token Amount Input */}
         <div>
-          <label className="block text-sm font-medium text-text mb-2">
-            Token Amount
-          </label>
+          <label className="block text-sm font-medium text-text mb-2">Token Amount</label>
           <div className="relative">
             <input
               type="number"
@@ -201,9 +139,7 @@ export default function AgentRedeemPage() {
 
         {/* Select Mint IDs */}
         <div>
-          <label className="block text-sm font-medium text-text mb-3">
-            Select Mint Records
-          </label>
+          <label className="block text-sm font-medium text-text mb-3">Select Mint Records</label>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {MOCK_AVAILABLE_MINTS.map((mint) => (
               <label
@@ -212,7 +148,7 @@ export default function AgentRedeemPage() {
                   selectedMints.includes(mint.mintId)
                     ? 'border-border-hi bg-purple-dim'
                     : 'border-border hover:border-border-hi'
-                } ${!REDEMPTION_ENABLED ? 'cursor-not-allowed' : ''}`}
+                }`}
               >
                 <input
                   type="checkbox"
@@ -223,15 +159,12 @@ export default function AgentRedeemPage() {
                 />
                 <div className="flex-1 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-text-secondary">
-                      #{mint.mintId}
-                    </span>
+                    <span className="font-mono text-xs text-text-secondary">#{mint.mintId}</span>
                     <span className="text-sm text-text">{mint.toolId}</span>
                     <TierBadge tier={mint.tier} />
                   </div>
                   <span className="font-mono text-sm text-text">
-                    {mint.amount.toFixed(1)}{' '}
-                    <span className="text-text-dim">AAOT</span>
+                    {mint.amount.toFixed(1)} <span className="text-text-dim">AAOT</span>
                   </span>
                 </div>
               </label>
@@ -241,12 +174,9 @@ export default function AgentRedeemPage() {
 
         {/* Expected USDC Output */}
         <div className="bg-elevated border border-border rounded-lg p-4 flex items-center justify-between">
-          <span className="text-sm text-text-secondary">
-            Expected USDC Output
-          </span>
+          <span className="text-sm text-text-secondary">Expected USDC Output</span>
           <span className="text-xl font-bold font-mono text-text">
-            {usdcOutput.toFixed(2)}{' '}
-            <span className="text-sm font-normal text-text-dim">USDC</span>
+            {usdcOutput.toFixed(2)} <span className="text-sm font-normal text-text-dim">USDC</span>
           </span>
         </div>
 
@@ -254,9 +184,7 @@ export default function AgentRedeemPage() {
         <button
           disabled={!REDEMPTION_ENABLED || selectedMints.length === 0}
           className={`w-full btn-gradient py-3.5 rounded-lg text-sm font-semibold transition-all ${
-            !REDEMPTION_ENABLED || selectedMints.length === 0
-              ? 'opacity-40 cursor-not-allowed'
-              : ''
+            !REDEMPTION_ENABLED || selectedMints.length === 0 ? 'opacity-40 cursor-not-allowed' : ''
           }`}
         >
           {REDEMPTION_ENABLED ? 'Redeem' : 'Coming Soon'}
@@ -265,9 +193,7 @@ export default function AgentRedeemPage() {
 
       {/* How Redemption Works */}
       <div className="bg-surface border border-border rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-text mb-5">
-          How Redemption Works
-        </h2>
+        <h2 className="text-lg font-semibold text-text mb-5">How Redemption Works</h2>
         <div className="space-y-5">
           <StepItem
             number={1}

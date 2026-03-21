@@ -2,14 +2,16 @@
 
 @theme inline {
   --color-bg: #0D0B2E;
-  --color-bg-nav: rgba(13, 11, 46, 0.88);
+  --color-bg-nav: rgba(13, 11, 46, 0.92);
   --color-surface: #14112E;
   --color-elevated: #1A1740;
+  --color-elevated-2: #221E4A;
   --color-purple: #7B6BA8;
   --color-purple-dim: rgba(123, 107, 168, 0.1);
   --color-lavender: #9B8EC8;
   --color-blue: #4A6CF7;
   --color-blue-bright: #5B7FFF;
+  --color-blue-dim: rgba(74, 108, 247, 0.12);
   --color-green: #18DC7E;
   --color-green-dim: rgba(24, 220, 126, 0.1);
   --color-amber: #F5A623;
@@ -56,4 +58,108 @@ body {
 .btn-gradient:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 28px rgba(74, 108, 247, 0.35);
+}
+.btn-gradient:active {
+  transform: translateY(0);
+}
+
+/* Secondary button */
+.btn-secondary {
+  background: var(--color-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  color: white;
+  border-color: var(--color-border-hi);
+  background: var(--color-elevated-2);
+}
+
+/* Card with glow on hover */
+.card-glow {
+  transition: all 0.25s ease;
+}
+.card-glow:hover {
+  border-color: var(--color-border-hi);
+  box-shadow: 0 0 40px rgba(74, 108, 247, 0.06);
+}
+
+/* Hero gradient background */
+.hero-gradient {
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(74, 108, 247, 0.12) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 40% at 70% 10%, rgba(123, 107, 168, 0.08) 0%, transparent 60%);
+}
+
+/* Animations */
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out;
+}
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: slide-up 0.4s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+/* Focus ring */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+/* Stat card highlight variant */
+.stat-highlight {
+  background: linear-gradient(135deg, rgba(74, 108, 247, 0.08) 0%, rgba(123, 107, 168, 0.06) 100%);
+  border-color: var(--color-border-hi);
+}
+
+/* Mobile sidebar overlay */
+@media (max-width: 1023px) {
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 40;
+  }
 }

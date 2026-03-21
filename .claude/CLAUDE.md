@@ -371,26 +371,50 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] 搭建通用 Layout（可折叠侧边栏 + 钱包连接）
 
 **Step 8: Builder Dashboard** ✅
-- [x] 提交 MCP Tool 双模式页（Simple 表单 + Editor 代码编辑器，toggle 切换）
-- [x] 诊断报告展示页（Terminal 动画 → Dashboard 数据视图自动切换）
-- [x] 改写建议展示 + Apply 按钮
-- [x] Builder Budget 管理页（USDC 充值、余额/消耗卡片、交易历史表格）
+- [x] 提交 MCP Tool 表单页（验证侧栏 + 参数解析）
+- [x] 诊断报告展示页（Terminal 动画可跳过 → Dashboard 数据视图）
+- [x] 改写建议展示 + Apply 按钮（带 Toast 反馈）
+- [x] Builder Budget 管理页（USDC 充值确认弹窗、余额/消耗卡片、交易历史表格）
 - [x] 已发布工具管理列表（ScoreRing、状态 badge、趋势 Sparkline）
+- [x] Builder 子导航（My Tools / Submit / Budget tab 切换）
 
 **Step 9: Registry 公开页面** ✅
-- [x] 工具排名列表页（表格 + 统一大小卡片双视图，toggle 切换，默认表格）
-- [x] 筛选 & 排序（category pills、搜索、列头排序）
-- [x] 搜索功能（实时关键词过滤）
+- [x] 工具排名列表页（表格 + 卡片双视图，表格行可点击跳转详情）
+- [x] 工具详情页 `/registry/[id]`（完整分数、趋势图、质量分解）
+- [x] 筛选 & 排序（category pills、搜索含 description、列头排序）
+- [x] 搜索功能（支持从首页意图入口传入 query）
+- [x] 响应式适配（移动端隐藏次要列、grid-cols 自适应）
 
-**Step 10: 用户意图入口**
-- [ ] 意图输入页（自然语言输入框）— 待 Fiona Registry API 就绪后对接
-- [ ] 工具推荐结果页
+**Step 10: 用户意图入口** ✅
+- [x] 首页 Hero + 自然语言输入框（提交后跳转 Registry 搜索）
+- [x] 角色选择卡片（Builder / Agent 两入口）
+- [x] How it Works 三步介绍 + CTA
+- [ ] 工具推荐结果页（AI 匹配）— 待 Fiona Registry API 就绪后对接
 - [ ] 执行结果展示
 
 **Step 11: Agent & 钱包页面** ✅
-- [x] Agent 注册页（3 步引导：连接钱包 → Agent ID → 确认注册）
-- [x] Agent Profile 页（钱包地址、stats 卡片、奖励历史表格 + BscScan 链接）
-- [x] 兑换页面（余额展示、状态 banner、mint 选择、Coming Soon 提示）
+- [x] Agent 注册页（3 步引导 + Toast + SVG icon）
+- [x] Agent Profile 页（钱包地址、stats 卡片、奖励历史 + 空状态）
+- [x] 兑换页面（余额展示、Lock/Unlock icon、Coming Soon 提示）
+- [x] Agent 子导航（Profile / Register / Redeem tab 切换）
+
+**Step 13: UI/UX 全面重构** ✅
+- [x] Landing Page：Hero + 意图输入 + 角色选择 + How it Works + CTA
+- [x] SVG Icon 系统替换 Unicode 字符（`components/Icons.tsx`，25+ 图标）
+- [x] Toast 通知系统（`components/Toast.tsx` + context provider）
+- [x] 确认弹窗组件（`components/ConfirmDialog.tsx`）
+- [x] Skeleton 加载占位组件（`components/Skeleton.tsx`）
+- [x] SubNav 子导航组件（Builder / Agent 页面内 tab 切换）
+- [x] LayoutShell 响应式外壳（Landing 无侧边栏、内页有侧边栏 + 移动端适配）
+- [x] 响应式设计（移动端 hamburger 菜单、表格列自适应隐藏、grid 自适应）
+- [x] CSS 动画系统（slide-in/slide-up/scale-in/fade-in/stagger-children）
+- [x] 视觉层级优化（stat-highlight、card-glow、hero-gradient、btn-secondary）
+- [x] Registry 行可点击 + 详情页 `/registry/[id]`
+- [x] Report 页面 Skip 按钮 + toolName 联动
+- [x] Budget Deposit 确认弹窗
+- [x] 移除假代码编辑器模式
+- [x] 修复 ScoreRing 在 Balance 中的滥用（改为数字展示）
+- [x] 空状态处理（Registry 无结果 + Clear filters、Rewards 空列表、Transactions 空列表）
 
 **Step 12: 对接联调**
 - [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents 全部 endpoint）
@@ -657,6 +681,15 @@ frontend/                   # React/Next.js 前端
         profile/page.tsx    # Agent Profile + 奖励历史
         redeem/page.tsx     # 兑换页面
     components/             # 可复用组件
+      Icons.tsx             # SVG icon 组件库（25+ icons）
+      Toast.tsx             # Toast 通知系统 + provider
+      ConfirmDialog.tsx     # 确认弹窗
+      Skeleton.tsx          # 加载占位组件
+      SubNav.tsx            # 子导航（Builder/Agent 页面内 tab）
+      LayoutShell.tsx       # 响应式布局外壳
+      Sidebar.tsx           # 侧边栏（移动端 hamburger）
+      ScoreRing.tsx         # 环形评分组件
+      Sparkline.tsx         # 趋势折线图
     hooks/                  # 自定义 hooks（合约交互、API 调用）
     lib/                    # 工具函数、合约 ABI、常量
     providers/              # Web3 Provider、主题等

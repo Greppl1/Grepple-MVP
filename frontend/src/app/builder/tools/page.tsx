@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import ScoreRing from '@/components/ScoreRing';
 import Sparkline from '@/components/Sparkline';
+import SubNav, { BUILDER_NAV } from '@/components/SubNav';
+import { IconPlus } from '@/components/Icons';
 
 interface PublishedTool {
   id: string;
@@ -70,30 +72,33 @@ export default function ToolsPage() {
   const hasTools = MY_TOOLS.length > 0;
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-6 lg:p-8 max-w-5xl animate-fade-in">
+      <SubNav items={BUILDER_NAV} />
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold gradient-text mb-2">My Tools</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">My Tools</h1>
           <p className="text-text-secondary">
             Manage and monitor your published MCP tools.
           </p>
         </div>
         <Link
           href="/builder/submit"
-          className="btn-gradient px-6 py-2.5 rounded-xl text-sm font-semibold"
+          className="btn-gradient px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
         >
+          <IconPlus size={16} />
           Submit New Tool
         </Link>
       </div>
 
       {hasTools ? (
-        <div className="space-y-4">
+        <div className="space-y-4 stagger-children">
           {MY_TOOLS.map((tool) => (
             <div
               key={tool.id}
-              className="bg-surface border border-border rounded-xl p-6 hover:border-border-hi transition-colors"
+              className="bg-surface border border-border rounded-xl p-5 sm:p-6 card-glow"
             >
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                 {/* Score Ring */}
                 <div className="flex-shrink-0">
                   {tool.composite > 0 ? (
@@ -107,8 +112,8 @@ export default function ToolsPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-lg font-semibold text-white font-mono">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-white font-mono">
                       {tool.name}
                     </h3>
                     <span
@@ -133,7 +138,7 @@ export default function ToolsPage() {
                 </div>
 
                 {/* Sparkline */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 hidden sm:block">
                   {tool.trend.length > 0 ? (
                     <Sparkline data={tool.trend} width={100} height={32} />
                   ) : (
@@ -144,8 +149,8 @@ export default function ToolsPage() {
                 {/* Action */}
                 <div className="flex-shrink-0">
                   <Link
-                    href={`/builder/report?id=${tool.id}`}
-                    className="text-sm text-blue-bright hover:text-white transition-colors font-medium border border-border-hi rounded-lg px-4 py-2 hover:bg-elevated"
+                    href={`/builder/report?id=${tool.id}&name=${encodeURIComponent(tool.name)}`}
+                    className="text-sm text-blue-bright hover:text-white transition-colors font-medium btn-secondary rounded-lg px-4 py-2"
                   >
                     View Report
                   </Link>
@@ -156,10 +161,12 @@ export default function ToolsPage() {
         </div>
       ) : (
         /* Empty State */
-        <div className="bg-surface border border-border rounded-xl p-16 text-center">
-          <div className="text-4xl mb-4 text-text-dim">&#x2B21;</div>
+        <div className="bg-surface border border-border rounded-xl p-12 sm:p-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-elevated border border-border flex items-center justify-center mx-auto mb-4">
+            <IconPlus size={24} className="text-text-dim" />
+          </div>
           <h2 className="text-xl font-semibold text-white mb-2">No tools published yet</h2>
-          <p className="text-text-secondary mb-6">
+          <p className="text-text-secondary mb-6 max-w-sm mx-auto">
             Submit your first MCP tool to get it diagnosed, scored, and listed in the registry.
           </p>
           <Link

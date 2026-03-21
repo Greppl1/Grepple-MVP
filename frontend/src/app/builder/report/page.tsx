@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ScoreRing from '@/components/ScoreRing';
+import SubNav, { BUILDER_NAV } from '@/components/SubNav';
+import { IconSkipForward } from '@/components/Icons';
+import { useToast } from '@/components/Toast';
 
 const TERMINAL_LINES = [
-  { delay: 0, prefix: '\u2192', prefixColor: 'text-blue', text: 'Connecting to MCP server at mcp-swap-tokens.endpoint.io...' },
+  { delay: 0, prefix: '\u2192', prefixColor: 'text-blue', text: 'Connecting to MCP server...' },
   { delay: 800, prefix: '\u2713', prefixColor: 'text-green', text: 'Connection established. Protocol v2.1 detected.' },
   { delay: 1500, prefix: '\u2192', prefixColor: 'text-blue', text: 'Fetching tool manifest and schema definitions...' },
   { delay: 2200, prefix: '\u2713', prefixColor: 'text-green', text: 'Schema loaded: 3 endpoints, 12 parameters.' },
   { delay: 2800, prefix: '\u2192', prefixColor: 'text-blue', text: 'Running diagnostic suite (schema, discovery, call, success)...' },
   { delay: 3500, prefix: '\u26A0', prefixColor: 'text-amber', text: 'Warning: description field lacks keyword density for agent discovery.' },
   { delay: 4200, prefix: '\u2713', prefixColor: 'text-green', text: 'Call test: swap(ETH, USDC, 0.1) \u2192 200 OK (342ms)' },
-  { delay: 4800, prefix: '\u2713', prefixColor: 'text-green', text: 'Error handling: invalid params \u2192 structured error response.' },
-  { delay: 5300, prefix: '\u2713', prefixColor: 'text-green', text: 'Diagnosis complete. Generating report...' },
+  { delay: 4800, prefix: '\u2713', prefixColor: 'text-green', text: 'Diagnosis complete. Generating report...' },
 ];
 
 interface ScoreCard {
@@ -41,17 +44,17 @@ const SUGGESTIONS = [
   {
     category: 'Description',
     text: 'Add keywords "token swap", "DEX", "cross-chain" to improve agent discoverability by ~12%.',
-    impact: 'high',
+    impact: 'high' as const,
   },
   {
     category: 'Schema',
     text: 'Add "examples" field to slippage parameter. Agents perform 23% better with example values.',
-    impact: 'medium',
+    impact: 'medium' as const,
   },
   {
     category: 'Discoverability',
     text: 'Include supported chains in tool metadata. Agents filter by chain 40% of the time.',
-    impact: 'high',
+    impact: 'high' as const,
   },
 ];
 
@@ -62,13 +65,20 @@ const COMPETITORS = [
   { name: 'mcp-jupiter-swap', score: 79, you: false },
 ];
 
-export default function ReportPage() {
+function ReportContent() {
+  const searchParams = useSearchParams();
+  const toolName = searchParams.get('name') || 'mcp-swap-tokens';
   const [phase, setPhase] = useState<'terminal' | 'dashboard'>('terminal');
   const [visibleLines, setVisibleLines] = useState(0);
   const [progress, setProgress] = useState(0);
   const [dashboardVisible, setDashboardVisible] = useState(false);
+  const { toast } = useToast();
 
-  // Terminal line animation
+  const skipToDashboard = () => {
+    setPhase('dashboard');
+    setTimeout(() => setDashboardVisible(true), 50);
+  };
+
   useEffect(() => {
     if (phase !== 'terminal') return;
 
@@ -81,27 +91,30 @@ export default function ReportPage() {
       timers.push(t);
     });
 
-    // Progress bar animation at step 5
     const progressStart = setTimeout(() => {
       let p = 0;
       const interval = setInterval(() => {
-        p += 4;
+        p += 5;
         setProgress(Math.min(p, 100));
         if (p >= 100) clearInterval(interval);
-      }, 50);
+      }, 40);
       timers.push(interval as unknown as ReturnType<typeof setTimeout>);
-    }, 3500);
+    }, 3000);
     timers.push(progressStart);
 
-    // Transition to dashboard
     const transitionTimer = setTimeout(() => {
       setPhase('dashboard');
       setTimeout(() => setDashboardVisible(true), 50);
-    }, 6000);
+    }, 5500);
     timers.push(transitionTimer);
 
     return () => timers.forEach(clearTimeout);
   }, [phase]);
+
+  // Update competitors to show submitted tool name
+  const competitors = COMPETITORS.map((c) =>
+    c.you ? { ...c, name: toolName } : c
+  );
 
   const impactColor = (impact: string) => {
     if (impact === 'high') return 'bg-red-dim text-red';
@@ -113,23 +126,32 @@ export default function ReportPage() {
     status === 'good' ? 'bg-green' : 'bg-amber';
 
   return (
-    <div className="p-8 max-w-6xl">
+    <>
       {phase === 'terminal' && (
         <div className="bg-[#0A0820] border border-border rounded-xl overflow-hidden">
           {/* Terminal Chrome */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-surface border-b border-border">
-            <span className="w-3 h-3 rounded-full bg-red/60" />
-            <span className="w-3 h-3 rounded-full bg-amber/60" />
-            <span className="w-3 h-3 rounded-full bg-green/60" />
-            <span className="ml-3 text-text-dim text-xs font-mono">
-              grepple diagnose --tool mcp-swap-tokens
-            </span>
+          <div className="flex items-center justify-between px-4 py-3 bg-surface border-b border-border">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-red/60" />
+              <span className="w-3 h-3 rounded-full bg-amber/60" />
+              <span className="w-3 h-3 rounded-full bg-green/60" />
+              <span className="ml-3 text-text-dim text-xs font-mono">
+                grepple diagnose --tool {toolName}
+              </span>
+            </div>
+            <button
+              onClick={skipToDashboard}
+              className="flex items-center gap-1.5 text-xs text-text-dim hover:text-white transition-colors px-2 py-1 rounded hover:bg-elevated"
+            >
+              <IconSkipForward size={12} />
+              Skip
+            </button>
           </div>
 
           {/* Terminal Body */}
-          <div className="p-6 font-mono text-sm min-h-[400px] space-y-2">
+          <div className="p-6 font-mono text-sm min-h-[300px] sm:min-h-[400px] space-y-2">
             {TERMINAL_LINES.slice(0, visibleLines).map((line, i) => (
-              <div key={i} className="flex gap-3 animate-[fadeIn_0.3s_ease-out]">
+              <div key={i} className="flex gap-3 animate-slide-up">
                 <span className={`${line.prefixColor} w-4 text-center flex-shrink-0`}>
                   {line.prefix}
                 </span>
@@ -137,11 +159,10 @@ export default function ReportPage() {
               </div>
             ))}
 
-            {/* Progress Bar */}
             {visibleLines >= 5 && (
               <div className="mt-4 pt-2">
                 <div className="flex items-center gap-3">
-                  <span className="text-text-dim text-xs w-20">Progress</span>
+                  <span className="text-text-dim text-xs w-16">Progress</span>
                   <div className="flex-1 h-2 bg-elevated rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-purple to-blue rounded-full transition-all duration-100"
@@ -159,21 +180,19 @@ export default function ReportPage() {
       {phase === 'dashboard' && (
         <div
           className={`transition-all duration-700 ${
-            dashboardVisible
-              ? 'opacity-100 scale-100'
-              : 'opacity-0 scale-95'
+            dashboardVisible ? 'opacity-100' : 'opacity-0'
           }`}
         >
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold gradient-text mb-2">Diagnosis Report</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">Diagnosis Report</h1>
             <p className="text-text-secondary">
-              mcp-swap-tokens — Diagnosed on Mar 20, 2026
+              {toolName} &mdash; Diagnosed on Mar 20, 2026
             </p>
           </div>
 
           {/* Score Cards Row */}
-          <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger-children">
             {SCORE_CARDS.map((card) => (
               <div
                 key={card.label}
@@ -191,9 +210,9 @@ export default function ReportPage() {
           </div>
 
           {/* Two Column Layout */}
-          <div className="flex gap-6 mb-8">
+          <div className="flex flex-col lg:flex-row gap-6 mb-8">
             {/* Left: Detailed Metrics */}
-            <div className="w-[60%] bg-surface border border-border rounded-xl p-6">
+            <div className="flex-1 bg-surface border border-border rounded-xl p-6">
               <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-5">
                 Detailed Metrics
               </h2>
@@ -211,7 +230,7 @@ export default function ReportPage() {
             </div>
 
             {/* Right: Suggestions */}
-            <div className="w-[40%] bg-surface border border-border rounded-xl p-6">
+            <div className="lg:w-[40%] bg-surface border border-border rounded-xl p-6">
               <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-5">
                 Rewrite Suggestions
               </h2>
@@ -231,7 +250,10 @@ export default function ReportPage() {
                       </span>
                     </div>
                     <p className="text-sm text-text-secondary leading-relaxed">{s.text}</p>
-                    <button className="text-xs text-blue-bright hover:text-white transition-colors font-medium">
+                    <button
+                      onClick={() => toast(`Applied "${s.category}" suggestion`, 'success')}
+                      className="text-xs text-blue-bright hover:text-white transition-colors font-medium"
+                    >
                       Apply Suggestion
                     </button>
                   </div>
@@ -243,13 +265,13 @@ export default function ReportPage() {
           {/* Competitor Comparison */}
           <div className="bg-surface border border-border rounded-xl p-6 mb-8">
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-5">
-              Category Comparison (DeFi Swap Tools)
+              Category Comparison
             </h2>
             <div className="space-y-3">
-              {COMPETITORS.sort((a, b) => b.score - a.score).map((c) => (
+              {competitors.sort((a, b) => b.score - a.score).map((c) => (
                 <div key={c.name} className="flex items-center gap-4">
                   <span
-                    className={`text-sm font-mono w-40 truncate ${
+                    className={`text-sm font-mono w-36 sm:w-40 truncate ${
                       c.you ? 'text-blue-bright font-semibold' : 'text-text-secondary'
                     }`}
                   >
@@ -273,8 +295,11 @@ export default function ReportPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
-            <button className="btn-gradient px-8 py-3 rounded-xl text-sm font-semibold">
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => toast('Tool launched to Registry!', 'success')}
+              className="btn-gradient px-8 py-3 rounded-xl text-sm font-semibold"
+            >
               Launch to Registry
             </button>
             <button
@@ -284,13 +309,24 @@ export default function ReportPage() {
                 setProgress(0);
                 setDashboardVisible(false);
               }}
-              className="px-8 py-3 rounded-xl text-sm font-semibold border border-border-hi text-text-secondary hover:text-white hover:bg-elevated transition-all"
+              className="btn-secondary px-8 py-3 rounded-xl text-sm font-semibold"
             >
               Run Again
             </button>
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export default function ReportPage() {
+  return (
+    <div className="p-6 lg:p-8 max-w-6xl animate-fade-in">
+      <SubNav items={BUILDER_NAV} />
+      <Suspense fallback={<div className="text-text-dim">Loading...</div>}>
+        <ReportContent />
+      </Suspense>
     </div>
   );
 }
