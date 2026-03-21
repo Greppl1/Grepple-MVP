@@ -11,8 +11,8 @@ class ToolInput(BaseModel):
     name: str = Field(min_length=1, max_length=64)
     description: str = Field(min_length=1)
     input_schema: dict[str, Any] = Field(alias="inputSchema")
-    server_url: HttpUrl = Field(alias="serverUrl")
-    category: str = Field(min_length=1)
+    server_url: HttpUrl | None = Field(default=None, alias="serverUrl")
+    category: str = Field(default="uncategorized")
     run_llm_test: bool = Field(default=True, alias="runLlmTest")
 
     @field_validator("input_schema")
