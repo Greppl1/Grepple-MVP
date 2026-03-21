@@ -29,23 +29,32 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
         try:
             event = TestTaskEvent.model_validate(payload)
         except ValidationError as exc:
-            raise HTTPException(status_code=400, detail=f"Malformed reward event: {exc.errors()[0]['msg']}") from exc
+            raise HTTPException(
+                status_code=400,
+                detail=f"Malformed reward event: {exc.errors()[0]['msg']}",
+            ) from exc
         try:
             reward = process_reward_event(event)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         if settings.zian_webhook_url:
-            send_webhook(reward, settings.zian_webhook_url)
+            send_webhook(
+                reward, settings.zian_webhook_url, settings.zian_webhook_api_key
+            )
         return reward
 
     @app.post("/api/v1/external-eval")
-    async def external_eval(payload: ExternalEvaluationRequest) -> ExternalEvaluationResponse:
+    async def external_eval(
+        payload: ExternalEvaluationRequest,
+    ) -> ExternalEvaluationResponse:
         try:
             reward = build_reward_from_external_eval(payload)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         if settings.zian_webhook_url:
-            send_webhook(reward, settings.zian_webhook_url)
+            send_webhook(
+                reward, settings.zian_webhook_url, settings.zian_webhook_api_key
+            )
         return ExternalEvaluationResponse(report=payload.report, reward=reward)
 
     return app

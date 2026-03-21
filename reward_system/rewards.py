@@ -50,10 +50,15 @@ def process_reward_event(event: TestTaskEvent) -> RewardResult:
     )
 
 
-def send_webhook(reward: RewardResult, webhook_url: str) -> dict[str, object]:
+def send_webhook(
+    reward: RewardResult, webhook_url: str, api_key: str = ""
+) -> dict[str, object]:
     payload = reward.model_dump(mode="json", by_alias=True)
+    headers: dict[str, str] = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
     try:
-        response = httpx.post(webhook_url, json=payload, timeout=10.0)
+        response = httpx.post(webhook_url, json=payload, headers=headers, timeout=10.0)
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         return {

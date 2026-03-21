@@ -32,6 +32,29 @@ def test_send_webhook_success() -> None:
     mock_post.assert_called_once_with(
         "https://example.com/webhook",
         json=build_reward().model_dump(mode="json", by_alias=True),
+        headers={"Content-Type": "application/json"},
+        timeout=10.0,
+    )
+
+
+def test_send_webhook_with_api_key() -> None:
+    response = Mock(spec=httpx.Response)
+    response.status_code = 200
+    response.raise_for_status.return_value = None
+
+    with patch("reward_system.rewards.httpx.post", return_value=response) as mock_post:
+        result = send_webhook(
+            build_reward(), "https://example.com/webhook", api_key="secret-key"
+        )
+
+    assert result == {"success": True, "status_code": 200}
+    mock_post.assert_called_once_with(
+        "https://example.com/webhook",
+        json=build_reward().model_dump(mode="json", by_alias=True),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer secret-key",
+        },
         timeout=10.0,
     )
 
@@ -42,7 +65,9 @@ def test_send_webhook_failure() -> None:
 
     with patch(
         "reward_system.rewards.httpx.post",
-        side_effect=httpx.HTTPStatusError("server error", request=request, response=response),
+        side_effect=httpx.HTTPStatusError(
+            "server error", request=request, response=response
+        ),
     ):
         result = send_webhook(build_reward(), "https://example.com/webhook")
 
