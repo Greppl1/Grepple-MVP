@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Callable
 
+import httpx
 from pydantic import ValidationError
 
 from reward_system.external_eval import (
@@ -42,11 +43,32 @@ def _app_kwargs() -> dict[str, object]:
     return {}
 
 
+async def _post_zian_webhook(event: TestTaskEvent, webhook_url: str) -> None:
+    payload = {
+        "event": "test_task_completed",
+        "data": {
+            "task_id": event.data.task_id,
+            "agent_wallet": event.data.agent_wallet,
+            "tool_id": event.data.tool_id,
+            "result": event.data.result,
+            "scores": {
+                "call_success": event.data.scores.call_success,
+                "structured_report": event.data.scores.structured_report,
+            },
+            "timestamp": event.data.timestamp,
+        },
+    }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.post(webhook_url, json=payload)
+        response.raise_for_status()
+
+
 def create_app(db_path: str | Path | None = None) -> FastAPI:
     del db_path
     settings = get_settings()
     app = FastAPI(title=f"{settings.app_title} Reward System", **_app_kwargs())
     webhook_api_key = os.getenv("WEBHOOK_API_KEY", "")
+    zian_webhook_url = os.getenv("ZIAN_WEBHOOK_URL", "")
     processed_rewards: dict[str, RewardResult] = {}
 
     app.add_middleware(
@@ -93,10 +115,11 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         processed_rewards[event.data.task_id] = reward
-        if settings.zian_webhook_url:
-            send_webhook(
-                reward, settings.zian_webhook_url, settings.zian_webhook_api_key
-            )
+        if zian_webhook_url:
+            try:
+                await _post_zian_webhook(event, zian_webhook_url)
+            except httpx.HTTPError as exc:
+                logger.error("Zian webhook failed for task %s: %s", event.data.task_id, exc)
         return reward
 
     @app.post("/api/v1/external-eval")
