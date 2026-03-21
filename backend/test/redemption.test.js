@@ -30,8 +30,8 @@ function createMockVaultContract({ redemptionEnabled = true, revertOnRequest = f
       }
       const hash = ethers.keccak256(
         ethers.solidityPacked(
-          ['address', 'uint256', 'uint256'],
-          [req.agent, req.tokenAmount, req.usdcAmount]
+          ['address', 'uint256'],
+          [req.agent, req.tokenAmount]
         )
       );
       if (processedHashes.has(hash)) {
@@ -64,9 +64,14 @@ function createMockFetchFn(registryResponses) {
 }
 
 describe('Redemption', () => {
+  beforeEach(() => {
+    jest.spyOn(contractService, 'ensureProviderConnected').mockResolvedValue();
+  });
+
   afterEach(() => {
     contractService.resetContracts();
     vaultService.resetFetchFn();
+    jest.restoreAllMocks();
   });
 
   test('valid redemption processes successfully', async () => {
@@ -92,11 +97,10 @@ describe('Redemption', () => {
       agent_wallet: AGENT_WALLET,
       token_amount: '1000000000000000000',
       mint_ids: [0, 1],
-      usdc_amount: '1000000',
     });
 
     expect(result.tx_hash).toBe('0xmock_redeem_tx');
-    expect(result.usdc_received).toBe('1000000');
+    expect(result.token_amount).toBe('1000000000000000000');
     expect(mockVault.requestRedemption).toHaveBeenCalledTimes(1);
     expect(mockToken.getMintRecord).toHaveBeenCalledTimes(2);
   });
@@ -111,7 +115,6 @@ describe('Redemption', () => {
         agent_wallet: AGENT_WALLET,
         token_amount: '1000000000000000000',
         mint_ids: [0],
-        usdc_amount: '1000000',
       })
     ).rejects.toThrow('redemption_disabled');
   });
@@ -138,7 +141,6 @@ describe('Redemption', () => {
         agent_wallet: AGENT_WALLET,
         token_amount: '1000000000000000000',
         mint_ids: [0],
-        usdc_amount: '1000000',
       })
     ).rejects.toThrow('callRecordHash mismatch');
   });
@@ -165,7 +167,6 @@ describe('Redemption', () => {
         agent_wallet: AGENT_WALLET,
         token_amount: '1000000000000000000',
         mint_ids: [0],
-        usdc_amount: '1000000',
       })
     ).rejects.toThrow('Already processed');
   });
@@ -186,7 +187,6 @@ describe('Redemption', () => {
         agent_wallet: AGENT_WALLET,
         token_amount: '1000000000000000000',
         mint_ids: [0],
-        usdc_amount: '1000000',
       })
     ).rejects.toThrow('does not belong to agent');
   });

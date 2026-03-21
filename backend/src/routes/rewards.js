@@ -23,6 +23,11 @@ router.post('/mint', agentAuth, mintRateLimiter, async (req, res, next) => {
     if (!agent_wallet || !task_id) {
       return res.status(400).json({ error: 'agent_wallet/agentWallet and task_id/taskId are required' });
     }
+
+    // Verify authenticated wallet matches requested wallet (prevent minting for others)
+    if (req.agentWallet && req.agentWallet.toLowerCase() !== agent_wallet.toLowerCase()) {
+      return res.status(403).json({ error: 'Authenticated wallet does not match agent_wallet' });
+    }
     if (!tier) {
       return res.status(400).json({ error: 'tier is required' });
     }
@@ -67,10 +72,13 @@ router.post('/webhook', webhookAuth, webhookRateLimiter, async (req, res, next) 
   }
 });
 
+const statusRateLimiter = createRateLimiter({ maxRequests: 30, windowMs: 60_000 });
+
 /**
  * GET /api/rewards/status/:task_id
+ * Rate-limited to prevent enumeration
  */
-router.get('/status/:task_id', (req, res) => {
+router.get('/status/:task_id', statusRateLimiter, (req, res) => {
   const { task_id } = req.params;
   const status = mintService.getMintStatus(task_id);
   res.json(status);

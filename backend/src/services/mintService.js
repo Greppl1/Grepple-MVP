@@ -1,11 +1,10 @@
 const { ethers } = require('ethers');
+const fs = require('fs');
+const path = require('path');
 const contractService = require('./contractService');
 const config = require('../config');
 const txQueue = require('./txQueue');
 const logger = require('./logger');
-
-// In-memory idempotency map: task_id -> mint result
-const mintedTasks = new Map();
 
 // RewardTier enum matching the contract
 const RewardTier = {
@@ -13,6 +12,41 @@ const RewardTier = {
   PARTIAL: 1,
   NONE: 2,
 };
+
+// ───────────────────── File-backed idempotency ─────────────────────
+
+const IDEMPOTENCY_FILE = path.resolve(config.idempotencyFile || './data/minted_tasks.json');
+
+function loadMintedTasks() {
+  try {
+    if (fs.existsSync(IDEMPOTENCY_FILE)) {
+      const data = JSON.parse(fs.readFileSync(IDEMPOTENCY_FILE, 'utf-8'));
+      return new Map(Object.entries(data));
+    }
+  } catch (err) {
+    logger.warn('idempotency_load_failed', { error: err.message, file: IDEMPOTENCY_FILE });
+  }
+  return new Map();
+}
+
+async function saveMintedTasks() {
+  try {
+    const dir = path.dirname(IDEMPOTENCY_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const tmpFile = IDEMPOTENCY_FILE + '.tmp';
+    await fs.promises.writeFile(tmpFile, JSON.stringify(Object.fromEntries(mintedTasks), null, 2));
+    await fs.promises.rename(tmpFile, IDEMPOTENCY_FILE);
+  } catch (err) {
+    logger.warn('idempotency_save_failed', { error: err.message, file: IDEMPOTENCY_FILE });
+  }
+}
+
+const mintedTasks = loadMintedTasks();
+
+// In-flight mint locks to prevent TOCTOU race conditions
+const inFlightMints = new Set();
+
+// ───────────────────── Helpers ─────────────────────
 
 /**
  * Normalize camelCase/snake_case fields from Jerry's events
@@ -67,6 +101,9 @@ function calculateAmount(tier, baseReward) {
  * Validate wallet address format
  */
 function validateAddress(address) {
+  if (!address) {
+    throw new Error('Wallet address is required');
+  }
   try {
     return ethers.getAddress(address);
   } catch {
@@ -74,19 +111,30 @@ function validateAddress(address) {
   }
 }
 
+// ───────────────────── Core mint logic ─────────────────────
+
 /**
  * Mint reward tokens for a completed test task
  */
 async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
-  // Validate address
+  // Validate inputs
+  if (!task_id) throw new Error('task_id is required');
   const checksummedWallet = validateAddress(agent_wallet);
 
-  // Idempotency check (in-memory)
+  // Idempotency check (file-backed)
   if (mintedTasks.has(task_id)) {
     logger.info('mint_idempotent', { task_id });
     return mintedTasks.get(task_id);
   }
 
+  // Acquire in-flight lock to prevent TOCTOU race (concurrent requests with same task_id)
+  if (inFlightMints.has(task_id)) {
+    logger.info('mint_in_flight', { task_id });
+    return { task_id, mint_status: 'pending', mint_id: null, tx_hash: null, amount: '0', tier: null };
+  }
+  inFlightMints.add(task_id);
+
+  try {
   // Determine tier
   let rewardTier;
   if (typeof tier === 'string') {
@@ -99,6 +147,9 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
   } else {
     throw new Error('Tier is required');
   }
+
+  // Ensure RPC connection is healthy before contract calls
+  await contractService.ensureProviderConnected();
 
   // Check if agent is registered
   const registryContract = contractService.getRegistryContract();
@@ -118,6 +169,7 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
       tier: 'NONE',
     };
     mintedTasks.set(task_id, result);
+    await saveMintedTasks();
     return result;
   }
 
@@ -127,7 +179,7 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
 
   const tokenContract = contractService.getTokenContract();
 
-  // Check if task was already minted on-chain (in case our in-memory map was lost)
+  // Check if task was already minted on-chain (in case our file map was stale)
   try {
     const alreadyMinted = await tokenContract.isTaskMinted(taskHash);
     if (alreadyMinted) {
@@ -135,12 +187,13 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
       const result = {
         task_id,
         mint_status: 'minted',
-        mint_id: null, // can't recover mintId easily
+        mint_id: null,
         tx_hash: null,
         amount: amount.toString(),
         tier: Object.keys(RewardTier).find((k) => RewardTier[k] === rewardTier),
       };
       mintedTasks.set(task_id, result);
+      await saveMintedTasks();
       return result;
     }
   } catch {
@@ -164,7 +217,7 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
           data: log.data,
         });
         if (parsed && parsed.name === 'TokenMinted') {
-          mintId = Number(parsed.args.mintId);
+          mintId = parsed.args.mintId.toString();
           break;
         }
       } catch {
@@ -181,9 +234,9 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
 
   // Update agent stats on-chain (best effort — don't fail the mint if this fails)
   try {
-    const registryContract = contractService.getRegistryContract();
+    const registryContract2 = contractService.getRegistryContract();
     await txQueue.enqueue(() =>
-      registryContract.updateAgentStats(checksummedWallet, amount, 1)
+      registryContract2.updateAgentStats(checksummedWallet, amount, 1)
     );
     logger.info('agent_stats_updated', { agent: checksummedWallet, earned: amount.toString() });
   } catch (err) {
@@ -200,8 +253,13 @@ async function mintReward({ agent_wallet, task_id, call_record_id, tier }) {
   };
 
   mintedTasks.set(task_id, result);
+  await saveMintedTasks();
   logger.tx('mint_complete', { task_id, mint_id: mintId, tx_hash: receipt.hash });
   return result;
+
+  } finally {
+    inFlightMints.delete(task_id);
+  }
 }
 
 /**
@@ -228,6 +286,9 @@ async function processTestTaskCompleted(event) {
   const raw = event.data || event;
   const normalized = normalizeEventData(raw);
 
+  if (!normalized.agent_wallet) throw new Error('agent_wallet is required in event data');
+  if (!normalized.task_id) throw new Error('task_id is required in event data');
+
   const rewardTier = determineRewardTier(event);
   const tierName = Object.keys(RewardTier).find((k) => RewardTier[k] === rewardTier);
 
@@ -246,6 +307,9 @@ async function processRewardResult(rewardResult) {
   const taskId = rewardResult.taskId || rewardResult.task_id;
   const agentWallet = rewardResult.agentWallet || rewardResult.agent_wallet;
   const rewardTier = rewardResult.rewardTier || rewardResult.reward_tier;
+
+  if (!taskId) throw new Error('taskId/task_id is required');
+  if (!agentWallet) throw new Error('agentWallet/agent_wallet is required');
 
   // Map Jerry's tier names to ours
   const tierMap = { full: 'FULL', partial: 'PARTIAL', none: 'NONE' };

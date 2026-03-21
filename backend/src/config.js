@@ -1,12 +1,20 @@
 require('dotenv').config();
 
-// Validate critical env vars on startup
-if (!process.env.PRIVATE_KEY && process.env.NODE_ENV !== 'test') {
+// Hard-fail in production if critical secrets are missing
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.PRIVATE_KEY) {
+    throw new Error('[config] FATAL: PRIVATE_KEY must be set in production');
+  }
+  if (!process.env.WEBHOOK_API_KEY) {
+    throw new Error('[config] FATAL: WEBHOOK_API_KEY must be set in production');
+  }
+} else if (!process.env.PRIVATE_KEY && process.env.NODE_ENV !== 'test') {
   console.warn('[config] WARNING: PRIVATE_KEY not set — using hardhat default. Do NOT use in production.');
 }
 
 const config = {
   port: process.env.PORT || 3000,
+  nodeEnv: process.env.NODE_ENV || 'development',
   rpcUrl: process.env.RPC_URL || 'http://127.0.0.1:8545',
   privateKey: process.env.PRIVATE_KEY || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
   contracts: {
@@ -23,6 +31,9 @@ const config = {
   corsOrigins: process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',')
     : ['http://localhost:3000', 'http://localhost:3001'],
+
+  // Idempotency persistence
+  idempotencyFile: process.env.IDEMPOTENCY_FILE || './data/minted_tasks.json',
 };
 
 module.exports = config;

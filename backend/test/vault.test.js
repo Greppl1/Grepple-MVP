@@ -27,6 +27,11 @@ describe('Vault Service', () => {
   beforeEach(() => {
     mockVault = createMockVaultContract();
     contractService.setContracts({ vault: mockVault });
+    jest.spyOn(contractService, 'ensureProviderConnected').mockResolvedValue();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('deposit', () => {

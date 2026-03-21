@@ -94,7 +94,6 @@ describe("AAOTestToken", function () {
 
     it("getMintRecord returns correct data", async function () {
       const record = await token.getMintRecord(0);
-      expect(record.mintId).to.equal(0);
       expect(record.agent).to.equal(agent1.address);
       expect(record.amount).to.equal(REWARD);
       expect(record.taskHash).to.equal(taskHash);
@@ -135,6 +134,125 @@ describe("AAOTestToken", function () {
       await expect(
         token.connect(unauthorized).setRewardAmount(ethers.parseEther("2"))
       ).to.be.revertedWithCustomError(token, "OwnableUnauthorizedAccount");
+    });
+  });
+
+  describe("Pausable", function () {
+    const taskHash = ethers.keccak256(ethers.toUtf8Bytes("task_pause_001"));
+    const callRecordHash = ethers.keccak256(ethers.toUtf8Bytes("cr_pause_001"));
+
+    it("pause() blocks minting", async function () {
+      await token.pause();
+      await expect(
+        token.connect(minter).mint(agent1.address, REWARD, taskHash, callRecordHash, 0)
+      ).to.be.revertedWithCustomError(token, "EnforcedPause");
+    });
+
+    it("pause() blocks transfers", async function () {
+      // Mint first, then pause, then try transfer
+      await token.connect(minter).mint(agent1.address, REWARD, taskHash, callRecordHash, 0);
+      await token.pause();
+      await expect(
+        token.connect(agent1).transfer(agent2.address, REWARD)
+      ).to.be.revertedWithCustomError(token, "EnforcedPause");
+    });
+
+    it("unpause() resumes minting", async function () {
+      await token.pause();
+      await token.unpause();
+      await token.connect(minter).mint(agent1.address, REWARD, taskHash, callRecordHash, 0);
+      expect(await token.balanceOf(agent1.address)).to.equal(REWARD);
+    });
+
+    it("non-owner cannot pause/unpause", async function () {
+      await expect(
+        token.connect(unauthorized).pause()
+      ).to.be.revertedWithCustomError(token, "OwnableUnauthorizedAccount");
+      await expect(
+        token.connect(unauthorized).unpause()
+      ).to.be.revertedWithCustomError(token, "OwnableUnauthorizedAccount");
+    });
+  });
+
+  describe("Agent registry check", function () {
+    let registry;
+    const taskHash1 = ethers.keccak256(ethers.toUtf8Bytes("task_reg_001"));
+    const taskHash2 = ethers.keccak256(ethers.toUtf8Bytes("task_reg_002"));
+    const taskHash3 = ethers.keccak256(ethers.toUtf8Bytes("task_reg_003"));
+    const callRecordHash = ethers.keccak256(ethers.toUtf8Bytes("cr_reg_001"));
+    const agentId1 = ethers.keccak256(ethers.toUtf8Bytes("agent_reg_001"));
+
+    beforeEach(async function () {
+      const RegistryFactory = await ethers.getContractFactory("AgentRegistry");
+      registry = await RegistryFactory.deploy();
+    });
+
+    it("mint fails for unregistered agent when registry is set", async function () {
+      await token.setAgentRegistry(await registry.getAddress());
+      await expect(
+        token.connect(minter).mint(agent1.address, REWARD, taskHash1, callRecordHash, 0)
+      ).to.be.revertedWith("Agent not registered");
+    });
+
+    it("mint succeeds for registered agent", async function () {
+      await token.setAgentRegistry(await registry.getAddress());
+      await registry.connect(agent1).registerAgent(agentId1);
+      await token.connect(minter).mint(agent1.address, REWARD, taskHash1, callRecordHash, 0);
+      expect(await token.balanceOf(agent1.address)).to.equal(REWARD);
+    });
+
+    it("mint works without registry set (backward compat)", async function () {
+      // No setAgentRegistry call — registry remains address(0)
+      await token.connect(minter).mint(agent1.address, REWARD, taskHash1, callRecordHash, 0);
+      expect(await token.balanceOf(agent1.address)).to.equal(REWARD);
+    });
+  });
+
+  describe("Task hash uniqueness", function () {
+    const taskHash = ethers.keccak256(ethers.toUtf8Bytes("task_unique_001"));
+    const callRecordHash = ethers.keccak256(ethers.toUtf8Bytes("cr_unique_001"));
+
+    it("same taskHash reverts on second mint", async function () {
+      await token.connect(minter).mint(agent1.address, REWARD, taskHash, callRecordHash, 0);
+      await expect(
+        token.connect(minter).mint(agent2.address, REWARD, taskHash, callRecordHash, 0)
+      ).to.be.revertedWith("Task already minted");
+    });
+
+    it("isTaskMinted returns true after mint", async function () {
+      expect(await token.isTaskMinted(taskHash)).to.be.false;
+      await token.connect(minter).mint(agent1.address, REWARD, taskHash, callRecordHash, 0);
+      expect(await token.isTaskMinted(taskHash)).to.be.true;
+    });
+  });
+
+  describe("Paginated queries", function () {
+    const callRecordHash = ethers.keccak256(ethers.toUtf8Bytes("cr_page_001"));
+
+    beforeEach(async function () {
+      // Mint 5 tokens to agent1
+      for (let i = 0; i < 5; i++) {
+        const taskHash = ethers.keccak256(ethers.toUtf8Bytes(`task_page_${i}`));
+        await token.connect(minter).mint(agent1.address, REWARD, taskHash, callRecordHash, 0);
+      }
+    });
+
+    it("getMintsByAgentPaginated returns correct slice", async function () {
+      const ids = await token.getMintsByAgentPaginated(agent1.address, 1, 3);
+      expect(ids.length).to.equal(3);
+      expect(ids[0]).to.equal(1);
+      expect(ids[1]).to.equal(2);
+      expect(ids[2]).to.equal(3);
+    });
+
+    it("getAgentMintCount returns correct count", async function () {
+      expect(await token.getAgentMintCount(agent1.address)).to.equal(5);
+      expect(await token.getAgentMintCount(agent2.address)).to.equal(0);
+    });
+
+    it("offset beyond length returns empty", async function () {
+      const ids = await token.getMintsByAgentPaginated(agent1.address, 100, 10);
+      expect(ids.length).to.equal(0);
     });
   });
 });

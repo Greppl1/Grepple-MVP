@@ -36,6 +36,7 @@ function validateAddress(address) {
  */
 async function deposit({ builder_wallet, usdc_amount }) {
   const checksummed = validateAddress(builder_wallet);
+  await contractService.ensureProviderConnected();
   const vault = contractService.getVaultContract();
 
   logger.tx('deposit_start', { builder: checksummed, amount: usdc_amount });
@@ -73,6 +74,7 @@ async function deposit({ builder_wallet, usdc_amount }) {
  */
 async function getBuilderBalance(wallet) {
   const checksummed = validateAddress(wallet);
+  await contractService.ensureProviderConnected();
   const vault = contractService.getVaultContract();
   const balance = await vault.getBuilderBalance(checksummed);
 
@@ -108,8 +110,9 @@ async function fetchCallRecord(callRecordHash) {
  * NOTE: Redemption is a placeholder feature — disabled by default.
  * In production, agents would call the contract directly from their wallet.
  */
-async function redeem({ agent_wallet, token_amount, mint_ids, usdc_amount }) {
+async function redeem({ agent_wallet, token_amount, mint_ids }) {
   const checksummed = validateAddress(agent_wallet);
+  await contractService.ensureProviderConnected();
   const vault = contractService.getVaultContract();
   const token = contractService.getTokenContract();
 
@@ -149,15 +152,14 @@ async function redeem({ agent_wallet, token_amount, mint_ids, usdc_amount }) {
       agent: checksummed,
       tokenAmount: token_amount,
       mintIds: mint_ids,
-      usdcAmount: usdc_amount,
     })
   );
 
-  logger.tx('redeem_complete', { agent: checksummed, tx_hash: receipt.hash, usdc: usdc_amount });
+  logger.tx('redeem_complete', { agent: checksummed, tx_hash: receipt.hash, token_amount });
 
   return {
     tx_hash: receipt.hash,
-    usdc_received: usdc_amount,
+    token_amount,
   };
 }
 

@@ -475,13 +475,52 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] `config.js`：启动时警告未设置 `PRIVATE_KEY`
 - [x] 合约编译通过，53 tests passing；后端 40 tests passing
 
+**Step 19: Production Hardening (2026-03-21)** ✅
+- [x] **AAOVault 防重放修复**：从 timestamp-based hash 改为 per-mintId `redeemedMintIds` mapping
+- [x] **AAOVault 汇率验证**：新增 `exchangeRate` 变量，USDC 金额由链上计算，不再信任调用者
+- [x] **AAOVault mintIds 限制**：`MAX_MINT_IDS = 50`，防 DoS
+- [x] **AAOVault 会计追踪**：新增 `totalDeposited`/`totalRedeemed`，`getAvailableBalance()` 查询
+- [x] **AAOTestToken AgentRegistry 检查**：mint 时链上验证 agent 注册状态（`setAgentRegistry` 设置后生效）
+- [x] **AAOTestToken Pause 冻结转账**：`_update` override 使 pause 冻结所有 token 移动
+- [x] **AAOTestToken 分页查询**：`getMintsByAgentPaginated(agent, offset, limit)` 防 OOG
+- [x] **AAOTestToken struct 优化**：移除冗余 `mintId` 字段，每次 mint 省 ~20,000 gas
+- [x] **AgentRegistry reactivateAgent**：新增重新激活功能
+- [x] **config.js 生产 hard-fail**：`PRIVATE_KEY` 和 `WEBHOOK_API_KEY` 未设置时 throw（非 warn）
+- [x] **webhookAuth 生产强制**：生产环境无 key 则拒绝所有请求
+- [x] **agentAuth body hash**：签名消息包含 `keccak256(body)`，防止 body 篡改重放
+- [x] **rateLimiter 双层限流**：IP-based (primary) + wallet-based (secondary)，防 wallet 轮换绕过
+- [x] **rateLimiter OOM 保护**：`maxStoreSize` 限制 + 紧急清理
+- [x] **txQueue 重试逻辑**：3 次重试 + exponential backoff，仅对 transient 错误重试
+- [x] **txQueue timer 清理**：`finally { clearTimeout }` 防止泄漏
+- [x] **mintService 文件持久化**：idempotency Map 写入 `data/minted_tasks.json`，重启不丢失
+- [x] **mintService 输入验证**：`processRewardResult`/`processTestTaskCompleted` 检查必填字段
+- [x] **contractService provider 重连**：30s 健康检查 + 自动重置缓存实例
+- [x] **app.js 安全头**：X-Content-Type-Options, X-Frame-Options, HSTS, CSP（无需 helmet 依赖）
+- [x] **app.js body 大小限制**：`express.json({ limit: '100kb' })`
+- [x] **app.js request correlation ID**：`crypto.randomUUID()` + `x-request-id` header
+- [x] **app.js 增强 health check**：验证 RPC 连接 + 返回 block number + 503 on degraded
+- [x] **app.js isSafeError 精确匹配**：改为 exact message match，不再 `.includes()` 误匹配
+- [x] **server.js graceful shutdown**：SIGTERM/SIGINT 处理 + 10s 强制退出 + 全局错误捕获
+- [x] **vault.js deposit 认证**：加 `webhookAuth` 中间件
+- [x] **vault.js mint_ids 大小限制**：`MAX_MINT_IDS = 50`
+- [x] **所有 GET 端点加限流**：30 req/min 防枚举
+- [x] **deploy.js 地址持久化**：输出 JSON 到 `deployments/` 目录
+- [x] **deploy.js 自动配置**：部署后自动 link AgentRegistry + 授权 deployer 为 minter
+- [x] **contracts/.env 从 git 移除**：`git rm --cached`，私钥不再被跟踪
+- [x] **.gitignore 加固**：`.claude/settings.local.json`、`*.pem`、`*.key`、`backend/data/`、`contracts/deployments/`
+- [x] **OpenZeppelin 版本精确锁定**：`^5.6.1` → `5.6.1`
+- [x] **.env.example 文件**：`contracts/.env.example` + `backend/.env.example`
+- [x] 合约 53 tests passing，后端 40 tests passing，前端 12 pages 0 errors
+
 **已知限制（非当前优先级）：**
-- Redeem 功能仅为占位接口，默认关闭，用户不涉及真实兑换。真钱是未来的事情
+- Redeem 功能仅为占位接口，默认关闭，用户不涉及真实兑换
 - MockUSDC 使用 18 decimals（真实 USDC 为 6），迁移 mainnet 时需适配
-- `builderDeposits` 只记录累计充值，不反映消耗后余额
-- `processedRedemptions` hash 包含 `block.timestamp`，未来需改为基于 mintId 的防重放
+- `builderDeposits` 记录累计充值（已重命名为 `getBuilderDeposited`），新增 `getAvailableBalance()`
+- Owner 仍为单 EOA，未来需 Timelock + Multisig
 - 缺少 off-chain indexer（The Graph / Ponder），统计数据暂为 mock
-- 幂等性 Map 仍为内存级，生产环境需 Redis/DB 持久化
+- 幂等性已从内存 Map 升级为 JSON 文件持久化，生产环境建议 Redis/DB
+- 无 CI/CD pipeline（需 GitHub Actions）
+- 合约不可升级（无 proxy pattern）
 
 **Step 15: Supabase 数据对接** ✅
 - [x] 安装 `@supabase/supabase-js`

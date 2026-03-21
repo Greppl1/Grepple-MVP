@@ -80,6 +80,11 @@ describe('Agent Service', () => {
     mockRegistry = createMockRegistryContract();
     mockToken = createMockTokenContract();
     contractService.setContracts({ registry: mockRegistry, token: mockToken });
+    jest.spyOn(contractService, 'ensureProviderConnected').mockResolvedValue();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('registerAgent', () => {

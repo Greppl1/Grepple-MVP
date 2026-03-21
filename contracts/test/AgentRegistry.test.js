@@ -121,4 +121,82 @@ describe("AgentRegistry", function () {
       ).to.be.revertedWithCustomError(registry, "OwnableUnauthorizedAccount");
     });
   });
+
+  describe("Reactivation", function () {
+    beforeEach(async function () {
+      await registry.connect(agent1).registerAgent(agentId1);
+    });
+
+    it("owner can reactivate deactivated agent", async function () {
+      await registry.deactivateAgent(agent1.address);
+      expect(await registry.isRegisteredAgent(agent1.address)).to.be.false;
+      await registry.reactivateAgent(agent1.address);
+      expect(await registry.isRegisteredAgent(agent1.address)).to.be.true;
+    });
+
+    it("reactivation emits AgentReactivated event", async function () {
+      await registry.deactivateAgent(agent1.address);
+      await expect(registry.reactivateAgent(agent1.address))
+        .to.emit(registry, "AgentReactivated")
+        .withArgs(agent1.address);
+    });
+
+    it("cannot reactivate already active agent", async function () {
+      await expect(
+        registry.reactivateAgent(agent1.address)
+      ).to.be.revertedWith("Agent already active");
+    });
+
+    it("cannot reactivate unregistered agent", async function () {
+      await expect(
+        registry.reactivateAgent(unauthorized.address)
+      ).to.be.revertedWith("Agent not found");
+    });
+  });
+
+  describe("Operator registration", function () {
+    const agentId3 = ethers.keccak256(ethers.toUtf8Bytes("agent_003"));
+
+    it("owner can register agent via registerAgentFor", async function () {
+      await registry.registerAgentFor(agent1.address, agentId1);
+      expect(await registry.isRegisteredAgent(agent1.address)).to.be.true;
+      const profile = await registry.getAgentProfile(agent1.address);
+      expect(profile.wallet).to.equal(agent1.address);
+    });
+
+    it("registerAgentFor sets operator to msg.sender (not wallet)", async function () {
+      await registry.registerAgentFor(agent1.address, agentId1);
+      const profile = await registry.getAgentProfile(agent1.address);
+      expect(profile.operator).to.equal(owner.address);
+    });
+
+    it("registerAgentFor rejects zero address", async function () {
+      await expect(
+        registry.registerAgentFor(ethers.ZeroAddress, agentId1)
+      ).to.be.revertedWith("Zero address");
+    });
+
+    it("registerAgentFor rejects duplicate wallet", async function () {
+      await registry.registerAgentFor(agent1.address, agentId1);
+      await expect(
+        registry.registerAgentFor(agent1.address, agentId2)
+      ).to.be.revertedWith("Already registered");
+    });
+  });
+
+  describe("Pausable", function () {
+    it("registration blocked when paused", async function () {
+      await registry.pause();
+      await expect(
+        registry.connect(agent1).registerAgent(agentId1)
+      ).to.be.revertedWithCustomError(registry, "EnforcedPause");
+    });
+
+    it("registration works after unpause", async function () {
+      await registry.pause();
+      await registry.unpause();
+      await registry.connect(agent1).registerAgent(agentId1);
+      expect(await registry.isRegisteredAgent(agent1.address)).to.be.true;
+    });
+  });
 });
