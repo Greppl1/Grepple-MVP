@@ -85,17 +85,78 @@ export function clusterToCategory(cluster: string | null): string {
 }
 
 /**
+ * Estimate scores from tool metadata when no benchmark data exists.
+ * Uses has_schema, parsed_schema, and tool_description to derive scores.
+ */
+function estimateScoresFromTool(tool: SupabaseTool) {
+  // Schema health: based on whether tool has a schema + schema quality
+  let schemaHealth = 0;
+  if (tool.has_schema) {
+    schemaHealth = 40; // base for having a schema
+    if (tool.parsed_schema) {
+      try {
+        const schema = JSON.parse(tool.parsed_schema);
+        const props = schema.properties ?? {};
+        const fieldCount = Object.keys(props).length;
+        // More fields with descriptions = better
+        let described = 0;
+        for (const key of Object.keys(props)) {
+          if (props[key]?.description) described++;
+        }
+        const coverage = fieldCount > 0 ? described / fieldCount : 0;
+        schemaHealth += coverage * 40; // up to 40 more for full coverage
+        if (schema.required?.length > 0) schemaHealth += 10; // required fields defined
+        if (fieldCount > 0) schemaHealth += 10; // has at least some fields
+      } catch { /* keep base */ }
+    }
+  }
+
+  // Discoverability: based on description quality
+  let discoverability = 0;
+  const desc = tool.tool_description ?? '';
+  if (desc.length > 0) {
+    discoverability = 30; // base for having a description
+    if (desc.length > 50) discoverability += 15;
+    if (desc.length > 100) discoverability += 10;
+    // Check for action verbs
+    if (/^(get|create|delete|update|list|search|fetch|send|add|remove|set|run|execute|query)/i.test(desc)) {
+      discoverability += 15;
+    }
+    // Check for use-case hints
+    if (/use this|when you|allows you|enables/i.test(desc)) {
+      discoverability += 15;
+    }
+    // Cap
+    discoverability = Math.min(100, discoverability);
+  }
+
+  // Success rate: unknown without benchmark → use a neutral placeholder
+  // We use 0 to indicate "not tested" rather than faking a number
+  const successRate = 0;
+
+  // Composite: only weight schema + discoverability when no success data
+  const composite = Math.round(
+    schemaHealth * 0.5 +
+    discoverability * 0.5
+  );
+
+  return {
+    schemaHealth: Math.round(schemaHealth),
+    discoverability: Math.round(discoverability),
+    successRate,
+    composite,
+  };
+}
+
+/**
  * Compute quality scores from benchmark data.
  * Returns 0-100 scores for each dimension.
  */
-function computeScores(bench: SupabaseBenchmark | null) {
+function computeScores(bench: SupabaseBenchmark | null, tool?: SupabaseTool) {
   if (!bench) {
-    return {
-      schemaHealth: 0,
-      discoverability: 0,
-      successRate: 0,
-      composite: 0,
-    };
+    // No benchmark data — estimate from tool metadata
+    if (tool) return estimateScoresFromTool(tool);
+    return { schemaHealth: 0, discoverability: 0, successRate: 0, composite: 0 };
   }
 
   // Schema health: from schema_metrics JSON
@@ -127,12 +188,13 @@ function computeScores(bench: SupabaseBenchmark | null) {
   }
 
   // Success rate: ratio of successful invocations out of all attempts
-  // Tools with 0 invocations and 0 errors get 0 (not 100)
   const invokeRate = bench.invoke_rate ?? 0;
   const errorRate = bench.error_rate ?? 0;
+  const mentionRate = bench.mention_rate ?? 0;
+  // Include mention_rate: agent recognized the tool even if it didn't invoke
   const successRate = (invokeRate + errorRate) > 0
     ? Math.round(invokeRate / (invokeRate + errorRate) * 100)
-    : 0;
+    : mentionRate > 0 ? Math.round(mentionRate * 0.5) : 0;
 
   // Composite: weighted average
   const composite = Math.round(
@@ -156,7 +218,7 @@ export function mapToFrontendTool(
   tool: SupabaseTool,
   benchmark: SupabaseBenchmark | null,
 ): Tool {
-  const scores = computeScores(benchmark);
+  const scores = computeScores(benchmark, tool);
 
   return {
     id: String(tool.id),
