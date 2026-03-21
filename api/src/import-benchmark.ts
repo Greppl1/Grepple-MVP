@@ -7,12 +7,13 @@
  *   npx tsx src/import-benchmark.ts --file my_benchmark.json  # custom file
  */
 
-import { initDb, importToolsJson, importBenchmarkJson, getDb } from "./db";
+import { initDb, importToolsJson, importBenchmarkJson } from "./db";
 import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 dotenv.config({ path: path.join(__dirname, "..", "..", "contracts", ".env") });
 
 const args = process.argv.slice(2);
@@ -22,11 +23,11 @@ const filename = fileIdx !== -1 ? args[fileIdx + 1] : "cross_model_benchmark_tri
 
 async function main() {
   // 1. Init DB + import tools if needed
-  initDb();
-  importToolsJson();
+  await initDb();
+  await importToolsJson();
 
-  // 2. Import benchmark into SQLite
-  importBenchmarkJson(filename);
+  // 2. Import benchmark into PostgreSQL
+  await importBenchmarkJson(filename);
 
   if (!onChain) {
     console.log("\nDone (DB only). Use --on-chain to also write to contract.");
