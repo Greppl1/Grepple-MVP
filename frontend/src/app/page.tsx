@@ -73,30 +73,50 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6">
-            <span className="animate-slide-up inline-block">Agents can&apos;t use what</span>
+            <span className="animate-slide-up inline-block">Find the right tool.</span>
             <br />
             <span className="animate-slide-up inline-block gradient-text" style={{ animationDelay: '0.15s' }}>
-              they can&apos;t understand
+              Try it instantly.
             </span>
           </h1>
 
           <p className="text-lg text-text-secondary max-w-xl mx-auto leading-relaxed mb-10 animate-fade-in" style={{ animationDelay: '0.35s' }}>
-            We diagnose your MCP tool, fix what blocks agents, and list it
-            where they&apos;ll find it &mdash; and pay for it.
+            Search 2,000+ AI tools, test them with one click,
+            and get the integration code to add them to your project.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+          {/* Intent search */}
+          <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-6 animate-fade-in" style={{ animationDelay: '0.45s' }}>
+            <div className="relative">
+              <IconSearch size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim pointer-events-none" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder='What do you need? e.g. "swap tokens"'
+                className="w-full bg-surface/80 backdrop-blur-sm border border-border rounded-xl pl-12 pr-32 py-4 text-text placeholder:text-text-dim text-base focus:border-blue focus:outline-none focus:ring-0 transition-colors"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 btn-gradient px-5 py-2.5 rounded-lg text-sm font-medium"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in" style={{ animationDelay: '0.6s' }}>
             <Link
               href="/builder/submit"
-              className="btn-gradient btn-glow px-8 py-4 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+              className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
             >
-              Diagnose My Tool — Free <IconArrowRight size={14} />
+              Submit Your Tool <IconArrowRight size={14} />
             </Link>
             <Link
               href="/registry"
-              className="btn-secondary px-8 py-4 rounded-xl text-sm font-semibold"
+              className="btn-ghost px-6 py-3 rounded-xl text-sm font-semibold"
             >
-              Browse Registry
+              Browse All Tools
             </Link>
           </div>
         </div>
