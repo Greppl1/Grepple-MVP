@@ -30,6 +30,7 @@ interface NavItem {
 const DISCOVER_ITEMS: NavItem[] = [
   { href: '/registry', label: 'Registry', icon: IconRegistry },
   { href: '/intent', label: 'Try Tools', icon: IconSparkles },
+  { href: '/settings', label: 'Settings', icon: IconSettings },
 ];
 
 const BUILD_ITEMS: NavItem[] = [
@@ -41,7 +42,6 @@ const BUILD_ITEMS: NavItem[] = [
 const AGENT_ITEMS: NavItem[] = [
   { href: '/agent/profile', label: 'Dashboard', icon: IconBarChart },
   { href: '/agent/redeem', label: 'Rewards', icon: IconRewards },
-  { href: '/settings', label: 'Settings', icon: IconSettings },
 ];
 
 function Logo({ collapsed }: { collapsed: boolean }) {

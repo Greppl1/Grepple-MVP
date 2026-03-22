@@ -218,7 +218,7 @@ function ExecutionPanel({
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
             <Link
-              href={`/builder/report/demo?tool=${encodeURIComponent(tool.name)}`}
+              href={`/builder/report?name=${encodeURIComponent(tool.name)}`}
               className="btn-ghost text-sm px-4 py-2 inline-flex items-center gap-2"
             >
               View Full Report

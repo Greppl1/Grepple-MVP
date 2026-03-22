@@ -7,7 +7,7 @@ import { IconRegistry, IconPlus, IconBarChart, IconSparkles, IconSearch } from '
 const items = [
   { href: '/registry', label: 'Registry', icon: IconRegistry },
   { href: '/intent', label: 'Try', icon: IconSparkles },
-  { href: '/builder/submit', label: 'Submit', icon: IconPlus },
+  { href: '/builder/submit', label: 'Diagnose', icon: IconPlus },
   { href: '/agent/profile', label: 'Agent', icon: IconBarChart },
 ];
 

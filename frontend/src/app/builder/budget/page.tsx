@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useToast } from '@/components/Toast';
 import { useAuth } from '@/providers/AuthProvider';
@@ -64,6 +65,18 @@ export default function BudgetPage() {
 
   const truncateHash = (hash: string) =>
     `${hash.slice(0, 6)}...${hash.slice(-4)}`;
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-6 lg:p-8 max-w-3xl mx-auto page-enter text-center py-20">
+        <h1 className="text-2xl font-bold text-text mb-3">Budget & Billing</h1>
+        <p className="text-text-dim mb-6">Sign in to manage your testing budget.</p>
+        <Link href="/agent/register" className="btn-gradient px-6 py-3 rounded-lg text-sm font-semibold">
+          Sign In
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto page-enter">

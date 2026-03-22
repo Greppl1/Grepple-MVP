@@ -47,7 +47,7 @@ export default function LandingPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) router.push(`/registry?q=${encodeURIComponent(query.trim())}`);
+    if (query.trim()) router.push(`/intent?q=${encodeURIComponent(query.trim())}`);
   };
 
   return (
