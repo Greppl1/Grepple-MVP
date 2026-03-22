@@ -72,16 +72,14 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6">
-            <span className="animate-slide-up inline-block">Build tools that work.</span>
-            <br />
-            <span className="animate-slide-up inline-block gradient-text" style={{ animationDelay: '0.15s' }}>
-              Get paid when they do.
-            </span>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6">
+            <span className="animate-slide-up inline-block">Build.</span>{' '}
+            <span className="animate-slide-up inline-block gradient-text" style={{ animationDelay: '0.1s' }}>Find.</span>{' '}
+            <span className="animate-slide-up inline-block" style={{ animationDelay: '0.2s' }}>Earn.</span>
           </h1>
 
-          <p className="text-lg text-text-secondary max-w-xl mx-auto leading-relaxed mb-10 animate-fade-in" style={{ animationDelay: '0.35s' }}>
-            Submit your AI tool for a free quality diagnosis. Pass the test, get listed in the registry, and earn tokens every time an agent uses it.
+          <p className="text-lg md:text-xl text-text-secondary max-w-lg mx-auto leading-relaxed mb-10 animate-fade-in" style={{ animationDelay: '0.35s' }}>
+            Submit AI tools, get quality-tested by real agents, earn tokens from every call.
           </p>
 
           {/* Intent search */}
