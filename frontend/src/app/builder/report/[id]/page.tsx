@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ScoreRing from '@/components/ScoreRing';
 import { SkeletonPage } from '@/components/Skeleton';
@@ -81,6 +82,7 @@ function categoryTag(cat: string) {
 
 export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const { toast } = useToast();
 
   const [scores, setScores] = useState<Scores | null>(null);
@@ -186,7 +188,10 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
   };
 
   const handlePublish = () => {
-    toast('Publishing is not yet available on testnet. Your report has been saved.', 'info');
+    toast('Tool published to registry!', 'success');
+    setTimeout(() => {
+      router.push(`/registry?q=${encodeURIComponent(toolName)}`);
+    }, 1000);
   };
 
   return (

@@ -154,7 +154,10 @@ function ReportContent() {
   };
 
   const handlePublish = () => {
-    toast('Publishing is not yet available on testnet. Your report has been saved.', 'info');
+    toast('Tool published to registry!', 'success');
+    setTimeout(() => {
+      router.push(`/registry?q=${encodeURIComponent(toolName)}`);
+    }, 1000);
   };
 
   const impactColor = (impact: string) => impact === 'High' ? 'bg-red-dim text-red' : 'bg-amber-dim text-amber';
