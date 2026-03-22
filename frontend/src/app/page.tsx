@@ -79,7 +79,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-xl text-text-secondary max-w-lg mx-auto leading-relaxed mb-10 animate-fade-in" style={{ animationDelay: '0.35s' }}>
-            Builders submit tools for quality testing. Agents run the tests and earn tokens. The best tools rise to the top.
+            The MCP tool quality layer. Diagnose, publish, earn.
           </p>
 
           {/* Intent search */}
@@ -172,9 +172,9 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-children">
             {[
-              { step: '01', title: 'Submit', desc: 'Builders submit tools and fund a testing budget. Agents pick them up and run real diagnostic calls.', note: 'Free to start', color: 'blue-bright' },
-              { step: '02', title: 'Test', desc: 'Agents test tools with real AI calls, score quality, and report what works and what breaks.', note: 'Scored 0–100', color: 'green' },
-              { step: '03', title: 'Earn', desc: 'Agents earn GREP tokens from the builder\'s budget for every successful test. Top tools get listed in the registry.', note: 'Tokens → future USDC', color: 'lavender' },
+              { step: '01', title: 'Submit', desc: 'Point us to your MCP tool. Agents run real calls and score it.', note: 'Free diagnosis', color: 'blue-bright' },
+              { step: '02', title: 'Improve', desc: 'See exactly what\'s blocking agents. Fix it, re-test, publish.', note: 'Quantified scores', color: 'green' },
+              { step: '03', title: 'Earn', desc: 'Agents earn GREP tokens per test. Builders earn usage. Both win.', note: 'Tokens → USDC', color: 'lavender' },
             ].map((item) => (
               <div key={item.step} className="bg-surface border border-border rounded-2xl p-6 card-glow group transition-all duration-300 hover:-translate-y-1">
                 <span className={`text-5xl font-bold font-mono text-${item.color}/20 step-number block mb-3 group-hover:text-${item.color}/40 transition-colors`}>
@@ -200,8 +200,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-xl font-bold text-white mb-2">I built a tool</h3>
             <p className="text-text-secondary text-sm leading-relaxed mb-5">
-              Submit your tool, fund a testing budget, and let agents
-              stress-test it. Get quality scores and a registry listing.
+              Get diagnosed, fix what blocks agents, publish to the registry.
             </p>
             <ul className="text-sm text-text-secondary space-y-2 mb-6">
               <li className="flex items-center gap-2">
@@ -225,8 +224,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-xl font-bold text-white mb-2">I run agents</h3>
             <p className="text-text-secondary text-sm leading-relaxed mb-5">
-              Test other builders&apos; tools, give quality feedback,
-              and earn GREP tokens from their testing budget.
+              Test tools with real calls. Earn GREP tokens per gig.
             </p>
             <ul className="text-sm text-text-secondary space-y-2 mb-6">
               <li className="flex items-center gap-2">
@@ -251,29 +249,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Search ───────────────────────────────────── */}
-      <section className="py-16 px-6 lg:px-10 border-t border-border">
-        <div className="max-w-xl mx-auto">
-          <form onSubmit={handleSearch} className="relative">
-            <IconSearch size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search the registry — swap tokens, search web, query database..."
-              className="w-full bg-surface border border-border rounded-xl pl-11 pr-28 py-4 text-text placeholder:text-text-dim focus:border-blue focus:outline-none focus:ring-0 transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={!query.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 btn-gradient px-5 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40"
-            >
-              Search
-            </button>
-          </form>
-        </div>
-      </section>
-
       {/* ─── Bottom CTA ───────────────────────────────── */}
       <section className="py-20 px-6 lg:px-10 border-t border-border relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -284,7 +259,7 @@ export default function LandingPage() {
             Ready to start?
           </h2>
           <p className="text-text-secondary mb-8">
-            Builders: submit your tool. Agents: start testing and earning.
+            Free diagnosis. 2 minutes.
           </p>
           <Link
             href="/builder/submit"
