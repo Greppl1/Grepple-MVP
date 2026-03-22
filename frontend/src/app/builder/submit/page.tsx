@@ -9,10 +9,10 @@ import { IconCheck, IconX } from '@/components/Icons';
 const CATEGORIES = ['Search', 'DeFi', 'DevTools', 'Database', 'AI', 'Data', 'Communication', 'Cloud', 'Productivity'];
 
 const BUDGET_OPTIONS = [
-  { value: '0.10', label: '$0.10' },
-  { value: '0.25', label: '$0.25' },
-  { value: '0.50', label: '$0.50' },
-  { value: '1.00', label: '$1.00' },
+  { value: '1', label: '$1' },
+  { value: '5', label: '$5' },
+  { value: '10', label: '$10' },
+  { value: '20', label: '$20' },
 ];
 
 const PLACEHOLDER_SCHEMA = `{
@@ -43,7 +43,7 @@ const EMPTY_FORM: FormData = {
   category: '',
   serverUrl: '',
   inputSchema: '',
-  testBudget: '0.25',
+  testBudget: '5',
 };
 
 function validate(form: FormData): Record<string, string> {
