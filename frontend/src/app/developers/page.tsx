@@ -110,117 +110,177 @@ export default function DevelopersPage() {
         </p>
       </div>
 
-      {/* ── Claude Integration Demo ── */}
-      <div className="bg-surface border border-border rounded-xl overflow-hidden mb-10">
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#D4A574]/15 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#D4A574" opacity="0.2"/><circle cx="9.5" cy="9" r="1" fill="#D4A574"/><circle cx="14.5" cy="9" r="1" fill="#D4A574"/><path d="M8.5 14c.83 1.45 2.08 2.5 3.5 2.5s2.67-1.05 3.5-2.5" stroke="#D4A574" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-text">Claude Desktop</p>
-              <p className="text-xs text-text-dim">with Grepple MCP tools connected</p>
-            </div>
+      {/* ── Claude-style Demo: Two Flows ── */}
+      <div className="mb-12 space-y-6">
+
+        {/* Flow 1: Builder diagnoses tool */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-blue-bright">Flow 1 — Builder diagnoses a tool</span>
           </div>
-          <span className="text-xs text-green font-medium flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
-            Connected
-          </span>
-        </div>
-
-        <div className="px-6 py-5 space-y-5 bg-bg/50">
-          {/* User message */}
-          <div className="flex justify-end">
-            <div className="bg-blue/10 border border-blue/20 rounded-2xl rounded-br-md px-4 py-3 max-w-sm">
-              <p className="text-sm text-text">Search for the latest AI news and summarize the top 3 results</p>
+          <div className="rounded-2xl overflow-hidden border border-[#d5d0c8] shadow-lg">
+            {/* Claude-style header */}
+            <div className="bg-[#F5F0E8] px-5 py-3 flex items-center gap-3 border-b border-[#e5dfd6]">
+              <div className="flex gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+                <span className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+                <span className="w-3 h-3 rounded-full bg-[#28CA41]" />
+              </div>
+              <span className="text-xs text-[#8B7E6A] font-medium ml-2">Claude — with Grepple MCP</span>
             </div>
-          </div>
 
-          {/* Claude response */}
-          <div className="flex gap-3">
-            <div className="w-7 h-7 rounded-full bg-[#D4A574]/15 flex items-center justify-center shrink-0 mt-0.5">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#D4A574"><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
-            </div>
-            <div className="space-y-3 flex-1 min-w-0">
-              <p className="text-sm text-text-secondary">I&apos;ll search for the latest AI news using the Grepple registry&apos;s web search tool.</p>
-
-              {/* Tool call */}
-              <div className="bg-surface border border-border rounded-xl overflow-hidden">
-                <div className="px-3 py-2 bg-elevated/50 border-b border-border flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-green shrink-0"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span className="text-xs font-mono text-green">search_tools</span>
-                  <span className="text-xs text-text-dim ml-auto hidden sm:inline">via Grepple Registry</span>
+            <div className="bg-[#FAF8F5] px-6 py-6 space-y-5">
+              {/* User */}
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-[#5436DA] flex items-center justify-center shrink-0 text-white text-xs font-bold">Z</div>
+                <div>
+                  <p className="text-[13px] text-[#2D2B28] leading-relaxed">I built an MCP tool called <strong>swap_tokens</strong> — can you check if it&apos;s good enough for agents to use?</p>
                 </div>
-                <pre className="px-3 py-2 text-xs font-mono text-text-secondary overflow-x-auto">{`{ "query": "web search", "category": "Search", "limit": 3 }`}</pre>
               </div>
 
-              {/* Tool result */}
-              <div className="bg-surface border border-border rounded-xl overflow-hidden">
-                <div className="px-3 py-2 bg-elevated/50 border-b border-border flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-bright shrink-0"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-                  <span className="text-xs font-mono text-text-dim">Found 3 tools</span>
-                  <span className="text-xs text-green ml-auto">Score: 82, 76, 71</span>
+              {/* Claude */}
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-[#D4A574] flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="8"/></svg>
                 </div>
-                <pre className="px-3 py-2 text-xs font-mono text-text-dim overflow-x-auto">{`[
-  { "name": "web_search", "score": 82, "category": "Search" },
-  { "name": "google_search", "score": 76, "category": "Search" },
-  { "name": "brave_search", "score": 71, "category": "Search" }
-]`}</pre>
-              </div>
+                <div className="space-y-3 flex-1 min-w-0">
+                  <p className="text-[13px] text-[#2D2B28] leading-relaxed">I&apos;ll run a diagnostic on your tool using Grepple.</p>
 
-              {/* Claude picks best tool and calls it */}
-              <p className="text-sm text-text-secondary">Found <strong className="text-text">web_search</strong> (score: 82). Let me use it to get the latest news.</p>
+                  {/* Tool call block — claude style */}
+                  <div className="rounded-lg border border-[#E5DFD6] overflow-hidden">
+                    <div className="bg-[#F0EBE3] px-3 py-1.5 flex items-center gap-2 border-b border-[#E5DFD6]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4A574" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+                      <span className="text-xs font-mono text-[#8B7E6A]">diagnose_tool</span>
+                    </div>
+                    <pre className="bg-[#FDFCFA] px-3 py-2 text-xs font-mono text-[#6B6560] overflow-x-auto">{`{
+  "name": "swap_tokens",
+  "description": "Swap ERC-20 tokens on Uniswap V3",
+  "input_schema": "{ \\"token_in\\": ..., \\"token_out\\": ... }"
+}`}</pre>
+                  </div>
 
-              {/* Second tool call */}
-              <div className="bg-surface border border-border rounded-xl overflow-hidden">
-                <div className="px-3 py-2 bg-elevated/50 border-b border-border flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-green shrink-0"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span className="text-xs font-mono text-green">web_search</span>
-                  <span className="text-xs text-text-dim ml-auto hidden sm:inline">score: 82/100 · trusted</span>
+                  {/* Result */}
+                  <div className="rounded-lg border border-[#E5DFD6] overflow-hidden">
+                    <div className="bg-[#F0EBE3] px-3 py-1.5 flex items-center gap-2 border-b border-[#E5DFD6]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#28CA41" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                      <span className="text-xs font-mono text-[#6B6560]">Report ready</span>
+                    </div>
+                    <pre className="bg-[#FDFCFA] px-3 py-2 text-xs font-mono text-[#6B6560] overflow-x-auto">{`{ "reportId": "7a3f...c91e", "overall": 68, "grade": "C" }`}</pre>
+                  </div>
+
+                  {/* Claude second call */}
+                  <div className="rounded-lg border border-[#E5DFD6] overflow-hidden">
+                    <div className="bg-[#F0EBE3] px-3 py-1.5 flex items-center gap-2 border-b border-[#E5DFD6]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4A574" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+                      <span className="text-xs font-mono text-[#8B7E6A]">get_report</span>
+                    </div>
+                    <pre className="bg-[#FDFCFA] px-3 py-2 text-xs font-mono text-[#6B6560] overflow-x-auto">{`{ "report_id": "7a3f...c91e" }`}</pre>
+                  </div>
+
+                  {/* Claude summary */}
+                  <div className="text-[13px] text-[#2D2B28] leading-relaxed space-y-2">
+                    <p>Your tool scored <strong>68/100 (C grade)</strong>. Here&apos;s the breakdown:</p>
+                    <div className="bg-[#F5F0E8] rounded-lg p-3 space-y-1.5">
+                      <div className="flex justify-between text-xs"><span className="text-[#6B6560]">Schema Health</span><span className="font-mono font-bold text-[#28CA41]">85</span></div>
+                      <div className="flex justify-between text-xs"><span className="text-[#6B6560]">Discoverability</span><span className="font-mono font-bold text-[#E5A100]">51</span></div>
+                    </div>
+                    <p><strong>Issues found:</strong></p>
+                    <ul className="ml-4 space-y-1 text-xs list-disc text-[#6B6560]">
+                      <li><span className="text-[#E5484D]">HIGH</span> — Missing &quot;Use this when...&quot; pattern in description</li>
+                      <li><span className="text-[#E5A100]">MED</span> — No usage example for agents to reference</li>
+                    </ul>
+                    <p>Fix the description and re-run <code className="bg-[#F0EBE3] px-1 py-0.5 rounded text-xs font-mono">diagnose_tool</code> to improve your score.</p>
+                  </div>
                 </div>
-                <pre className="px-3 py-2 text-xs font-mono text-text-secondary overflow-x-auto">{`{ "query": "latest AI news March 2026", "num_results": 3 }`}</pre>
-              </div>
-
-              {/* Response */}
-              <div className="bg-surface border border-border rounded-xl overflow-hidden">
-                <div className="px-3 py-2 bg-elevated/50 border-b border-border flex items-center gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-bright shrink-0"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-                  <span className="text-xs font-mono text-text-dim">Response — 3 results</span>
-                  <span className="text-xs text-green ml-auto">200 OK · 1.2s</span>
-                </div>
-                <pre className="px-3 py-2 text-xs font-mono text-text-dim overflow-x-auto">{`[
-  { "title": "Claude 4.5 Sets New Benchmarks...", "url": "..." },
-  { "title": "Open Source AI Models Surpass...", "url": "..." },
-  { "title": "AI Agents Now Handle 40% of...", "url": "..." }
-]`}</pre>
-              </div>
-
-              {/* Summary */}
-              <div className="text-sm text-text-secondary leading-relaxed">
-                <p>Here are the top 3 AI news stories this week:</p>
-                <ol className="mt-2 ml-4 space-y-1.5 list-decimal text-xs">
-                  <li><strong className="text-text">Claude 4.5 Sets New Benchmarks</strong> — Anthropic&apos;s latest model achieves state-of-the-art on coding and reasoning tasks...</li>
-                  <li><strong className="text-text">Open Source AI Models Surpass GPT-4</strong> — Llama 4 and Mistral Large beat proprietary models on key benchmarks...</li>
-                  <li><strong className="text-text">AI Agents Handle 40% of Customer Support</strong> — Enterprise adoption of agentic workflows doubles in Q1 2026...</li>
-                </ol>
-              </div>
-
-              {/* GREP earned */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green/5 border border-green/15 rounded-lg">
-                <span className="text-xs text-green font-medium">+1.0 GREP earned</span>
-                <span className="text-xs text-text-dim">· Successful tool call verified on-chain</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-3 border-t border-border bg-surface/50 flex items-center justify-between">
-          <p className="text-xs text-text-dim">
-            Works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible agent
-          </p>
-          <Link href="/registry" className="text-xs text-blue hover:underline">
-            Browse tools →
-          </Link>
+        {/* Flow 2: Agent discovers + earns */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-green">Flow 2 — Agent discovers tools &amp; earns</span>
+          </div>
+          <div className="rounded-2xl overflow-hidden border border-[#d5d0c8] shadow-lg">
+            <div className="bg-[#F5F0E8] px-5 py-3 flex items-center gap-3 border-b border-[#e5dfd6]">
+              <div className="flex gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+                <span className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+                <span className="w-3 h-3 rounded-full bg-[#28CA41]" />
+              </div>
+              <span className="text-xs text-[#8B7E6A] font-medium ml-2">Claude — with Grepple MCP</span>
+            </div>
+
+            <div className="bg-[#FAF8F5] px-6 py-6 space-y-5">
+              {/* User */}
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-[#5436DA] flex items-center justify-center shrink-0 text-white text-xs font-bold">Z</div>
+                <p className="text-[13px] text-[#2D2B28] leading-relaxed">I want to swap tokens on Uniswap. Find me the best tool and do it.</p>
+              </div>
+
+              {/* Claude */}
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-[#D4A574] flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="8"/></svg>
+                </div>
+                <div className="space-y-3 flex-1 min-w-0">
+                  <p className="text-[13px] text-[#2D2B28] leading-relaxed">Let me search Grepple&apos;s registry for DeFi swap tools.</p>
+
+                  {/* search_tools */}
+                  <div className="rounded-lg border border-[#E5DFD6] overflow-hidden">
+                    <div className="bg-[#F0EBE3] px-3 py-1.5 flex items-center gap-2 border-b border-[#E5DFD6]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4A574" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+                      <span className="text-xs font-mono text-[#8B7E6A]">search_tools</span>
+                    </div>
+                    <pre className="bg-[#FDFCFA] px-3 py-2 text-xs font-mono text-[#6B6560] overflow-x-auto">{`{ "query": "swap tokens uniswap", "category": "DeFi" }`}</pre>
+                  </div>
+
+                  {/* Results */}
+                  <div className="rounded-lg border border-[#E5DFD6] overflow-hidden">
+                    <div className="bg-[#F0EBE3] px-3 py-1.5 flex items-center gap-2 border-b border-[#E5DFD6]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#28CA41" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                      <span className="text-xs font-mono text-[#6B6560]">3 tools found</span>
+                    </div>
+                    <pre className="bg-[#FDFCFA] px-3 py-2 text-xs font-mono text-[#6B6560] overflow-x-auto">{`[
+  { "name": "swap_token",   "score": 78, "trust": "✓ verified" },
+  { "name": "uniswap_v3",   "score": 72, "trust": "✓ open source" },
+  { "name": "dex_swap",     "score": 65, "trust": "⚠ unverified" }
+]`}</pre>
+                  </div>
+
+                  <p className="text-[13px] text-[#2D2B28] leading-relaxed">Found <strong>swap_token</strong> (score 78, verified). I&apos;ll get the details and execute the swap.</p>
+
+                  {/* get_tool_detail */}
+                  <div className="rounded-lg border border-[#E5DFD6] overflow-hidden">
+                    <div className="bg-[#F0EBE3] px-3 py-1.5 flex items-center gap-2 border-b border-[#E5DFD6]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4A574" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+                      <span className="text-xs font-mono text-[#8B7E6A]">get_tool_detail</span>
+                    </div>
+                    <pre className="bg-[#FDFCFA] px-3 py-2 text-xs font-mono text-[#6B6560] overflow-x-auto">{`{ "tool_name": "swap_token" }`}</pre>
+                  </div>
+
+                  {/* Claude explains and executes */}
+                  <div className="text-[13px] text-[#2D2B28] leading-relaxed space-y-2">
+                    <p>The tool is from <strong>rhein1/defi-mcp-server</strong> (open source, 82 stars). Here&apos;s what I did:</p>
+                    <div className="bg-[#F5F0E8] rounded-lg p-3 space-y-1.5 text-xs">
+                      <div className="flex items-center gap-2"><span className="text-[#28CA41]">✓</span> Connected to swap_token MCP server</div>
+                      <div className="flex items-center gap-2"><span className="text-[#28CA41]">✓</span> Called with params: ETH → USDC, 0.5 ETH</div>
+                      <div className="flex items-center gap-2"><span className="text-[#28CA41]">✓</span> Received valid response — swap quote: 1,247.50 USDC</div>
+                      <div className="flex items-center gap-2"><span className="text-[#28CA41]">✓</span> Call verified on-chain (BSC Testnet)</div>
+                    </div>
+                    <p>Swap quote ready: <strong>0.5 ETH → 1,247.50 USDC</strong> via Uniswap V3.</p>
+                  </div>
+
+                  {/* GREP earned — claude style */}
+                  <div className="bg-[#F0F9F1] border border-[#B4DFC4] rounded-lg px-3 py-2 inline-flex items-center gap-2">
+                    <span className="text-xs font-medium text-[#1A7F37]">+1.5 GREP earned</span>
+                    <span className="text-xs text-[#6B6560]">· FULL tier — successful call + structured report</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
