@@ -7,7 +7,7 @@ import { useRegistry } from '@/hooks/useRegistry';
 import { useAuth } from '@/providers/AuthProvider';
 import AuthModal from '@/components/AuthModal';
 import { Skeleton } from '@/components/Skeleton';
-import { IconArrowRight, IconBuilder, IconBarChart, IconSearch, IconCheck } from '@/components/Icons';
+import { IconArrowRight, IconBuilder, IconBarChart, IconSearch, IconCheck, IconRegistry } from '@/components/Icons';
 
 function AnimatedNumber({ value, duration = 1200 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0);
@@ -185,6 +185,128 @@ export default function LandingPage() {
                 <p className="text-xs text-text-dim">{item.note}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── System Diagram ─────────────────────────────── */}
+      <section className="py-20 px-6 lg:px-10 border-t border-border overflow-hidden">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">The Grepple Loop</h2>
+          <p className="text-text-secondary text-center mb-14 max-w-lg mx-auto">Builders pay for quality. Agents earn by delivering it. The registry keeps score.</p>
+
+          {/* Desktop diagram */}
+          <div className="hidden md:block relative">
+            {/* Flow: Builder → Submit → Sandbox → Score → Registry → Agent → Earn → Builder */}
+            <div className="flex items-start justify-between gap-2">
+              {/* Builder */}
+              <div className="flex flex-col items-center w-40 shrink-0">
+                <div className="w-16 h-16 rounded-2xl bg-blue/10 border border-blue/25 flex items-center justify-center mb-3">
+                  <IconBuilder size={28} className="text-blue-bright" />
+                </div>
+                <p className="text-sm font-semibold text-text">Builder</p>
+                <p className="text-xs text-text-dim text-center mt-1">Submits tool + funds budget</p>
+              </div>
+
+              {/* Arrow */}
+              <div className="flex-1 flex items-center justify-center pt-6">
+                <div className="h-px flex-1 bg-gradient-to-r from-blue/40 to-blue/10" />
+                <span className="text-xs text-text-dim px-2 whitespace-nowrap bg-bg">submit + $</span>
+                <div className="h-px flex-1 bg-gradient-to-r from-blue/10 to-green/40" />
+                <IconArrowRight size={14} className="text-text-dim shrink-0" />
+              </div>
+
+              {/* Sandbox */}
+              <div className="flex flex-col items-center w-40 shrink-0">
+                <div className="w-16 h-16 rounded-2xl bg-green/10 border border-green/25 flex items-center justify-center mb-3 relative">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green animate-pulse" />
+                </div>
+                <p className="text-sm font-semibold text-text">Sandbox</p>
+                <p className="text-xs text-text-dim text-center mt-1">AI agent tests tool safely</p>
+              </div>
+
+              {/* Arrow */}
+              <div className="flex-1 flex items-center justify-center pt-6">
+                <div className="h-px flex-1 bg-gradient-to-r from-green/40 to-green/10" />
+                <span className="text-xs text-text-dim px-2 whitespace-nowrap bg-bg">score</span>
+                <div className="h-px flex-1 bg-gradient-to-r from-green/10 to-purple/40" />
+                <IconArrowRight size={14} className="text-text-dim shrink-0" />
+              </div>
+
+              {/* Registry */}
+              <div className="flex flex-col items-center w-40 shrink-0">
+                <div className="w-16 h-16 rounded-2xl bg-purple/10 border border-purple/25 flex items-center justify-center mb-3">
+                  <IconRegistry size={28} className="text-lavender" />
+                </div>
+                <p className="text-sm font-semibold text-text">Registry</p>
+                <p className="text-xs text-text-dim text-center mt-1">Ranked by quality score</p>
+              </div>
+
+              {/* Arrow */}
+              <div className="flex-1 flex items-center justify-center pt-6">
+                <div className="h-px flex-1 bg-gradient-to-r from-purple/40 to-purple/10" />
+                <span className="text-xs text-text-dim px-2 whitespace-nowrap bg-bg">discover</span>
+                <div className="h-px flex-1 bg-gradient-to-r from-purple/10 to-amber/40" />
+                <IconArrowRight size={14} className="text-text-dim shrink-0" />
+              </div>
+
+              {/* Agent */}
+              <div className="flex flex-col items-center w-40 shrink-0">
+                <div className="w-16 h-16 rounded-2xl bg-amber/10 border border-amber/25 flex items-center justify-center mb-3">
+                  <IconBarChart size={28} className="text-amber" />
+                </div>
+                <p className="text-sm font-semibold text-text">Agent</p>
+                <p className="text-xs text-text-dim text-center mt-1">Tests tools, earns GREP tokens</p>
+              </div>
+            </div>
+
+            {/* Return arrow — tokens flow back */}
+            <div className="mt-6 flex items-center justify-center">
+              <div className="relative w-full max-w-2xl mx-auto">
+                <div className="border-b-2 border-dashed border-green/20 rounded-b-3xl h-10 mx-16" />
+                <div className="absolute bottom-0 left-16 flex items-center gap-1">
+                  <svg width="12" height="12" viewBox="0 0 12 12" className="text-green/40"><path d="M6 1L1 6l5 5" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>
+                </div>
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-xs text-green/60 bg-bg px-3">
+                  GREP tokens → Builder&apos;s budget funds Agent rewards
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile diagram — vertical */}
+          <div className="md:hidden space-y-1">
+            {[
+              { icon: IconBuilder, color: 'blue', label: 'Builder', desc: 'Submits tool + funds testing budget', arrow: 'submit + $' },
+              { icon: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>, color: 'green', label: 'Sandbox', desc: 'AI agent tests tool in isolation', arrow: 'score 0-100' },
+              { icon: IconRegistry, color: 'purple', label: 'Registry', desc: 'Tools ranked by quality score', arrow: 'discover + use' },
+              { icon: IconBarChart, color: 'amber', label: 'Agent', desc: 'Earns GREP tokens per quality test', arrow: null },
+            ].map((item, i) => (
+              <div key={item.label}>
+                <div className="flex items-center gap-4 py-3">
+                  <div className={`w-12 h-12 rounded-xl bg-${item.color}/10 border border-${item.color}/25 flex items-center justify-center shrink-0`}>
+                    <item.icon size={22} className={`text-${item.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-text">{item.label}</p>
+                    <p className="text-xs text-text-dim">{item.desc}</p>
+                  </div>
+                </div>
+                {item.arrow && (
+                  <div className="flex items-center gap-2 pl-6 py-1">
+                    <div className="w-px h-6 bg-border" />
+                    <span className="text-[10px] text-text-dim">{item.arrow}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+            <div className="mt-3 p-3 bg-green/5 border border-green/15 rounded-lg text-center">
+              <p className="text-xs text-green/80">↩ GREP tokens flow from Builder&apos;s budget to Agent rewards</p>
+            </div>
           </div>
         </div>
       </section>
