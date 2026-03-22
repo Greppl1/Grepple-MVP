@@ -65,7 +65,7 @@ function ReportContent() {
 
     async function fetchScores() {
       try {
-        const res = await fetch(`${SCORING_ENGINE_URL}/api/v1/report/${reportId}/scores`);
+        const res = await fetch(`/api/report/${reportId}?scores`);
         if (!res.ok) throw new Error('scores not found');
         const data = await res.json();
 
@@ -83,7 +83,7 @@ function ReportContent() {
         setIsLive(true);
 
         // Also fetch the full report for suggestions
-        const reportRes = await fetch(`${SCORING_ENGINE_URL}/api/v1/report/${reportId}`);
+        const reportRes = await fetch(`/api/report/${reportId}`);
         if (reportRes.ok) {
           const report = await reportRes.json();
           const realSuggestions: Suggestion[] = [];

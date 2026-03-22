@@ -192,7 +192,7 @@ export default function SubmitPage() {
       let schema = {};
       try { schema = JSON.parse(formData.inputSchema); } catch { /* empty schema */ }
 
-      const res = await fetch(`${SCORING_ENGINE_URL}/api/v1/diagnose`, {
+      const res = await fetch('/api/diagnose', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

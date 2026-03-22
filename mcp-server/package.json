@@ -1,0 +1,16 @@
+{
+  "name": "@grepple/mcp-server",
+  "version": "0.1.0",
+  "description": "Grepple MCP Server — search, diagnose, and discover MCP tools via any AI agent",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "grepple-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}

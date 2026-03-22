@@ -93,7 +93,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
     async function fetchReport() {
       try {
         // Fetch scores
-        const scoresRes = await fetch(`${SCORING_ENGINE_URL}/api/v1/report/${id}/scores`);
+        const scoresRes = await fetch(`/api/report/${id}?scores`);
         if (!scoresRes.ok) throw new Error('scores not found');
         const data = await scoresRes.json();
 
@@ -113,7 +113,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
         });
 
         // Fetch full report for suggestions + tool name
-        const reportRes = await fetch(`${SCORING_ENGINE_URL}/api/v1/report/${id}`);
+        const reportRes = await fetch(`/api/report/${id}`);
         if (reportRes.ok) {
           const report = await reportRes.json();
           if (report.toolName) setToolName(report.toolName);
