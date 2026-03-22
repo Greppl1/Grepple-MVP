@@ -8,9 +8,12 @@
     "grepple-mcp": "./index.js"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "start:stdio": "node index.js --stdio"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1"
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
   }
 }
