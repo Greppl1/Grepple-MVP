@@ -1,0 +1,558 @@
+@import "tailwindcss";
+
+/* ============================================================
+   THEME — Design tokens
+   ============================================================ */
+@theme inline {
+  --color-bg: #07071C;
+  --color-bg-nav: rgba(7, 7, 28, 0.92);
+  --color-surface: #111136;
+  --color-elevated: #1C1C4D;
+  --color-elevated-2: #272766;
+  --color-purple: #8B7BC8;
+  --color-purple-dim: rgba(139, 123, 200, 0.1);
+  --color-lavender: #A99ADA;
+  --color-blue: #4A6CF7;
+  --color-blue-bright: #6B8AFF;
+  --color-blue-dim: rgba(74, 108, 247, 0.12);
+  --color-green: #22E88A;
+  --color-green-dim: rgba(34, 232, 138, 0.1);
+  --color-amber: #F5A623;
+  --color-amber-dim: rgba(245, 166, 35, 0.15);
+  --color-red: #FF4757;
+  --color-red-dim: rgba(255, 71, 87, 0.15);
+  --color-text: #EEEEFF;
+  --color-text-secondary: #9D97BE;
+  --color-text-dim: #918BB2;
+  --color-border: #2A2660;
+  --color-border-hi: #3D3880;
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-hi); }
+
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============================================================
+   ACCENT TEXT
+   ============================================================ */
+.accent-text {
+  color: var(--color-blue-bright);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+/* Gradient button — primary CTA */
+.btn-gradient {
+  background: linear-gradient(135deg, #8B7BC8, #4A6CF7);
+  color: white;
+  box-shadow: 0 4px 20px rgba(74, 108, 247, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(74, 108, 247, 0.35);
+}
+.btn-gradient:active {
+  transform: translateY(0);
+}
+.btn-gradient:disabled {
+  background: var(--color-elevated);
+  color: var(--color-text-dim);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 1;
+}
+
+/* Secondary button */
+.btn-secondary {
+  background: var(--color-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  color: white;
+  border-color: var(--color-border-hi);
+  background: var(--color-elevated-2);
+}
+
+/* Ghost button — minimal emphasis */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text);
+}
+
+/* Icon button — square, no label */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: all 0.15s ease;
+}
+.btn-icon:hover {
+  background: var(--color-elevated);
+  color: var(--color-text);
+}
+
+/* Danger button — destructive actions */
+.btn-danger {
+  background: color-mix(in srgb, var(--color-red) 15%, transparent);
+  color: var(--color-red);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--color-red) 30%, transparent);
+  transition: all 0.15s ease;
+}
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--color-red) 25%, transparent);
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+
+/* Card with glow on hover */
+.card-glow {
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+}
+.card-glow:hover {
+  border-color: var(--color-border-hi);
+  box-shadow: 0 0 0 1px var(--color-border-hi), 0 8px 32px -8px rgba(74, 108, 247, 0.15);
+}
+
+/* Stat card highlight variant */
+.stat-highlight {
+  background: linear-gradient(135deg, rgba(74, 108, 247, 0.08) 0%, rgba(139, 123, 200, 0.06) 100%);
+  border-color: var(--color-border-hi);
+}
+
+/* ============================================================
+   HERO & LANDING
+   ============================================================ */
+
+/* Hero gradient background */
+.hero-gradient {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, color-mix(in srgb, var(--color-blue) 28%, transparent), transparent),
+    radial-gradient(ellipse 50% 50% at 80% 20%, color-mix(in srgb, var(--color-purple) 22%, transparent), transparent),
+    radial-gradient(ellipse 40% 40% at 20% 30%, color-mix(in srgb, var(--color-green) 8%, transparent), transparent);
+}
+
+/* Animated orbs behind hero */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+.hero-orb-1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-blue) 30%, transparent), transparent 70%);
+  top: -120px; left: 10%;
+  animation: orb-drift-1 12s ease-in-out infinite;
+}
+.hero-orb-2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-purple) 25%, transparent), transparent 70%);
+  top: -60px; right: 5%;
+  animation: orb-drift-2 15s ease-in-out infinite;
+}
+.hero-orb-3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-green) 15%, transparent), transparent 70%);
+  bottom: -80px; left: 40%;
+  animation: orb-drift-3 10s ease-in-out infinite;
+}
+
+@keyframes orb-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, 20px) scale(1.1); }
+  66% { transform: translate(-20px, -10px) scale(0.95); }
+}
+@keyframes orb-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 30px) scale(1.05); }
+}
+@keyframes orb-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(20px, -20px) scale(1.1); }
+  80% { transform: translate(-10px, 10px) scale(0.9); }
+}
+
+/* Dot grid pattern overlay */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--color-text) 6%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 80%);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #6B8AFF 0%, #22E88A 50%, #A99ADA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated counter reveal */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-count-up {
+  animation: count-up 0.6s ease-out forwards;
+}
+
+/* Glow pulse on CTA */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(74, 108, 247, 0.25); }
+  50% { box-shadow: 0 4px 40px rgba(74, 108, 247, 0.45), 0 0 80px rgba(107, 138, 255, 0.15); }
+}
+.btn-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Step number glow */
+.step-number {
+  text-shadow: 0 0 40px color-mix(in srgb, var(--color-blue) 40%, transparent);
+}
+
+/* Role card gradient borders */
+.card-builder {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-blue) 6%, var(--color-surface)), var(--color-surface));
+}
+.card-builder:hover {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-blue) 12%, var(--color-surface)), var(--color-surface));
+}
+.card-agent {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-green) 5%, var(--color-surface)), var(--color-surface));
+}
+.card-agent:hover {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-green) 10%, var(--color-surface)), var(--color-surface));
+}
+
+/* Logo: "grep" white, "ple" purple */
+.logo-grep { color: #EEEEFF; }
+.logo-ple { color: #8B7BC8; }
+
+/* ============================================================
+   TESTNET BANNER — subtle, de-emphasized
+   ============================================================ */
+.testnet-banner {
+  background: color-mix(in srgb, var(--color-amber) 8%, transparent);
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+
+/* Table row hover */
+.row-hover {
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.row-hover:hover {
+  background: rgba(24, 24, 64, 0.6);
+}
+
+/* ============================================================
+   METRIC BAR — horizontal score bar for lists
+   ============================================================ */
+.metric-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-elevated-2);
+  overflow: hidden;
+}
+.metric-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* ============================================================
+   SCORE BADGE — compact inline score display
+   ============================================================ */
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--color-text-dim);
+}
+.empty-state svg {
+  opacity: 0.4;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================
+   FORM — focus rings & validation states
+   ============================================================ */
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+/* Input focus ring improvement */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-blue) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-blue) 20%, transparent);
+}
+
+/* Inline validation states */
+.input-error {
+  border-color: var(--color-red) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-red) 15%, transparent);
+}
+.input-success {
+  border-color: var(--color-green) !important;
+}
+.field-error {
+  color: var(--color-red);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+.field-hint {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* ============================================================
+   ANIMATIONS — keyframes
+   ============================================================ */
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(-100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   ANIMATIONS — utility classes
+   ============================================================ */
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out;
+}
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+.animate-slide-left {
+  animation: slide-left 0.25s ease-out;
+}
+
+/* Page transition */
+.page-enter {
+  animation: page-fade-in 0.25s ease forwards;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: slide-up 0.4s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 480ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 540ms; }
+
+/* ============================================================
+   MOBILE — sidebar overlay
+   ============================================================ */
+@media (max-width: 1023px) {
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 40;
+    animation: fade-in 0.2s ease-out;
+  }
+}
+
+/* ============================================================
+   COMMAND PALETTE
+   ============================================================ */
+.cmd-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  animation: fade-in 0.15s ease-out;
+}
+.cmd-panel {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 2rem));
+  z-index: 201;
+  animation: scale-in 0.15s ease-out;
+}
+
+/* ============================================================
+   IDENTICON
+   ============================================================ */
+.identicon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* ============================================================
+   DEMO BANNER — honest about testnet / demo state
+   ============================================================ */
+.demo-banner {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-amber) 10%, transparent), color-mix(in srgb, var(--color-amber) 5%, transparent));
+  color: var(--color-amber);
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-amber) 20%, transparent);
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+/* ============================================================
+   NAV SECTION LABEL
+   ============================================================ */
+.nav-section-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-dim);
+  padding: 0.5rem 0.75rem 0.25rem;
+}
+
+/* ============================================================
+   COMING SOON BADGE
+   ============================================================ */
+.badge-coming-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: color-mix(in srgb, var(--color-amber) 12%, transparent);
+  color: var(--color-amber);
+  border: 1px solid color-mix(in srgb, var(--color-amber) 25%, transparent);
+}

@@ -1,1 +1,45 @@
 __pycache__/
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Secrets / private keys
+*.pem
+*.key
+.claude/settings.local.json
+
+# Idempotency data
+backend/data/
+
+# Deployment outputs
+contracts/deployments/
+
+# Style demos (not production code)
+style-demos/
+.vercel
