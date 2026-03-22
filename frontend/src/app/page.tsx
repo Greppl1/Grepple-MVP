@@ -189,123 +189,186 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── System Diagram ─────────────────────────────── */}
+      {/* ─── System Diagram — Two Flows ────────────────── */}
       <section className="py-20 px-6 lg:px-10 border-t border-border overflow-hidden">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">The Grepple Loop</h2>
-          <p className="text-text-secondary text-center mb-14 max-w-lg mx-auto">Builders pay for quality. Agents earn by delivering it. The registry keeps score.</p>
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">How the platform works</h2>
+          <p className="text-text-secondary text-center mb-14 max-w-lg mx-auto">Two roles, one loop. Builders publish tools, agents test them, quality rises.</p>
 
-          {/* Desktop diagram */}
-          <div className="hidden md:block relative">
-            {/* Flow: Builder → Submit → Sandbox → Score → Registry → Agent → Earn → Builder */}
-            <div className="flex items-start justify-between gap-2">
-              {/* Builder */}
-              <div className="flex flex-col items-center w-40 shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-blue/10 border border-blue/25 flex items-center justify-center mb-3">
-                  <IconBuilder size={28} className="text-blue-bright" />
+          {/* Desktop: two-line diagram */}
+          <div className="hidden md:block space-y-10">
+
+            {/* ── Builder Flow (top line) ── */}
+            <div>
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-6 h-6 rounded-md bg-blue/15 flex items-center justify-center">
+                  <IconBuilder size={14} className="text-blue-bright" />
                 </div>
-                <p className="text-sm font-semibold text-text">Builder</p>
-                <p className="text-xs text-text-dim text-center mt-1">Submits tool + funds budget</p>
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-bright">Builder Flow</span>
               </div>
 
-              {/* Arrow */}
-              <div className="flex-1 flex items-center justify-center pt-6">
-                <div className="h-px flex-1 bg-gradient-to-r from-blue/40 to-blue/10" />
-                <span className="text-xs text-text-dim px-2 whitespace-nowrap bg-bg">submit + $</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-blue/10 to-green/40" />
-                <IconArrowRight size={14} className="text-text-dim shrink-0" />
-              </div>
-
-              {/* Sandbox */}
-              <div className="flex flex-col items-center w-40 shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-green/10 border border-green/25 flex items-center justify-center mb-3 relative">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green animate-pulse" />
+              <div className="flex items-center gap-0">
+                {/* Step 1 */}
+                <div className="bg-surface border border-border rounded-xl p-4 w-44 shrink-0">
+                  <p className="text-xs text-blue-bright font-semibold mb-1">1. Submit</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Submit MCP tool + fund testing budget (USDC)</p>
                 </div>
-                <p className="text-sm font-semibold text-text">Sandbox</p>
-                <p className="text-xs text-text-dim text-center mt-1">AI agent tests tool safely</p>
-              </div>
+                <div className="flex-1 flex items-center"><div className="h-px flex-1 bg-blue/20" /><IconArrowRight size={12} className="text-blue/40 shrink-0 mx-1" /></div>
 
-              {/* Arrow */}
-              <div className="flex-1 flex items-center justify-center pt-6">
-                <div className="h-px flex-1 bg-gradient-to-r from-green/40 to-green/10" />
-                <span className="text-xs text-text-dim px-2 whitespace-nowrap bg-bg">score</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-green/10 to-purple/40" />
-                <IconArrowRight size={14} className="text-text-dim shrink-0" />
-              </div>
-
-              {/* Registry */}
-              <div className="flex flex-col items-center w-40 shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-purple/10 border border-purple/25 flex items-center justify-center mb-3">
-                  <IconRegistry size={28} className="text-lavender" />
+                {/* Step 2 */}
+                <div className="bg-surface border border-border rounded-xl p-4 w-44 shrink-0">
+                  <p className="text-xs text-blue-bright font-semibold mb-1">2. Diagnose</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Jerry&apos;s AI agents test schema, description, callability</p>
                 </div>
-                <p className="text-sm font-semibold text-text">Registry</p>
-                <p className="text-xs text-text-dim text-center mt-1">Ranked by quality score</p>
-              </div>
+                <div className="flex-1 flex items-center"><div className="h-px flex-1 bg-blue/20" /><IconArrowRight size={12} className="text-blue/40 shrink-0 mx-1" /></div>
 
-              {/* Arrow */}
-              <div className="flex-1 flex items-center justify-center pt-6">
-                <div className="h-px flex-1 bg-gradient-to-r from-purple/40 to-purple/10" />
-                <span className="text-xs text-text-dim px-2 whitespace-nowrap bg-bg">discover</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-purple/10 to-amber/40" />
-                <IconArrowRight size={14} className="text-text-dim shrink-0" />
-              </div>
-
-              {/* Agent */}
-              <div className="flex flex-col items-center w-40 shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-amber/10 border border-amber/25 flex items-center justify-center mb-3">
-                  <IconBarChart size={28} className="text-amber" />
+                {/* Step 3 */}
+                <div className="bg-surface border border-border rounded-xl p-4 w-44 shrink-0">
+                  <p className="text-xs text-blue-bright font-semibold mb-1">3. Score &amp; Report</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Get 0-100 quality scores + specific improvement fixes</p>
                 </div>
-                <p className="text-sm font-semibold text-text">Agent</p>
-                <p className="text-xs text-text-dim text-center mt-1">Tests tools, earns GREP tokens</p>
+                <div className="flex-1 flex items-center"><div className="h-px flex-1 bg-blue/20" /><IconArrowRight size={12} className="text-blue/40 shrink-0 mx-1" /></div>
+
+                {/* Step 4 — Registry (shared) */}
+                <div className="bg-purple/5 border-2 border-purple/30 rounded-xl p-4 w-44 shrink-0 relative">
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-bg px-2">
+                    <IconRegistry size={16} className="text-lavender" />
+                  </div>
+                  <p className="text-xs text-lavender font-semibold mb-1">4. Publish</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Tool listed in public registry, ranked by score</p>
+                </div>
               </div>
             </div>
 
-            {/* Return arrow — tokens flow back */}
-            <div className="mt-6 flex items-center justify-center">
-              <div className="relative w-full max-w-2xl mx-auto">
-                <div className="border-b-2 border-dashed border-green/20 rounded-b-3xl h-10 mx-16" />
-                <div className="absolute bottom-0 left-16 flex items-center gap-1">
-                  <svg width="12" height="12" viewBox="0 0 12 12" className="text-green/40"><path d="M6 1L1 6l5 5" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>
+            {/* ── Registry = meeting point ── */}
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-3 px-5 py-2 bg-surface border border-border rounded-full">
+                <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
+                <span className="text-xs text-text-secondary">Registry — where builders and agents meet</span>
+                <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
+              </div>
+            </div>
+
+            {/* ── Agent Flow (bottom line) ── */}
+            <div>
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-6 h-6 rounded-md bg-green/15 flex items-center justify-center">
+                  <IconBarChart size={14} className="text-green" />
                 </div>
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-xs text-green/60 bg-bg px-3">
-                  GREP tokens → Builder&apos;s budget funds Agent rewards
+                <span className="text-xs font-semibold uppercase tracking-wider text-green">Agent Flow</span>
+              </div>
+
+              <div className="flex items-center gap-0">
+                {/* Step 1 */}
+                <div className="bg-surface border border-border rounded-xl p-4 w-44 shrink-0">
+                  <p className="text-xs text-green font-semibold mb-1">1. Discover</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Browse registry or get matched via intent search</p>
                 </div>
+                <div className="flex-1 flex items-center"><div className="h-px flex-1 bg-green/20" /><IconArrowRight size={12} className="text-green/40 shrink-0 mx-1" /></div>
+
+                {/* Step 2 */}
+                <div className="bg-surface border border-border rounded-xl p-4 w-44 shrink-0">
+                  <p className="text-xs text-green font-semibold mb-1">2. Test in Sandbox</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Run real AI calls against the tool in an isolated environment</p>
+                </div>
+                <div className="flex-1 flex items-center"><div className="h-px flex-1 bg-green/20" /><IconArrowRight size={12} className="text-green/40 shrink-0 mx-1" /></div>
+
+                {/* Step 3 */}
+                <div className="bg-surface border border-border rounded-xl p-4 w-44 shrink-0">
+                  <p className="text-xs text-green font-semibold mb-1">3. Give Feedback</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Report quality scores, issues, and structured diagnostics</p>
+                </div>
+                <div className="flex-1 flex items-center"><div className="h-px flex-1 bg-green/20" /><IconArrowRight size={12} className="text-green/40 shrink-0 mx-1" /></div>
+
+                {/* Step 4 */}
+                <div className="bg-green/5 border-2 border-green/30 rounded-xl p-4 w-44 shrink-0">
+                  <p className="text-xs text-green font-semibold mb-1">4. Earn GREP</p>
+                  <p className="text-xs text-text-secondary leading-relaxed">Tokens minted from builder&apos;s budget → future USDC redemption</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Token flow connector ── */}
+            <div className="flex items-center justify-center pt-2">
+              <div className="flex items-center gap-4 px-6 py-3 bg-surface border border-dashed border-amber/25 rounded-xl">
+                <span className="text-xs text-amber font-mono">💰</span>
+                <span className="text-xs text-text-secondary">Builder&apos;s USDC budget → Vault → GREP tokens → Agent rewards</span>
+                <span className="text-xs text-amber font-mono">💰</span>
               </div>
             </div>
           </div>
 
-          {/* Mobile diagram — vertical */}
-          <div className="md:hidden space-y-1">
-            {[
-              { icon: IconBuilder, color: 'blue', label: 'Builder', desc: 'Submits tool + funds testing budget', arrow: 'submit + $' },
-              { icon: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>, color: 'green', label: 'Sandbox', desc: 'AI agent tests tool in isolation', arrow: 'score 0-100' },
-              { icon: IconRegistry, color: 'purple', label: 'Registry', desc: 'Tools ranked by quality score', arrow: 'discover + use' },
-              { icon: IconBarChart, color: 'amber', label: 'Agent', desc: 'Earns GREP tokens per quality test', arrow: null },
-            ].map((item, i) => (
-              <div key={item.label}>
-                <div className="flex items-center gap-4 py-3">
-                  <div className={`w-12 h-12 rounded-xl bg-${item.color}/10 border border-${item.color}/25 flex items-center justify-center shrink-0`}>
-                    <item.icon size={22} className={`text-${item.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-text">{item.label}</p>
-                    <p className="text-xs text-text-dim">{item.desc}</p>
-                  </div>
+          {/* Mobile: two-section vertical */}
+          <div className="md:hidden space-y-8">
+
+            {/* Builder Flow */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-md bg-blue/15 flex items-center justify-center">
+                  <IconBuilder size={14} className="text-blue-bright" />
                 </div>
-                {item.arrow && (
-                  <div className="flex items-center gap-2 pl-6 py-1">
-                    <div className="w-px h-6 bg-border" />
-                    <span className="text-[10px] text-text-dim">{item.arrow}</span>
-                  </div>
-                )}
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-bright">Builder Flow</span>
               </div>
-            ))}
-            <div className="mt-3 p-3 bg-green/5 border border-green/15 rounded-lg text-center">
-              <p className="text-xs text-green/80">↩ GREP tokens flow from Builder&apos;s budget to Agent rewards</p>
+              <div className="space-y-0">
+                {[
+                  { n: '1', title: 'Submit', desc: 'Submit MCP tool + fund budget' },
+                  { n: '2', title: 'Diagnose', desc: 'AI agents test your tool' },
+                  { n: '3', title: 'Score', desc: 'Get 0-100 quality scores + fixes' },
+                  { n: '4', title: 'Publish', desc: 'Listed in public registry' },
+                ].map((s, i) => (
+                  <div key={s.n}>
+                    <div className="flex items-center gap-3 py-2.5">
+                      <span className="w-6 h-6 rounded-full bg-blue/10 text-blue-bright text-xs font-bold flex items-center justify-center shrink-0">{s.n}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-text">{s.title}</p>
+                        <p className="text-xs text-text-dim">{s.desc}</p>
+                      </div>
+                    </div>
+                    {i < 3 && <div className="ml-3 w-px h-3 bg-blue/15" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-text-dim">Registry</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Agent Flow */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-md bg-green/15 flex items-center justify-center">
+                  <IconBarChart size={14} className="text-green" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-green">Agent Flow</span>
+              </div>
+              <div className="space-y-0">
+                {[
+                  { n: '1', title: 'Discover', desc: 'Find tools via search or registry' },
+                  { n: '2', title: 'Sandbox Test', desc: 'Test safely in isolated environment' },
+                  { n: '3', title: 'Feedback', desc: 'Report scores and diagnostics' },
+                  { n: '4', title: 'Earn GREP', desc: 'Tokens from builder\'s budget' },
+                ].map((s, i) => (
+                  <div key={s.n}>
+                    <div className="flex items-center gap-3 py-2.5">
+                      <span className="w-6 h-6 rounded-full bg-green/10 text-green text-xs font-bold flex items-center justify-center shrink-0">{s.n}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-text">{s.title}</p>
+                        <p className="text-xs text-text-dim">{s.desc}</p>
+                      </div>
+                    </div>
+                    {i < 3 && <div className="ml-3 w-px h-3 bg-green/15" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Token flow */}
+            <div className="p-3 bg-surface border border-dashed border-amber/20 rounded-lg text-center">
+              <p className="text-xs text-text-secondary">💰 Builder&apos;s USDC → Vault → GREP → Agent rewards 💰</p>
             </div>
           </div>
         </div>
