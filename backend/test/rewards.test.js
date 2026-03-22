@@ -147,7 +147,7 @@ describe('Mint Service', () => {
       expect(result.mint_status).toBe('minted');
       expect(result.tier).toBe('FULL');
       expect(result.tx_hash).toBeTruthy();
-      expect(result.mint_id).toBe(0);
+      expect(String(result.mint_id)).toBe('0');
       expect(BigInt(result.amount)).toBeGreaterThan(0n);
       expect(mockToken.mint).toHaveBeenCalledTimes(1);
     });

@@ -2,35 +2,26 @@
 
 import { useEffect } from 'react';
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
-    console.error('Page error:', error);
+    console.error('Application error:', error);
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center p-6">
       <div className="text-center max-w-md">
-        <div className="w-16 h-16 rounded-2xl bg-red-dim border border-red/20 flex items-center justify-center mx-auto mb-6">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4757" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="w-12 h-12 rounded-full bg-red/10 flex items-center justify-center mx-auto mb-4">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Something went wrong</h2>
-        <p className="text-text-secondary text-sm mb-8 leading-relaxed">
-          An unexpected error occurred. This has been logged and we&apos;ll look into it.
+        <h1 className="text-xl font-semibold text-text mb-2">Something went wrong</h1>
+        <p className="text-text-secondary mb-6 text-sm">
+          {error.message || 'An unexpected error occurred.'}
         </p>
-        <button
-          onClick={reset}
-          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold"
-        >
+        <button onClick={reset} className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-medium">
           Try again
         </button>
       </div>

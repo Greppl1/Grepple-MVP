@@ -28,5 +28,17 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Secrets / private keys
+*.pem
+*.key
+.claude/settings.local.json
+
+# Idempotency data
+backend/data/
+
+# Deployment outputs
+contracts/deployments/
+
 # Style demos (not production code)
 style-demos/
+.vercel

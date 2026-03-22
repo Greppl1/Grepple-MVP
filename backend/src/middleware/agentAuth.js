@@ -7,10 +7,11 @@ const TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes
  *
  * Requires headers:
  *   x-agent-wallet    - the claimed wallet address
- *   x-agent-signature - signature over `${method}:${path}:${timestamp}`
+ *   x-agent-signature - signature over `${method}:${path}:${timestamp}:${bodyHash}`
  *   x-agent-timestamp - unix-ms timestamp (must be within 5 minutes of server time)
  *
- * Recovers the signer via ethers.verifyMessage and compares to the claimed wallet.
+ * The signed message now includes a keccak256 hash of the request body,
+ * preventing an attacker from modifying the body while reusing a captured signature.
  */
 function agentAuth(req, res, next) {
   const wallet = req.headers['x-agent-wallet'];
@@ -32,8 +33,13 @@ function agentAuth(req, res, next) {
     return res.status(401).json({ error: 'Timestamp expired' });
   }
 
+  // Compute body hash for integrity protection
+  const bodyHash = req.body && Object.keys(req.body).length > 0
+    ? ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(req.body)))
+    : '0x';
+
   // Reconstruct signed message and verify
-  const message = `${req.method}:${req.originalUrl || req.path}:${timestamp}`;
+  const message = `${req.method}:${req.originalUrl || req.path}:${timestamp}:${bodyHash}`;
 
   try {
     const recovered = ethers.verifyMessage(message, signature);

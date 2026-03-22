@@ -344,7 +344,7 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 |----|--------|------|
 | 合约（Mocha/Chai） | 53 | ✅ all passing（含 Pausable + taskHash 唯一性 + ReentrancyGuard） |
 | 后端 API（Jest） | 40 | ✅ all passing（含 txQueue + webhookAuth + 地址校验） |
-| 前端（Next.js build） | 12 pages | ✅ compiles, 0 errors |
+| 前端（Next.js build） | 13 pages | ✅ compiles, 0 errors（Step 20 后重验证） |
 | **总计** | **93+** | **✅** |
 
 ### 队友对接 Issues
@@ -389,11 +389,11 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] 响应式适配（移动端隐藏次要列、grid-cols 自适应）
 
 **Step 10: 用户意图入口** ✅
-- [x] 首页 Hero + 自然语言输入框（提交后跳转 Registry 搜索）
-- [x] 角色选择卡片（Builder / Agent 两入口）
+- [x] 首页 Hero + 自然语言意图搜索框（提交后跳转 `/intent?q=...`）
 - [x] How it Works 三步介绍 + CTA
-- [ ] 工具推荐结果页（AI 匹配）— 待 Fiona Registry API 就绪后对接
-- [ ] 执行结果展示
+- [x] 工具推荐结果页 `/intent`（Supabase ilike 搜索匹配 tool_name + tool_description，按 composite 排序，最多 10 结果）
+- [x] 执行结果展示（Agent 4 步执行动画 + 真实分数展示 + 文字诊断 verdict + Quick Setup 代码片段）
+- [x] 意图建议 pills（swap tokens / search documents / query database 等快捷搜索）
 
 **Step 11: Agent & 钱包页面** ✅
 - [x] Agent 注册页（3 步引导 + Toast + SVG icon）
@@ -459,6 +459,33 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] **Testnet Banner 统一**：Landing 和内页使用一致的 banner 策略
 - [x] **前端 build 通过**：12 pages, 0 errors
 
+**Step 20: UI/UX 极致重构 + 意图流程 + 集成指南 (2026-03-21)** ✅
+- [x] **设计系统重写**：新色板 WCAG AA 对比度达标（bg #07071C、surface #0F0F2D、text-secondary #9D97BE）
+- [x] **新按钮变体**：btn-ghost、btn-icon、btn-danger + btn-gradient disabled 修复
+- [x] **新 CSS 工具类**：metric-bar、score-badge、empty-state、page-enter、input-error/success、field-error/hint
+- [x] **Testnet banner 弱化**：小字 uppercase 替代醒目 amber banner
+- [x] **Sidebar 重构**：角色感知导航（未登录只显示 Registry/Try Tools/Submit，登录后显示 My Tools/Dashboard/Rewards）
+- [x] **移除嵌套子菜单**：Builder/Agent 展开折叠改为扁平导航
+- [x] **移除 CommandPalette**：⌘K 搜索对 13 页 MVP 过早优化
+- [x] **移动端底部导航**：BottomNav 组件（Registry/Try/Submit/Dashboard），thumb zone 友好
+- [x] **Landing 重写**：清晰 value prop "The quality layer for AI tools" + 意图搜索输入框 + 3 步 How it Works
+- [x] **移除角色选择卡片**：不再强制用户自我认同 Builder/Agent
+- [x] **Registry 卡片布局**：从表格改为 3 列卡片 grid，移除列表 ScoreRing（改为数字 + 颜色编码）
+- [x] **Registry 排序下拉**：替代可点击表头，更直观
+- [x] **Submit 单页表单**：3 步 wizard → 单页滚动表单 + blur 时 inline validation
+- [x] **Agent 注册 1 步**：3 步引导 → 单按钮注册
+- [x] **Agent Profile 集成 Redeem**：Profile 页底部加 "Redeem Tokens" 卡片，Redeem 页简化为信息页
+- [x] **Report 页面改进**：Grade badge (A-F 颜色编码)、metric-bar 替代旧样式
+- [x] **Builder Tools 空状态**：引导性空状态 + Submit CTA
+- [x] **Budget 简化**：数字展示替代 ScoreRing、诚实空状态
+- [x] **Tool Detail 集成指南**："How to Use This Tool" 三步（Install、MCP Config、Input Schema）+ CodeBlock 可复制
+- [x] **Intent 页面 `/intent`**：自然语言搜索 → Supabase 匹配 → Agent 执行动画 → 分数 + 诊断 + Quick Setup
+- [x] **分数计算修复**：924/990 工具无 benchmark 时从 tool metadata 估算分数（schema 质量 + 描述质量）
+- [x] **Tool 接口扩展**：新增 githubUrl、repoName、sourceFile、inputSchema 字段
+- [x] **前端 build 通过**：13 pages, 0 errors
+- [x] **Vercel 部署**：https://grepple.vercel.app
+- [x] **PR #21**：https://github.com/Greppl1/Grepple-MVP/pull/21
+
 **Step 14: 后端 + 合约安全加固** ✅
 - [x] AAOTestToken：添加 `mintedTaskHashes` 映射防重复 mint + `Pausable` 紧急暂停
 - [x] AgentRegistry：添加 `registerAgentFor(address, bytes32)` operator 模式 + `Pausable`
@@ -475,13 +502,52 @@ Fiona 的 Registry 提供调用记录的链上证明，我的合约验证时需�
 - [x] `config.js`：启动时警告未设置 `PRIVATE_KEY`
 - [x] 合约编译通过，53 tests passing；后端 40 tests passing
 
+**Step 19: Production Hardening (2026-03-21)** ✅
+- [x] **AAOVault 防重放修复**：从 timestamp-based hash 改为 per-mintId `redeemedMintIds` mapping
+- [x] **AAOVault 汇率验证**：新增 `exchangeRate` 变量，USDC 金额由链上计算，不再信任调用者
+- [x] **AAOVault mintIds 限制**：`MAX_MINT_IDS = 50`，防 DoS
+- [x] **AAOVault 会计追踪**：新增 `totalDeposited`/`totalRedeemed`，`getAvailableBalance()` 查询
+- [x] **AAOTestToken AgentRegistry 检查**：mint 时链上验证 agent 注册状态（`setAgentRegistry` 设置后生效）
+- [x] **AAOTestToken Pause 冻结转账**：`_update` override 使 pause 冻结所有 token 移动
+- [x] **AAOTestToken 分页查询**：`getMintsByAgentPaginated(agent, offset, limit)` 防 OOG
+- [x] **AAOTestToken struct 优化**：移除冗余 `mintId` 字段，每次 mint 省 ~20,000 gas
+- [x] **AgentRegistry reactivateAgent**：新增重新激活功能
+- [x] **config.js 生产 hard-fail**：`PRIVATE_KEY` 和 `WEBHOOK_API_KEY` 未设置时 throw（非 warn）
+- [x] **webhookAuth 生产强制**：生产环境无 key 则拒绝所有请求
+- [x] **agentAuth body hash**：签名消息包含 `keccak256(body)`，防止 body 篡改重放
+- [x] **rateLimiter 双层限流**：IP-based (primary) + wallet-based (secondary)，防 wallet 轮换绕过
+- [x] **rateLimiter OOM 保护**：`maxStoreSize` 限制 + 紧急清理
+- [x] **txQueue 重试逻辑**：3 次重试 + exponential backoff，仅对 transient 错误重试
+- [x] **txQueue timer 清理**：`finally { clearTimeout }` 防止泄漏
+- [x] **mintService 文件持久化**：idempotency Map 写入 `data/minted_tasks.json`，重启不丢失
+- [x] **mintService 输入验证**：`processRewardResult`/`processTestTaskCompleted` 检查必填字段
+- [x] **contractService provider 重连**：30s 健康检查 + 自动重置缓存实例
+- [x] **app.js 安全头**：X-Content-Type-Options, X-Frame-Options, HSTS, CSP（无需 helmet 依赖）
+- [x] **app.js body 大小限制**：`express.json({ limit: '100kb' })`
+- [x] **app.js request correlation ID**：`crypto.randomUUID()` + `x-request-id` header
+- [x] **app.js 增强 health check**：验证 RPC 连接 + 返回 block number + 503 on degraded
+- [x] **app.js isSafeError 精确匹配**：改为 exact message match，不再 `.includes()` 误匹配
+- [x] **server.js graceful shutdown**：SIGTERM/SIGINT 处理 + 10s 强制退出 + 全局错误捕获
+- [x] **vault.js deposit 认证**：加 `webhookAuth` 中间件
+- [x] **vault.js mint_ids 大小限制**：`MAX_MINT_IDS = 50`
+- [x] **所有 GET 端点加限流**：30 req/min 防枚举
+- [x] **deploy.js 地址持久化**：输出 JSON 到 `deployments/` 目录
+- [x] **deploy.js 自动配置**：部署后自动 link AgentRegistry + 授权 deployer 为 minter
+- [x] **contracts/.env 从 git 移除**：`git rm --cached`，私钥不再被跟踪
+- [x] **.gitignore 加固**：`.claude/settings.local.json`、`*.pem`、`*.key`、`backend/data/`、`contracts/deployments/`
+- [x] **OpenZeppelin 版本精确锁定**：`^5.6.1` → `5.6.1`
+- [x] **.env.example 文件**：`contracts/.env.example` + `backend/.env.example`
+- [x] 合约 53 tests passing，后端 40 tests passing，前端 12 pages 0 errors
+
 **已知限制（非当前优先级）：**
-- Redeem 功能仅为占位接口，默认关闭，用户不涉及真实兑换。真钱是未来的事情
+- Redeem 功能仅为占位接口，默认关闭，用户不涉及真实兑换
 - MockUSDC 使用 18 decimals（真实 USDC 为 6），迁移 mainnet 时需适配
-- `builderDeposits` 只记录累计充值，不反映消耗后余额
-- `processedRedemptions` hash 包含 `block.timestamp`，未来需改为基于 mintId 的防重放
+- `builderDeposits` 记录累计充值（已重命名为 `getBuilderDeposited`），新增 `getAvailableBalance()`
+- Owner 仍为单 EOA，未来需 Timelock + Multisig
 - 缺少 off-chain indexer（The Graph / Ponder），统计数据暂为 mock
-- 幂等性 Map 仍为内存级，生产环境需 Redis/DB 持久化
+- 幂等性已从内存 Map 升级为 JSON 文件持久化，生产环境建议 Redis/DB
+- 无 CI/CD pipeline（需 GitHub Actions）
+- 合约不可升级（无 proxy pattern）
 
 **Step 15: Supabase 数据对接** ✅
 - [x] 安装 `@supabase/supabase-js`
@@ -507,8 +573,8 @@ ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud
 - [x] Jerry 部署到 Railway：`https://spirited-success-production-2b55.up.railway.app`
 - [x] 前端 `.env.local` 配好 `NEXT_PUBLIC_SCORING_ENGINE_URL`
 - [x] Builder 提交页 → `POST /api/v1/diagnose` → 拿到 `reportId` → 跳转报告页 ✅ 已测试
-- [x] 报告页 → `GET /api/v1/report/{reportId}/scores` → 展示真实 0-100 分数 + grade
-- [x] 报告页 → `GET /api/v1/report/{reportId}` → 从 `diagnosis.issues` 提取改进建议
+- [x] 报告页 → `GET /api/v1/report/{reportId}/scores` → 展示真实 0-100 分数 + grade（已适配架构拆分：只有 schemaHealth + discoverability，无 callability）
+- [x] 报告页 → `GET /api/v1/report/{reportId}` → 从 `diagnosis.issues` 提取改进建议（兼容 `suggestions` 和 `rewriteSuggestion` 两种字段名）
 - [x] 评分引擎不可达时 fallback 到确定性 mock 分数
 - [x] 后端 `.env` 配好 `SCORING_ENGINE_URL` + `REGISTRY_API_URL`（Supabase Edge Function）
 - [x] `vaultService.fetchCallRecord` URL 格式改为 Supabase `?id=` 格式
@@ -538,9 +604,36 @@ ai_ml→AI, database→Database, dex_swap→DeFi, calendar→Productivity, cloud
 
 **Step 12: 对接联调**
 - [x] 前端 ↔ Fiona Registry Supabase 对接 ✅（2,114 工具实时展示）
-- [x] 前端 ↔ Jerry 评分 API 联调 ✅（diagnose + scores + report 全通）
-- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents — 等后端部署公网）
+- [x] 前端 ↔ Jerry 评分 API 联调 ✅（diagnose + scores + report 全通，已适配架构拆分）
+- [x] 后端 Railway 部署 ✅（`https://zian-backend-production.up.railway.app`，Issue #15）
+- [x] successRate 公式修复 ✅（Issue #12 Fiona 反馈：`invoke_rate/(invoke_rate+error_rate)` 替代 `100-error_rate`）
+- [ ] 前端 ↔ Zian 后端 API 联调（rewards、vault、agents — 等 Railway 部署验证）
+- [x] 意图 → 匹配 → 执行结果完整闭环 ✅（Landing 搜索 → /intent 匹配 → Agent 执行 → 分数 + 集成指南）
 - [ ] 端到端流程测试：Builder 提交 → 诊断 → Launch → Registry 展示 → Agent 测试 → Token 发放
+
+**Step 20: UX/UI 产品级重构 (2026-03-21)** ✅
+- [x] **Landing Page 重写**：Hero 改为 "Ship tools that agents actually use"，具体 value prop 替代抽象术语
+- [x] **Landing 搜索统一**：移除 Intent 独立搜索入口，Landing 搜索跳转 Registry（`/registry?q=...`）消除双搜索混乱
+- [x] **Landing 角色入口**：Builder / Agent 双卡片，各自展示 3 个具体 value points + CTA
+- [x] **Testnet Banner**：Landing 顶部统一 amber 横幅 "BSC Testnet — no real funds involved"
+- [x] **SidebarProvider 上下文**：新增 `providers/SidebarProvider.tsx`，Sidebar 折叠状态全局共享
+- [x] **LayoutShell 修复**：margin-left 根据 sidebar collapsed 状态动态切换（`lg:ml-16` / `lg:ml-60`），不再硬编码
+- [x] **Sidebar 角色分区**：Discover（Registry, Try Tools）/ Build（Submit, My Tools, Budget）/ Agent（Dashboard, Rewards），section label 标识
+- [x] **Budget 加入导航**：Sidebar 新增 Budget 入口（之前完全无法到达）
+- [x] **BottomNav 对齐**：Landing 页隐藏底部导航，4 个入口与 Sidebar 结构一致
+- [x] **假功能标注**：所有 "Publish to Registry" 按钮改为 `btn-secondary` + Coming Soon badge，不再伪装成真功能
+- [x] **Report 数据源标注**：scoring engine 不可达时顶部显示 demo-banner 明确说明 "showing estimated scores"
+- [x] **Agent Execution Demo 标注**：Intent 页 agent 执行面板右上角添加 Demo badge
+- [x] **Agent 注册持久化**：`isRegistered` 存入 localStorage（`grepple_agent_registered_{userId}`），刷新不丢失
+- [x] **Agent Profile 注册联动**：读取 localStorage 注册状态，未注册时显示 "Not registered — Register now" 链接替代硬编码 "Active"
+- [x] **Budget Demo Banner**：顶部说明 "Testnet mode — deposits use mock USDC. Balances will update once backend connected"
+- [x] **错误 Toast 级别修复**：scoring engine 不可达 / API 错误从 `toast('info')` 改为 `toast('error')`，不再误导用户
+- [x] **Registry 搜索防抖**：250ms debounce，避免 2000+ 工具时每次按键都触发过滤
+- [x] **颜色对比度提升**：`text-dim` 从 #7B75A0 提升至 #918BB2（WCAG AA 达标）
+- [x] **Surface 分层加大**：surface #111136、elevated #1C1C4D、elevated-2 #272766，与 bg #07071C 形成更明显层级
+- [x] **CSS 新增**：`.demo-banner`（诚实状态横幅）、`.nav-section-label`（导航分区标签）、`.badge-coming-soon`（未上线功能标记）
+- [x] **My Tools 空状态优化**：新增 "Published tools will appear here once registry publishing is enabled" 说明
+- [x] 前端 build 通过（13 pages, 0 errors）
 
 ---
 
@@ -790,32 +883,36 @@ frontend/                   # React/Next.js 前端
   src/
     app/                    # Next.js App Router 页面
       layout.tsx            # 全局 Layout（导航、钱包连接）
-      page.tsx              # 首页 / 用户意图入口
+      page.tsx              # 首页（Hero + 意图搜索 + How it Works）
+      intent/page.tsx       # 意图匹配 → 工具推荐 → Agent 执行结果
       builder/
-        submit/page.tsx     # 提交 MCP Tool
-        report/[id]/page.tsx # 诊断报告详情
+        submit/page.tsx     # 提交 MCP Tool（单页表单 + inline validation）
+        report/[id]/page.tsx # 诊断报告详情（Grade badge + 分数 + 建议）
         budget/page.tsx     # Budget 管理（充值、余额）
         tools/page.tsx      # 已发布工具列表
       registry/
-        page.tsx            # Registry 排名列表
-        [id]/page.tsx       # 工具详情页
+        page.tsx            # Registry 卡片列表（搜索 + 筛选 + 排序）
+        [id]/page.tsx       # 工具详情页（分数 + How to Use 集成指南）
       agent/
-        register/page.tsx   # Agent 注册
-        profile/page.tsx    # Agent Profile + 奖励历史
-        redeem/page.tsx     # 兑换页面
+        register/page.tsx   # Agent 1-click 注册
+        profile/page.tsx    # Agent Dashboard（stats + rewards + redeem）
+        redeem/page.tsx     # 兑换信息页（Coming Soon）
     components/             # 可复用组件
       Icons.tsx             # SVG icon 组件库（25+ icons）
       Toast.tsx             # Toast 通知系统 + provider
       ConfirmDialog.tsx     # 确认弹窗
       Skeleton.tsx          # 加载占位组件
-      SubNav.tsx            # 子导航（Builder/Agent 页面内 tab）
-      LayoutShell.tsx       # 响应式布局外壳
-      Sidebar.tsx           # 侧边栏（移动端 hamburger）
+      LayoutShell.tsx       # 响应式布局外壳 + BottomNav 集成
+      Sidebar.tsx           # 角色感知侧边栏（移动端 hamburger）
+      BottomNav.tsx         # 移动端底部导航（Registry/Try/Submit/Dashboard）
       ScoreRing.tsx         # 环形评分组件
       Sparkline.tsx         # 趋势折线图
+      Identicon.tsx         # 钱包地址确定性头像
+      AuthModal.tsx         # 邮箱注册/登录弹窗
+      UserButton.tsx        # 认证状态按钮 + 菜单
     hooks/                  # 自定义 hooks（合约交互、API 调用）
     lib/                    # 工具函数、合约 ABI、常量
-    providers/              # Web3 Provider、主题等
+    providers/              # Web3 Provider、Auth、Sidebar 状态等
 ```
 
 ### 命名规范

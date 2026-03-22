@@ -3,6 +3,7 @@ import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Web3Provider from "@/providers/Web3Provider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { SidebarProvider } from "@/providers/SidebarProvider";
 import Sidebar from "@/components/Sidebar";
 import { ToastProvider } from "@/components/Toast";
 import LayoutShell from "@/components/LayoutShell";
@@ -34,12 +35,14 @@ export default function RootLayout({
       <body className="min-h-full bg-bg text-text font-sans antialiased">
         <Web3Provider>
           <AuthProvider>
-            <ToastProvider>
-              <Sidebar />
-              <LayoutShell>
-                {children}
-              </LayoutShell>
-            </ToastProvider>
+            <SidebarProvider>
+              <ToastProvider>
+                <Sidebar />
+                <LayoutShell>
+                  {children}
+                </LayoutShell>
+              </ToastProvider>
+            </SidebarProvider>
           </AuthProvider>
         </Web3Provider>
       </body>

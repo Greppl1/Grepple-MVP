@@ -20,6 +20,6 @@ export const BSC_TESTNET = {
   testnet: true,
 } as const;
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-export const SCORING_ENGINE_URL = process.env.NEXT_PUBLIC_SCORING_ENGINE_URL || 'http://localhost:8001';
-export const REWARD_SYSTEM_URL = process.env.NEXT_PUBLIC_REWARD_SYSTEM_URL || 'http://localhost:8002';
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://zian-backend-production.up.railway.app';
+export const SCORING_ENGINE_URL = process.env.NEXT_PUBLIC_SCORING_ENGINE_URL || 'https://spirited-success-production-2b55.up.railway.app';
+export const REWARD_SYSTEM_URL = process.env.NEXT_PUBLIC_REWARD_SYSTEM_URL || 'https://zian-backend-production.up.railway.app';

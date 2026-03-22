@@ -19,6 +19,7 @@ function validateAddress(address) {
  */
 async function registerAgent({ wallet_address, agent_id }) {
   const checksummed = validateAddress(wallet_address);
+  await contractService.ensureProviderConnected();
   const registry = contractService.getRegistryContract();
   const agentIdHash = ethers.keccak256(ethers.toUtf8Bytes(agent_id));
 
@@ -57,6 +58,7 @@ async function registerAgent({ wallet_address, agent_id }) {
  */
 async function getAgentProfile(wallet) {
   const checksummed = validateAddress(wallet);
+  await contractService.ensureProviderConnected();
   const registry = contractService.getRegistryContract();
   const profile = await registry.getAgentProfile(checksummed);
 
@@ -78,6 +80,7 @@ async function isRegistered(wallet) {
  */
 async function getAgentRewards(wallet) {
   const checksummed = validateAddress(wallet);
+  await contractService.ensureProviderConnected();
   const tokenContract = contractService.getTokenContract();
 
   const mintIds = await tokenContract.getMintsByAgent(checksummed);
@@ -91,7 +94,7 @@ async function getAgentRewards(wallet) {
     mintIds.map(async (mintId) => {
       const record = await tokenContract.getMintRecord(mintId);
       return {
-        mint_id: Number(record.mintId),
+        mint_id: mintId.toString(),
         agent: record.agent,
         amount: record.amount.toString(),
         task_hash: record.taskHash,

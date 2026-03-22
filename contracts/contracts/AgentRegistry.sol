@@ -20,6 +20,7 @@ contract AgentRegistry is Ownable, Pausable {
 
     event AgentRegistered(address indexed wallet, bytes32 indexed agentIdHash);
     event AgentDeactivated(address indexed wallet);
+    event AgentReactivated(address indexed wallet);
     event AgentStatsUpdated(address indexed wallet, uint256 totalEarned, uint256 taskCount);
 
     constructor() Ownable(msg.sender) {}
@@ -67,6 +68,13 @@ contract AgentRegistry is Ownable, Pausable {
         require(agents[wallet].wallet != address(0), "Agent not found");
         agents[wallet].isActive = false;
         emit AgentDeactivated(wallet);
+    }
+
+    function reactivateAgent(address wallet) external onlyOwner {
+        require(agents[wallet].wallet != address(0), "Agent not found");
+        require(!agents[wallet].isActive, "Agent already active");
+        agents[wallet].isActive = true;
+        emit AgentReactivated(wallet);
     }
 
     function getAgentProfile(address wallet) external view returns (AgentProfile memory) {

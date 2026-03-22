@@ -12,6 +12,11 @@ export interface Tool {
   trend: number[];
   lastTested: string;
   description: string;
+  // Integration fields
+  githubUrl?: string;
+  repoName?: string;
+  sourceFile?: string;
+  inputSchema?: string; // raw JSON string of parsed_schema
 }
 
 export const TOOLS: Tool[] = [

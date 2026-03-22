@@ -69,11 +69,15 @@ function ReportContent() {
         if (!res.ok) throw new Error('scores not found');
         const data = await res.json();
 
+        // Jerry's scoring engine now only returns schemaHealth + discoverability (no callability)
+        // Overall = schema×50% + description×50%
+        const schema = data.schemaHealth?.score ?? 0;
+        const discovery = data.discoverability?.score ?? 0;
         setScores({
-          composite: data.overall ?? 0,
-          schema: data.schemaHealth?.score ?? 0,
-          discoverability: data.discoverability?.score ?? 0,
-          successRate: Math.max(0, 100 - (data.callability?.breakdown?.friction ?? 0)),
+          composite: data.overall ?? Math.round((schema + discovery) / 2),
+          schema,
+          discoverability: discovery,
+          successRate: 0, // callability removed from scoring engine; only in external agent eval
           grade: data.grade ?? 'N/A',
         });
         setIsLive(true);
@@ -97,12 +101,13 @@ function ReportContent() {
             }
           }
 
-          // Add rewrite suggestion if present
-          if (report.rewriteSuggestion?.rationale) {
+          // Add rewrite suggestion if present (Jerry aliases rewriteSuggestion as "suggestions")
+          const rewrite = report.suggestions ?? report.rewriteSuggestion;
+          if (rewrite?.rationale) {
             realSuggestions.push({
               category: 'Description',
               impact: 'High',
-              text: report.rewriteSuggestion.rationale,
+              text: rewrite.rationale,
             });
           }
 
@@ -125,11 +130,17 @@ function ReportContent() {
     return <SkeletonPage />;
   }
 
-  const SCORE_CARDS = [
-    { label: 'Schema Health', score: scores.schema },
-    { label: 'Discoverability', score: scores.discoverability },
-    { label: 'Success Rate', score: scores.successRate },
-  ];
+  // When live, scoring engine only returns schema + discoverability (no callability)
+  const SCORE_CARDS = isLive
+    ? [
+        { label: 'Schema Health', score: scores.schema },
+        { label: 'Discoverability', score: scores.discoverability },
+      ]
+    : [
+        { label: 'Schema Health', score: scores.schema },
+        { label: 'Discoverability', score: scores.discoverability },
+        { label: 'Success Rate', score: scores.successRate },
+      ];
 
   const handleCopy = async (text: string, index: number) => {
     try {
@@ -143,8 +154,7 @@ function ReportContent() {
   };
 
   const handlePublish = () => {
-    toast('Tool published to registry!', 'success');
-    setTimeout(() => { router.push('/builder/tools'); }, 1500);
+    toast('Publishing is not yet available on testnet. Your report has been saved.', 'info');
   };
 
   const impactColor = (impact: string) => impact === 'High' ? 'bg-red-dim text-red' : 'bg-amber-dim text-amber';
@@ -156,10 +166,17 @@ function ReportContent() {
 
   return (
     <div className="animate-fade-in">
+      {/* Data source banner */}
+      {!isLive && (
+        <div className="demo-banner mb-6">
+          Scoring engine unavailable &mdash; showing estimated scores based on tool name. Submit again when the engine is online for real diagnostics.
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <p className="text-sm text-text-dim font-mono mb-1">{toolName}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-blue-bright">Diagnosis Report</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-text">Diagnosis Report</h1>
         {isLive && (
           <p className="text-xs text-green mt-2 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-green" />
@@ -237,9 +254,10 @@ function ReportContent() {
         </button>
         <button
           onClick={handlePublish}
-          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold"
+          className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
         >
           Publish to Registry
+          <span className="badge-coming-soon">Soon</span>
         </button>
       </div>
     </div>
