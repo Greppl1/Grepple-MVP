@@ -36,7 +36,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     });
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, Math.max(4000, message.length * 80));
   }, []);
 
   const dismiss = useCallback((id: number) => {
@@ -68,7 +68,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center gap-3 bg-surface border ${borderMap[t.type]} rounded-xl px-5 py-3 shadow-2xl shadow-black/30 animate-slide-in min-w-[280px] max-w-[420px]`}
+            className={`pointer-events-auto flex items-center gap-3 bg-surface border ${borderMap[t.type]} rounded-xl px-5 py-3 shadow-2xl shadow-black/30 animate-slide-in min-w-[280px] max-w-[520px]`}
           >
             {iconMap[t.type]}
             <span className="text-sm text-text flex-1">{t.message}</span>

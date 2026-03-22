@@ -280,16 +280,22 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-4">
-        <button onClick={handlePublish} className="btn-secondary px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
-          Publish to Registry
-          <span className="badge-coming-soon">Soon</span>
-        </button>
+        <Link
+          href={`/builder/submit?name=${encodeURIComponent(displayName)}`}
+          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+        >
+          Fix &amp; Re-diagnose
+        </Link>
         <Link
           href="/builder/submit"
-          className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center"
+          className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold"
         >
-          Submit Another Tool
+          New Tool
         </Link>
+        <button onClick={handlePublish} className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
+          Publish
+          <span className="badge-coming-soon">Soon</span>
+        </button>
       </div>
     </div>
   );

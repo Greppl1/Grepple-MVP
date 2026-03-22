@@ -236,15 +236,20 @@ export default function LandingPage() {
                 GREP tokens → USDC redemption
               </li>
             </ul>
-            {isAuthenticated ? (
-              <Link href="/agent/profile" className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
-                Dashboard <IconArrowRight size={14} />
+            <div className="flex flex-wrap gap-2">
+              {isAuthenticated ? (
+                <Link href="/agent/profile" className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+                  Dashboard <IconArrowRight size={14} />
+                </Link>
+              ) : (
+                <button onClick={() => setShowAuth(true)} className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+                  Register <IconArrowRight size={14} />
+                </button>
+              )}
+              <Link href="/developers" className="btn-ghost px-4 py-2.5 rounded-lg text-sm font-medium inline-flex items-center gap-1.5">
+                MCP Setup
               </Link>
-            ) : (
-              <button onClick={() => setShowAuth(true)} className="btn-gradient px-5 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
-                Register <IconArrowRight size={14} />
-              </button>
-            )}
+            </div>
           </div>
         </div>
       </section>

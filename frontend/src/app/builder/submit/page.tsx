@@ -120,14 +120,24 @@ export default function SubmitPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Load draft on mount
+  // Load draft on mount, or pre-fill from URL params (e.g. ?name=my-tool from "Fix & Re-diagnose")
   useEffect(() => {
     try {
+      const params = new URLSearchParams(window.location.search);
+      const urlName = params.get('name');
+
       const saved = localStorage.getItem(DRAFT_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<FormData>;
         setFormData((prev) => ({ ...prev, ...parsed }));
-        toast('Draft restored from previous session', 'info');
+        if (!urlName) toast('Draft restored from previous session', 'info');
+      }
+
+      // URL param overrides draft name — user came from "Fix & Re-diagnose"
+      if (urlName) {
+        setFormData((prev) => ({ ...prev, toolName: urlName }));
+        setTouched((prev) => ({ ...prev, toolName: true }));
+        toast('Fix your tool and re-diagnose', 'info');
       }
     } catch { /* ignore corrupt data */ }
     setDraftLoaded(true);

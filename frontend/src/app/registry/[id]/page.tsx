@@ -13,6 +13,8 @@ import {
   IconExternalLink,
   IconCopy,
   IconArrowRight,
+  IconCheck,
+  IconX,
 } from '@/components/Icons';
 import type { Tool } from '@/lib/mock-data';
 
@@ -41,6 +43,21 @@ function CategoryBadge({ category }: { category: string }) {
     <span className={`inline-block px-2.5 py-0.5 text-xs font-medium rounded border ${classes}`}>
       {category}
     </span>
+  );
+}
+
+/* ─── Security Check ──────────────────────────────────────────────── */
+
+function SecurityCheck({ passed, label }: { passed: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {passed ? (
+        <IconCheck size={16} className="text-green shrink-0" />
+      ) : (
+        <IconX size={16} className="text-text-dim shrink-0" />
+      )}
+      <span className={`text-sm ${passed ? 'text-text-secondary' : 'text-text-dim'}`}>{label}</span>
+    </div>
   );
 }
 
@@ -216,6 +233,67 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* ────────────────────────────────────────────────────────────── */}
+      {/* SECURITY & TRUST                                              */}
+      {/* ────────────────────────────────────────────────────────────── */}
+      <div className="bg-surface rounded-xl border border-border p-6 mb-8">
+        <h2 className="text-lg font-semibold text-text mb-4">Security &amp; Trust</h2>
+
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* Trust Score */}
+          <div className="bg-elevated rounded-lg p-4">
+            <p className="text-xs text-text-dim mb-1">Trust Score</p>
+            <p className={`text-2xl font-bold ${tool.composite >= 70 ? 'text-green' : tool.composite >= 40 ? 'text-amber' : 'text-red'}`}>
+              {tool.composite}/100
+            </p>
+            <p className="text-xs text-text-dim mt-1">Based on schema + description quality</p>
+          </div>
+
+          {/* Source */}
+          <div className="bg-elevated rounded-lg p-4">
+            <p className="text-xs text-text-dim mb-1">Source</p>
+            {tool.githubUrl ? (
+              <>
+                <p className="text-sm font-medium text-text truncate">{tool.repoName || 'GitHub'}</p>
+                <p className="text-xs text-text-dim mt-1">Open source — code is auditable</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-text-dim">Unknown</p>
+                <p className="text-xs text-text-dim mt-1">No source repository linked</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Security Checklist */}
+        <div className="space-y-2">
+          <SecurityCheck
+            passed={tool.metrics.schemaHealth >= 50}
+            label="Schema defines parameter types and descriptions"
+          />
+          <SecurityCheck
+            passed={tool.metrics.discoverability >= 50}
+            label="Description clearly states what the tool does"
+          />
+          <SecurityCheck
+            passed={!!tool.githubUrl}
+            label="Source code is publicly available"
+          />
+          <SecurityCheck
+            passed={tool.composite >= 60}
+            label="Passes minimum quality threshold"
+          />
+        </div>
+
+        {/* Warning for low-trust tools */}
+        {tool.composite < 40 && (
+          <div className="mt-4 p-3 bg-red/5 border border-red/15 rounded-lg">
+            <p className="text-xs text-red font-medium">Warning: Low trust score — review the source code carefully before using this tool locally.</p>
+          </div>
+        )}
+      </div>
+
+      {/* ────────────────────────────────────────────────────────────── */}
       {/* HOW TO USE THIS TOOL — the key section                       */}
       {/* ────────────────────────────────────────────────────────────── */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-6">
@@ -282,6 +360,13 @@ export default function ToolDetailPage({ params }: { params: Promise<{ id: strin
               <p className="text-xs text-text-dim mt-2">
                 Works with: Claude Desktop, Cursor, Windsurf, and any MCP-compatible client.
               </p>
+              <div className="mt-4 p-3 bg-amber/5 border border-amber/15 rounded-lg">
+                <p className="text-xs text-amber">
+                  <strong>Security note:</strong> Installing an MCP server gives it access to your local system.
+                  Only install tools from sources you trust. Use the Sandbox test on the{' '}
+                  <Link href="/intent" className="underline">Try Tools</Link> page for safe testing.
+                </p>
+              </div>
             </div>
 
             {/* Step 3: Input Schema */}

@@ -8,10 +8,22 @@ import { mapToFrontendTool, type SupabaseTool, type SupabaseBenchmark } from '@/
 import type { Tool } from '@/lib/mock-data';
 import { TOOLS as MOCK_TOOLS } from '@/lib/mock-data';
 import { useToast } from '@/components/Toast';
-import { IconSearch, IconSparkles, IconCheck, IconX, IconArrowRight, IconExternalLink } from '@/components/Icons';
+import { IconSearch, IconSparkles, IconCheck, IconX, IconArrowRight, IconExternalLink, IconLock } from '@/components/Icons';
 import { Skeleton } from '@/components/Skeleton';
 import ScoreRing from '@/components/ScoreRing';
 import { SCORING_ENGINE_URL } from '@/lib/contracts';
+
+/* ── types ──────────────────────────────────────────── */
+
+interface ExecutionResult {
+  schemaHealth: number;
+  discoverability: number;
+  composite: number;
+  issues: Array<{ field: string; severity: string; code: string; detail: string }>;
+  suggestions: any;
+  reportId: string | null;
+  isLive: boolean;
+}
 
 /* ── helpers ─────────────────────────────────────────── */
 
@@ -121,11 +133,13 @@ function ExecutionPanel({
   step,
   done,
   stepTimings,
+  executionResult,
 }: {
   tool: Tool;
   step: number;
   done: boolean;
   stepTimings: number[];
+  executionResult: ExecutionResult | null;
 }) {
   return (
     <div className="bg-elevated rounded-xl p-6 mt-3 border border-border animate-slide-up">
@@ -180,20 +194,52 @@ function ExecutionPanel({
       {/* Results (after all steps done) */}
       {done && (
         <div className="animate-fade-in">
+          {/* Sandbox badge */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-green/10 text-green border border-green/20">
+              <IconLock size={12} />
+              {executionResult?.isLive ? 'Sandbox \u2014 Live Test' : 'Sandbox \u2014 Estimated'}
+            </span>
+            {executionResult?.reportId && (
+              <Link href={`/builder/report/${executionResult.reportId}`} className="text-xs text-blue hover:underline">
+                Full report &rarr;
+              </Link>
+            )}
+          </div>
+
+          {/* Scores */}
           <div className="border-t border-border/40 pt-5 mb-5">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-text-dim mb-4">Results</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <ResultRow label="Schema Health" value={tool.metrics.schemaHealth} />
-              <ResultRow label="Discoverability" value={tool.metrics.discoverability} />
-              <ResultRow label="Success Rate" value={tool.metrics.successRate} />
-              <ResultRow label="Composite" value={tool.composite} />
+              <ResultRow label="Schema Health" value={executionResult?.schemaHealth ?? tool.metrics.schemaHealth} />
+              <ResultRow label="Discoverability" value={executionResult?.discoverability ?? tool.metrics.discoverability} />
+              <ResultRow label="Composite" value={executionResult?.composite ?? tool.composite} />
             </div>
           </div>
+
+          {/* Issues from live test */}
+          {executionResult?.issues && executionResult.issues.length > 0 && (
+            <div className="mb-5">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-text-dim mb-3">Issues Found</h4>
+              <div className="space-y-2">
+                {executionResult.issues.map((issue, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded ${
+                      issue.severity === 'high' ? 'bg-red/10 text-red' : 'bg-amber/10 text-amber'
+                    }`}>
+                      {issue.severity}
+                    </span>
+                    <span className="text-text-secondary">{issue.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Verdict */}
           <div className="bg-surface rounded-lg border border-border/40 p-4 mb-5">
             <p className="text-sm text-text-secondary italic leading-relaxed">
-              {generateVerdict(tool)}
+              {generateVerdict(executionResult ? { ...tool, metrics: { schemaHealth: executionResult.schemaHealth, discoverability: executionResult.discoverability, successRate: 0 }, composite: executionResult.composite } : tool)}
             </p>
           </div>
 
@@ -210,13 +256,13 @@ function ExecutionPanel({
                 href={`/registry/${tool.id}`}
                 className="text-xs text-blue hover:underline mt-2 inline-block"
               >
-                View full integration guide →
+                View full integration guide &rarr;
               </Link>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 mt-5">
             <Link
               href={`/builder/report?name=${encodeURIComponent(tool.name)}`}
               className="btn-ghost text-sm px-4 py-2 inline-flex items-center gap-2"
@@ -265,13 +311,15 @@ function ToolCard({
   executionDone,
   stepTimings,
   onTest,
+  executionResult,
 }: {
   tool: Tool;
   isExecuting: boolean;
   executionStep: number;
   executionDone: boolean;
   stepTimings: number[];
-  onTest: () => void;
+  onTest: (mode: 'sandbox' | 'local') => void;
+  executionResult: ExecutionResult | null;
 }) {
   return (
     <div>
@@ -331,13 +379,21 @@ function ToolCard({
               )}
             </button>
           ) : (
-            <button
-              onClick={onTest}
-              className="btn-gradient text-sm px-4 py-2 inline-flex items-center gap-1.5 rounded-lg font-medium"
-            >
-              Try it
-              <IconArrowRight size={14} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onTest('sandbox')}
+                className="btn-gradient text-sm px-4 py-2 rounded-lg font-medium inline-flex items-center gap-1.5"
+              >
+                <IconLock size={14} />
+                Try in Sandbox
+              </button>
+              <button
+                onClick={() => onTest('local')}
+                className="btn-ghost text-sm px-3 py-2 rounded-lg inline-flex items-center gap-1.5"
+              >
+                Local Install
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -349,6 +405,7 @@ function ToolCard({
           step={executionStep}
           done={executionDone}
           stepTimings={stepTimings}
+          executionResult={executionResult}
         />
       )}
     </div>
@@ -401,6 +458,7 @@ function IntentPageInner() {
   const [executionStep, setExecutionStep] = useState(0);
   const [executionDone, setExecutionDone] = useState(false);
   const [stepTimings, setStepTimings] = useState<number[]>([]);
+  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
   const executionRef = useRef<boolean>(false);
 
   // Run search on mount if query present
@@ -420,6 +478,7 @@ function IntentPageInner() {
     setExecutionStep(0);
     setExecutionDone(false);
     setStepTimings([]);
+    setExecutionResult(null);
 
     try {
       const results = await searchTools(q.trim());
@@ -443,35 +502,137 @@ function IntentPageInner() {
     runSearch(query.trim());
   };
 
-  const handleTestTool = useCallback((tool: Tool) => {
+  const handleTestTool = useCallback(async (tool: Tool, mode: 'sandbox' | 'local') => {
     if (executionRef.current) return;
-    executionRef.current = true;
 
+    if (mode === 'local') {
+      // Show local install info — redirect to tool detail page
+      router.push(`/registry/${tool.id}`);
+      return;
+    }
+
+    // Sandbox mode — real API call
+    executionRef.current = true;
     setExecutingToolId(tool.id);
     setExecutionStep(0);
     setExecutionDone(false);
     setStepTimings([]);
+    setExecutionResult(null);
 
-    let step = 0;
+    // Start animation while API call runs in parallel
+    const steps = EXECUTION_STEPS;
+    let stepIdx = 0;
     const timings: number[] = [];
 
-    const runStep = () => {
-      if (step < EXECUTION_STEPS.length) {
-        setExecutionStep(step + 1);
+    const animateStep = () => {
+      if (stepIdx < steps.length) {
+        setExecutionStep(stepIdx + 1);
         const jitter = (Math.random() - 0.5) * 400;
-        const duration = Math.max(300, EXECUTION_STEPS[step].duration + jitter);
+        const duration = Math.max(300, steps[stepIdx].duration + jitter);
         timings.push(Math.round(duration));
         setStepTimings([...timings]);
-        step++;
-        setTimeout(runStep, duration);
-      } else {
-        setExecutionDone(true);
-        executionRef.current = false;
+        stepIdx++;
+        setTimeout(animateStep, duration);
       }
     };
+    setTimeout(animateStep, 300);
 
-    setTimeout(runStep, 500);
-  }, []);
+    // Real API call in parallel
+    try {
+      let schema = {};
+      if (tool.inputSchema) {
+        try { schema = JSON.parse(tool.inputSchema); } catch { /* ignore parse errors */ }
+      }
+
+      const res = await fetch('/api/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: Object.keys(schema).length > 0 ? schema : { type: 'object', properties: {} },
+          serverUrl: tool.githubUrl || 'https://unknown',
+          category: tool.category,
+          runLlmTest: true,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Extract scores from Jerry's response
+        const metrics = data.metrics;
+        if (metrics) {
+          const schemaScore = metrics.schema ? Math.min(100, Math.max(0, Math.round(
+            (metrics.schema.hasSchema ? 20 : 0) +
+            (metrics.schema.descriptionCoverage ?? 0) * 0.6 +
+            (metrics.schema.requiredFields > 0 ? 10 : 0) +
+            (metrics.schema.hasDefaults ? 5 : 0) -
+            (metrics.schema.ambiguousFieldNames?.length ?? 0) * 5 -
+            (metrics.schema.issues?.length ?? 0) * 3
+          ))) : 0;
+
+          const discoverScore = metrics.description ? Math.min(100, Math.max(0, Math.round(
+            40 +
+            (metrics.description.hasActionVerb ? 20 : 0) +
+            (metrics.description.hasUseCase ? 20 : 0) +
+            (metrics.description.hasExample ? 10 : 0) +
+            (metrics.description.semanticDensity ?? 0) * 10 -
+            (metrics.description.missingElements?.length ?? 0) * 8
+          ))) : 0;
+
+          setExecutionResult({
+            schemaHealth: schemaScore,
+            discoverability: discoverScore,
+            composite: Math.round(schemaScore * 0.5 + discoverScore * 0.5),
+            issues: data.diagnosis?.issues || [],
+            suggestions: data.suggestions,
+            reportId: data.reportId,
+            isLive: true,
+          });
+        } else {
+          // Response OK but no metrics — use tool's existing scores
+          setExecutionResult({
+            schemaHealth: tool.metrics.schemaHealth,
+            discoverability: tool.metrics.discoverability,
+            composite: tool.composite,
+            issues: data.diagnosis?.issues || [],
+            suggestions: data.suggestions || null,
+            reportId: data.reportId || null,
+            isLive: false,
+          });
+        }
+      } else {
+        // API returned error status — fall back to existing tool scores
+        setExecutionResult({
+          schemaHealth: tool.metrics.schemaHealth,
+          discoverability: tool.metrics.discoverability,
+          composite: tool.composite,
+          issues: [],
+          suggestions: null,
+          reportId: null,
+          isLive: false,
+        });
+      }
+    } catch {
+      // API failed — fall back to existing tool scores
+      setExecutionResult({
+        schemaHealth: tool.metrics.schemaHealth,
+        discoverability: tool.metrics.discoverability,
+        composite: tool.composite,
+        issues: [],
+        suggestions: null,
+        reportId: null,
+        isLive: false,
+      });
+    }
+
+    // Wait for animation to finish, then show results
+    const totalAnimTime = steps.reduce((s, step) => s + step.duration, 0) + 800;
+    setTimeout(() => {
+      setExecutionDone(true);
+      executionRef.current = false;
+    }, totalAnimTime);
+  }, [router]);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 page-enter">
@@ -538,7 +699,8 @@ function IntentPageInner() {
                 executionStep={executingToolId === tool.id ? executionStep : 0}
                 executionDone={executingToolId === tool.id ? executionDone : false}
                 stepTimings={executingToolId === tool.id ? stepTimings : []}
-                onTest={() => handleTestTool(tool)}
+                onTest={(mode) => handleTestTool(tool, mode)}
+                executionResult={executingToolId === tool.id ? executionResult : null}
               />
             ))}
           </div>

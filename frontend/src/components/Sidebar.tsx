@@ -19,6 +19,7 @@ import {
   IconSparkles,
   IconWallet,
   IconSettings,
+  IconCode,
 } from '@/components/Icons';
 
 interface NavItem {
@@ -30,6 +31,7 @@ interface NavItem {
 const DISCOVER_ITEMS: NavItem[] = [
   { href: '/registry', label: 'Registry', icon: IconRegistry },
   { href: '/intent', label: 'Try Tools', icon: IconSparkles },
+  { href: '/developers', label: 'For Agents', icon: IconCode },
   { href: '/settings', label: 'Settings', icon: IconSettings },
 ];
 

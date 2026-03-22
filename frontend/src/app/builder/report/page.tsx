@@ -250,10 +250,16 @@ function ReportContent() {
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-4">
         <button
+          onClick={() => router.push(`/builder/submit?name=${encodeURIComponent(toolName)}`)}
+          className="btn-gradient px-6 py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2"
+        >
+          Fix &amp; Re-diagnose
+        </button>
+        <button
           onClick={() => router.push('/builder/submit')}
           className="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold"
         >
-          Submit Another Tool
+          New Tool
         </button>
         <button
           onClick={handlePublish}
