@@ -24,7 +24,7 @@ from scoring_engine.models.report import (
 )
 from scoring_engine.models.submission import ImprovedToolSubmission, SubmissionResponse
 from scoring_engine.models.tool_input import ToolInput
-from scoring_engine.score_formulas import compute_scores
+from scoring_engine.score_formulas import compute_scores, scores_to_dict
 
 try:
     from fastapi import FastAPI, HTTPException, Request  # type: ignore
@@ -284,7 +284,9 @@ def create_app(
 
     @app.post("/api/v1/diagnose/batch")
     async def diagnose_batch(payload: BatchDiagnosisRequest) -> BatchDiagnosisResponse:
-        reports = await engine.diagnose_batch([_sanitize_tool(tool) for tool in payload.tools])
+        reports = await engine.diagnose_batch(
+            [_sanitize_tool(tool) for tool in payload.tools]
+        )
         return BatchDiagnosisResponse(reports=reports)
 
     @app.get("/api/v1/report/{report_id}")
